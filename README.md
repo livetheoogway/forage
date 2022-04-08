@@ -1,3 +1,7 @@
+# forage
+
+The easy search engine
+
 ### To cover
 1. Lucene internals being masked
 2. Searchers
