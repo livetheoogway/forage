@@ -1,6 +1,9 @@
 .default_tag: &default_tag
   tags:
-    - backend
+    - backend-docker-large
+  image: docker.phonepe.com:5000/pp-maven:3.8.4-openjdk-11
+  before_script:
+    - export MAVEN_OPTS="--add-opens java.base/java.lang=ALL-UNNAMED"
 
 stages:
   - build
