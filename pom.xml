@@ -4,6 +4,13 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>com.phonepe</groupId>
+        <artifactId>pp-parent-pom</artifactId>
+        <version>0.51</version>
+        <relativePath/>
+    </parent>
+
     <groupId>com.phonepe.platform</groupId>
     <artifactId>forage</artifactId>
     <packaging>pom</packaging>
