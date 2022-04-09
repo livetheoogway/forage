@@ -13,12 +13,16 @@
 
     <properties>
         <lucene.version>9.1.0</lucene.version>
-        <jackson>2.13.2</jackson>
         <javax.validation>2.0.1.Final</javax.validation>
-        <caffine>3.0.5</caffine>
+        <caffine>3.0.6</caffine>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.phonepe.platform</groupId>
+            <artifactId>forage-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.lucene</groupId>
             <artifactId>lucene-core</artifactId>
@@ -45,6 +49,16 @@
             <version>${jackson}</version>
         </dependency>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-guava</artifactId>
+            <version>${jackson}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-parameter-names</artifactId>
+            <version>${jackson}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
             <version>${javax.validation}</version>
@@ -54,9 +68,8 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.github.ben-manes.caffeine</groupId>
-            <artifactId>caffeine</artifactId>
-            <version>${caffine}</version>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
         </dependency>
 
     </dependencies>

@@ -1,9 +1,9 @@
 package com.phonepe.platform.forage.search.engine.lucene;
 
 import com.phonepe.platform.forage.search.engine.lucene.field.LuceneFieldHandler;
-import com.phonepe.platform.forage.search.engine.model.DocumentVisitor;
-import com.phonepe.platform.forage.search.engine.model.ForageDocument;
-import com.phonepe.platform.forage.search.engine.model.LuceneDocument;
+import com.phonepe.platform.forage.search.engine.model.index.DocumentVisitor;
+import com.phonepe.platform.forage.search.engine.model.index.ForageDocument;
+import com.phonepe.platform.forage.search.engine.model.index.LuceneDocument;
 import lombok.val;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;

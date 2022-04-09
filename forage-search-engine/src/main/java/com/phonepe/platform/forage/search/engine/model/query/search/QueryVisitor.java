@@ -5,7 +5,9 @@ import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 public interface QueryVisitor<T> {
     T visit(BooleanQuery booleanQuery) throws ForageSearchError;
 
-    T visit(IsQuery isQuery) throws ForageSearchError;
+    T visit(MatchQuery matchQuery) throws ForageSearchError;
 
     T visit(ParsableQuery parsableQuery) throws ForageSearchError;
+
+    T visit(RangeQuery rangeQuery);
 }

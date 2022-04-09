@@ -8,5 +8,8 @@ public interface FieldTypeVisitor<T> {
 
     T lucene();
 
+    T floatPoint();
+
+    T intPoint();
 
 }

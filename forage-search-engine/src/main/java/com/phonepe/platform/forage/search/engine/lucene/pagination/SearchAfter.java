@@ -1,11 +1,18 @@
 package com.phonepe.platform.forage.search.engine.lucene.pagination;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.phonepe.platform.forage.models.result.DocScore;
 import lombok.Value;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.search.ScoreDoc;
 
 @Value
 public class SearchAfter {
-    ScoreDoc after;
-    Query query;
+    DocScore after;
+    String query;
+
+    @JsonCreator
+    public SearchAfter(@JsonProperty("after") final DocScore after, @JsonProperty("query") final String query) {
+        this.after = after;
+        this.query = query;
+    }
 }

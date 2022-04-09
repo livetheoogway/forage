@@ -1,25 +1,23 @@
 package com.phonepe.platform.forage.search.engine.lucene;
 
+import com.phonepe.platform.forage.models.result.ForageQueryResult;
 import com.phonepe.platform.forage.search.engine.ForageSearchEngine;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
-import com.phonepe.platform.forage.search.engine.model.ForageDocument;
-import com.phonepe.platform.forage.search.engine.model.IndexableDocument;
 import com.phonepe.platform.forage.search.engine.model.field.TextField;
+import com.phonepe.platform.forage.search.engine.model.index.ForageDocument;
+import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
 import com.phonepe.platform.forage.search.engine.model.query.ForageQuery;
 import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
-import com.phonepe.platform.forage.search.engine.model.query.result.ForageQueryResult;
-import com.phonepe.platform.forage.search.engine.model.query.search.IsQuery;
+import com.phonepe.platform.forage.search.engine.model.query.search.MatchQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.io.IOException;
 
 class LuceneSearchEngineTest {
 
     private ForageSearchEngine<IndexableDocument, ForageQuery, ForageQueryResult> searchEngine;
 
     @BeforeEach
-    void setUp() throws IOException, ForageSearchError {
+    void setUp() throws ForageSearchError {
         searchEngine = LuceneSearchEngineBuilder.builder().build();
     }
 
@@ -34,7 +32,7 @@ class LuceneSearchEngineTest {
         searchEngine.flush();
 
         final ForageQueryResult result
-                = searchEngine.query(new ForageSearchQuery(new IsQuery("pod", "nexus"), 10));
+                = searchEngine.query(new ForageSearchQuery(new MatchQuery("pod", "nexus"), 10));
         System.out.println(result);
     }
 }

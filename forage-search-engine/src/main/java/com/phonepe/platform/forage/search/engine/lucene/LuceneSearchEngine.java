@@ -1,28 +1,29 @@
 package com.phonepe.platform.forage.search.engine.lucene;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.phonepe.platform.forage.models.result.ForageQueryResult;
+import com.phonepe.platform.forage.models.result.MatchingResult;
+import com.phonepe.platform.forage.models.result.Relation;
+import com.phonepe.platform.forage.models.result.TotalResults;
 import com.phonepe.platform.forage.search.engine.ForageSearchEngine;
 import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.pagination.LucenePagination;
 import com.phonepe.platform.forage.search.engine.lucene.pagination.SearchAfter;
 import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserFactory;
-import com.phonepe.platform.forage.search.engine.model.IndexableDocument;
+import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
 import com.phonepe.platform.forage.search.engine.model.query.ForageQuery;
 import com.phonepe.platform.forage.search.engine.model.query.ForageQueryVisitor;
 import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.PageQuery;
-import com.phonepe.platform.forage.search.engine.model.query.result.ForageQueryResult;
-import com.phonepe.platform.forage.search.engine.model.query.result.Relation;
-import com.phonepe.platform.forage.search.engine.model.query.result.TotalResults;
-import com.phonepe.platform.forage.search.engine.model.query.search.MatchingResult;
 import com.phonepe.platform.forage.search.engine.model.result.OperationResult;
 import com.phonepe.platform.forage.search.engine.operation.OperationExecutor;
 import com.phonepe.platform.forage.search.engine.util.ArrayUtils;
 import com.phonepe.platform.forage.search.engine.util.Converters;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.search.Query;
+import org.apache.lucene.queryparser.classic.ParseException;
+import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
@@ -38,6 +39,7 @@ public class LuceneSearchEngine
     private final LuceneQueryGenerator luceneQueryGenerator;
     private final LucenePagination lucenePagination;
     private final ObjectStore objectStore;
+    private final QueryParser queryParser;
 
     public LuceneSearchEngine(final ObjectMapper mapper,
                               final QueryParserFactory queryParserFactory,
@@ -47,6 +49,7 @@ public class LuceneSearchEngine
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
         this.objectStore = new ObjectStore();
+        this.queryParser = new QueryParser("TEMP", analyzer);
     }
 
     @Override
@@ -71,7 +74,7 @@ public class LuceneSearchEngine
                 try {
                     val query = forageSearchQuery.getQuery().accept(luceneQueryGenerator);
                     val topDocs = searcher.search(query, forageSearchQuery.getSize());
-                    return extractResult(query, topDocs);
+                    return extractResult(query.toString(), topDocs);
                 } catch (IOException e) {
                     throw new ForageSearchError(ForageErrorCode.SEARCH_ERROR, e);
                 }
@@ -81,18 +84,21 @@ public class LuceneSearchEngine
             public ForageQueryResult visit(final PageQuery pageQuery) throws ForageSearchError {
                 try {
                     val searchAfter = lucenePagination.parsePage(pageQuery.getPage());
-                    val topDocs = searcher.searchAfter(searchAfter.getAfter(), searchAfter.getQuery(),
+                    val topDocs = searcher.searchAfter(Converters.toScoreDoc(searchAfter.getAfter()),
+                                                       queryParser.parse(searchAfter.getQuery()),
                                                        pageQuery.getSize());
                     return extractResult(searchAfter.getQuery(), topDocs);
 
                 } catch (IOException e) {
                     throw new ForageSearchError(ForageErrorCode.SEARCH_ERROR, e);
+                } catch (ParseException e) {
+                    throw new ForageSearchError(ForageErrorCode.PAGE_QUERY_PARSE_ERROR, e);
                 }
             }
         });
     }
 
-    private ForageQueryResult extractResult(final Query query,
+    private ForageQueryResult extractResult(final String query,
                                             final TopDocs topDocs) throws ForageSearchError {
         if (topDocs == null || topDocs.scoreDocs.length <= 0) {
             return ForageQueryResult.builder()
@@ -100,17 +106,16 @@ public class LuceneSearchEngine
                     .build();
         }
         val last = ArrayUtils.last(topDocs.scoreDocs);
-        val searchAfter = last.map(value -> new SearchAfter(value, query)).orElse(null);
+        val searchAfter = last
+                .map(value -> new SearchAfter(Converters.toDocScore(value), query))
+                .orElse(null);
         val docRetriever = luceneIndex.docRetriever();
 
         final List<MatchingResult> matchingResults = Arrays.stream(topDocs.scoreDocs)
                 .map(scoreDoc -> {
                     val doc = docRetriever.document(scoreDoc.doc);
                     final String docId = documentHandler.extractId(doc);
-//                    val fields = doc.getFields().stream()
-//                            .map(LuceneFieldHandler::extractField)
-//                            .collect(Collectors.toList());
-                    return new MatchingResult(objectStore.get(docId), Converters.toDocScore(scoreDoc));
+                    return new MatchingResult(docId, objectStore.get(docId), Converters.toDocScore(scoreDoc));
                 }).collect(Collectors.toList());
 
         return ForageQueryResult.builder()

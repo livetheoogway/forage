@@ -11,6 +11,7 @@
     <modules>
         <module>forage-core</module>
         <module>forage-search-engine</module>
+        <module>forage-models</module>
     </modules>
 
     <properties>
@@ -21,6 +22,7 @@
         <junit.jupiter.version>5.8.2</junit.jupiter.version>
         <slf4j.api>1.7.36</slf4j.api>
         <lombok.version>1.18.22</lombok.version>
+        <jackson>2.13.2</jackson>
     </properties>
 
     <dependencyManagement>

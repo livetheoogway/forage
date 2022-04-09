@@ -1,6 +1,7 @@
 package com.phonepe.platform.forage.search.engine.store;
 
-import com.phonepe.platform.forage.search.engine.model.store.Storable;
+
+import com.phonepe.platform.forage.models.StoredData;
 
 import java.util.List;
 
@@ -9,9 +10,9 @@ import java.util.List;
  * @param <T>
  */
 public interface Store<T> {
-    void store(Storable<T> storable);
+    void store(StoredData<T> storedData);
 
-    void store(List<Storable<T>> storables);
+    void store(List<StoredData<T>> storedData);
 
     T get(String id);
 

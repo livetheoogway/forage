@@ -1,20 +1,22 @@
 package com.phonepe.platform.forage.search.engine.operation;
 
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
-import com.phonepe.platform.forage.search.engine.model.result.FailedResult;
 import com.phonepe.platform.forage.search.engine.model.result.FailedOperation;
+import com.phonepe.platform.forage.search.engine.model.result.FailedResult;
 import com.phonepe.platform.forage.search.engine.model.result.OperationResult;
 import com.phonepe.platform.forage.search.engine.model.result.PartiallyFailedResult;
 import com.phonepe.platform.forage.search.engine.model.result.SuccessResult;
 import com.phonepe.platform.forage.search.engine.util.EConsumer;
+import lombok.experimental.UtilityClass;
 import lombok.val;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@UtilityClass
 public class OperationExecutor {
 
-    public static <S> OperationResult<S> execute(final List<S> items, final EConsumer<S> consumer) {
+    public <S> OperationResult<S> execute(final List<S> items, final EConsumer<S> consumer) {
         try {
             List<FailedOperation<S>> failedOperations = null;
             for (val item : items) {

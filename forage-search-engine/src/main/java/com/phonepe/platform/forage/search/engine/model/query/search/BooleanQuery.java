@@ -1,5 +1,7 @@
 package com.phonepe.platform.forage.search.engine.model.query.search;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -14,7 +16,9 @@ public class BooleanQuery extends Query {
     List<Query> queries;
     ClauseType clauseType;
 
-    public BooleanQuery(final List<Query> queries, final ClauseType clauseType) {
+    @JsonCreator
+    public BooleanQuery(@JsonProperty("queries") final List<Query> queries,
+                        @JsonProperty("clauseType") final ClauseType clauseType) {
         super(QueryType.BOOLEAN);
         this.queries = queries;
         this.clauseType = clauseType;

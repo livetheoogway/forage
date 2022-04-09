@@ -6,4 +6,8 @@ public interface FieldVisitor<T> {
     T visit(StringField stringField);
 
     T visit(LuceneField luceneField);
+
+    T visit(FloatField floatField);
+
+    T visit(IntField intField);
 }

@@ -1,22 +1,22 @@
 package com.phonepe.platform.forage.search.engine.lucene.parser;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.phonepe.platform.forage.search.engine.util.MaxSizeHashMap;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
+import java.util.Map;
+
 public class CachedQueryParserFactory extends QueryParserFactory {
-    private final LoadingCache<String, QueryParser> cache;
+    private final Map<String, QueryParser> cache;
 
     public CachedQueryParserFactory(final Analyzer analyzer, int maxSize) {
         super(analyzer);
-        cache = Caffeine.newBuilder()
-                .maximumSize(maxSize)
-                .build(super::queryParser);
+        cache = new MaxSizeHashMap<>(maxSize);
     }
 
     @Override
     public QueryParser queryParser(final String field) {
+        cache.computeIfAbsent(field, super::queryParser);
         return cache.get(field);
     }
 }

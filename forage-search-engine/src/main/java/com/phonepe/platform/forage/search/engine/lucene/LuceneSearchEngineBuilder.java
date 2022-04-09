@@ -15,6 +15,11 @@ public class LuceneSearchEngineBuilder {
     private int maxFieldSizeHint;
     private QueryParserFactory queryParserFactory;
 
+    public LuceneSearchEngineBuilder withMapper(final ObjectMapper mapper) {
+        this.mapper = mapper;
+        return this;
+    }
+
     public LuceneSearchEngineBuilder withAnalyser(final Analyzer analyzer) {
         this.analyzer = analyzer;
         return this;

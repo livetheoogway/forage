@@ -7,17 +7,30 @@ public enum FieldType {
             return visitor.text();
         }
     },
-    STRING{
+    STRING {
         @Override
         public <T> T accept(final FieldTypeVisitor<T> visitor) {
             return visitor.string();
         }
-    }, /* analysis disabled */
+    },
     LUCENE {
         @Override
         public <T> T accept(final FieldTypeVisitor<T> visitor) {
             return visitor.lucene();
         }
+    },
+    FLOAT {
+        @Override
+        public <T> T accept(final FieldTypeVisitor<T> visitor) {
+            return visitor.floatPoint();
+        }
+    },
+    INT {
+        @Override
+        public <T> T accept(final FieldTypeVisitor<T> visitor) {
+            return visitor.intPoint();
+        }
     };
+
     public abstract <T> T accept(FieldTypeVisitor<T> visitor);
 }

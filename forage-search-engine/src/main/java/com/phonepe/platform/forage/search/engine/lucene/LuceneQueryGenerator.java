@@ -5,11 +5,17 @@ import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserSupplier;
 import com.phonepe.platform.forage.search.engine.model.query.search.BooleanQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.ClauseVisitor;
-import com.phonepe.platform.forage.search.engine.model.query.search.IsQuery;
+import com.phonepe.platform.forage.search.engine.model.query.search.MatchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.ParsableQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.QueryVisitor;
+import com.phonepe.platform.forage.search.engine.model.query.search.RangeQuery;
+import com.phonepe.platform.forage.search.engine.model.query.search.range.FloatRange;
+import com.phonepe.platform.forage.search.engine.model.query.search.range.IntRange;
+import com.phonepe.platform.forage.search.engine.model.query.search.range.RangeVisitor;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.lucene.document.FloatPoint;
+import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.Query;
@@ -52,8 +58,8 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     }
 
     @Override
-    public Query visit(final IsQuery isQuery) {
-        return new TermQuery(new Term(isQuery.getField(), isQuery.getValue()));
+    public Query visit(final MatchQuery matchQuery) {
+        return new TermQuery(new Term(matchQuery.getField(), matchQuery.getValue()));
     }
 
     @Override
@@ -65,6 +71,21 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
         } catch (Exception e) {
             throw new ForageSearchError(ForageErrorCode.QUERY_PARSE_ERROR, e);
         }
+    }
+
+    @Override
+    public Query visit(final RangeQuery rangeQuery) {
+        return rangeQuery.getRange().accept(new RangeVisitor<Query>() {
+            @Override
+            public Query visit(final IntRange intRange) {
+                return IntPoint.newRangeQuery(rangeQuery.getField(), intRange.getLow(), intRange.getHigh());
+            }
+
+            @Override
+            public Query visit(final FloatRange floatRange) {
+                return FloatPoint.newRangeQuery(rangeQuery.getField(), floatRange.getLow(), floatRange.getHigh());
+            }
+        });
     }
 
     @SneakyThrows

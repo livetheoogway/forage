@@ -1,6 +1,6 @@
 package com.phonepe.platform.forage.search.engine.lucene;
 
-import com.phonepe.platform.forage.search.engine.model.store.Storable;
+import com.phonepe.platform.forage.models.StoredData;
 import com.phonepe.platform.forage.search.engine.store.Store;
 
 import java.util.HashMap;
@@ -15,13 +15,13 @@ class ObjectStore implements Store<Object> {
     }
 
     @Override
-    public void store(final Storable<Object> storable) {
-        hashMap.putIfAbsent(storable.id(), storable.data());
+    public void store(final StoredData<Object> storedData) {
+        hashMap.putIfAbsent(storedData.id(), storedData.data());
     }
 
     @Override
-    public void store(final List<Storable<Object>> storables) {
-        storables.forEach(this::store);
+    public void store(final List<StoredData<Object>> storedData) {
+        storedData.forEach(this::store);
     }
 
     @Override
