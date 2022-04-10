@@ -5,7 +5,7 @@ import com.phonepe.platform.forage.core.model.DataItem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DataStore implements Bootstrapper<String, DataItem> {
+public class SimpleListDataStore implements Bootstrapper<String, DataItem> {
 
     private final List<DataItem> database = new ArrayList<>();
 

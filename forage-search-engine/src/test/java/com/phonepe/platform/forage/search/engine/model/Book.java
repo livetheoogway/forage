@@ -11,6 +11,7 @@ import java.util.List;
 
 @Value
 public class Book {
+    String id;
     String title;
     String author;
     float rating;

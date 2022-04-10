@@ -9,14 +9,14 @@ import java.util.List;
 
 @Value
 @Builder
-public class ForageQueryResult {
+public class ForageQueryResult<D> {
     TotalResults total;
-    List<MatchingResult> matchingResults;
+    List<MatchingResult<D>> matchingResults;
     String nextPage;
 
     @JsonCreator
     public ForageQueryResult(@JsonProperty("total") final TotalResults total,
-                             @JsonProperty("matchingResults") final List<MatchingResult> matchingResults,
+                             @JsonProperty("matchingResults") final List<MatchingResult<D>> matchingResults,
                              @JsonProperty("nextPage") final String nextPage) {
         this.total = total;
         this.matchingResults = matchingResults;

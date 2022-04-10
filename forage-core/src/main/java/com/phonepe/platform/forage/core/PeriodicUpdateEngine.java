@@ -38,7 +38,7 @@ public class PeriodicUpdateEngine<T, D extends StoredData<T>> extends UpdateEngi
     public void start() {
         executorService.scheduleWithFixedDelay(() -> {
             try {
-                bootstrapper.bootstrap(updateConsumer);
+                bootstrap();
             } catch (Exception e) {
                 errorHandler.handleError(e);
             }

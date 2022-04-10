@@ -25,7 +25,8 @@ public class ResourceReader {
                         return null;
                     }
                     try {
-                        return new Book(splits[0].trim(),
+                        return new Book(TestIdUtils.generateBookId(),
+                                        splits[0].trim(),
                                         splits[1].trim(),
                                         Float.parseFloat(splits[2].trim()),
                                         splits[3].trim(),

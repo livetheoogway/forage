@@ -2,7 +2,6 @@ package com.phonepe.platform.forage.search.engine.lucene;
 
 import com.google.common.collect.Lists;
 import com.phonepe.platform.forage.models.result.ForageQueryResult;
-import com.phonepe.platform.forage.search.engine.ForageSearchEngine;
 import com.phonepe.platform.forage.search.engine.ResourceReader;
 import com.phonepe.platform.forage.search.engine.ResultUtil;
 import com.phonepe.platform.forage.search.engine.TestIdUtils;
@@ -11,7 +10,6 @@ import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.model.Book;
 import com.phonepe.platform.forage.search.engine.model.index.ForageDocument;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
-import com.phonepe.platform.forage.search.engine.model.query.ForageQuery;
 import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.PageQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.BooleanQuery;
@@ -30,16 +28,16 @@ import java.util.stream.Collectors;
 
 @Slf4j
 class SimpleSearchTest {
-    private static ForageSearchEngine<IndexableDocument, ForageQuery, ForageQueryResult> searchEngine;
+    private static LuceneSearchEngine<Book> searchEngine;
 
     @BeforeAll
     static void setup() throws ForageSearchError, IOException {
-        searchEngine = LuceneSearchEngineBuilder.builder()
+        searchEngine = LuceneSearchEngineBuilder.<Book>builder()
                 .withMapper(TestUtils.mapper()).build();
 
-        final List<IndexableDocument> documents = ResourceReader.extractBooks()
+        final List<IndexableDocument<Book>> documents = ResourceReader.extractBooks()
                 .stream()
-                .map(book -> ForageDocument.builder()
+                .map(book -> ForageDocument.<Book>builder()
                         .fields(book.fields())
                         .data(book)
                         .id(TestIdUtils.generateBookId())
@@ -52,7 +50,7 @@ class SimpleSearchTest {
 
     @Test
     void testSimpleSearch() throws ForageSearchError {
-        ForageQueryResult result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
+        ForageQueryResult<Book> result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertTrue(result.getTotal().getTotal() > 10);
@@ -61,7 +59,7 @@ class SimpleSearchTest {
 
     @Test
     void testPaginatedSearch() throws ForageSearchError {
-        ForageQueryResult result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
+        ForageQueryResult<Book> result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertEquals(25, result.getTotal().getTotal());
@@ -75,7 +73,7 @@ class SimpleSearchTest {
 
     @Test
     void testMultipleSearch() throws ForageSearchError {
-        ForageQueryResult result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
+        ForageQueryResult<Book> result = searchEngine.query(new ForageSearchQuery(new MatchQuery("author", "rowling"), 10));
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         result = searchEngine.query(new PageQuery(result.getNextPage(), 10));
@@ -95,7 +93,7 @@ class SimpleSearchTest {
 
     @Test
     void testMustClauseSearch() throws ForageSearchError {
-        ForageQueryResult result;
+        ForageQueryResult<Book> result;
         result = searchEngine.query(new ForageSearchQuery(
                 new BooleanQuery(Lists.newArrayList(
                         new MatchQuery("author", "rowling"),
@@ -108,7 +106,7 @@ class SimpleSearchTest {
 
     @Test
     void testShouldClauseSearch() throws ForageSearchError {
-        ForageQueryResult result = searchEngine.query(new ForageSearchQuery(
+        ForageQueryResult<Book> result = searchEngine.query(new ForageSearchQuery(
                 new BooleanQuery(Lists.newArrayList(
                         new MatchQuery("author", "rowling"),
                         new MatchQuery("title", "prince")),
@@ -121,14 +119,14 @@ class SimpleSearchTest {
 
     @Test
     void testIntRangeSearch() throws ForageSearchError {
-        ForageQueryResult result;
+        ForageQueryResult<Book> result;
 
         result = searchEngine.query(new ForageSearchQuery(
                 new RangeQuery("numPage", new IntRange(600, 800)),
                 10));
         Assertions.assertTrue(result.getMatchingResults()
                                       .stream()
-                                      .map(matchingResult -> ((Book) matchingResult.getData()).getNumPage())
+                                      .map(matchingResult -> matchingResult.getData().getNumPage())
                                       .allMatch(pages -> pages <= 800 && pages >= 600));
         System.out.println("result.getTotal().getTotal() = " + result.getTotal().getTotal());
         Assertions.assertEquals(10, result.getMatchingResults().size());
@@ -139,7 +137,7 @@ class SimpleSearchTest {
                 new RangeQuery("numPage", new IntRange(100, 200)), 10));
         Assertions.assertTrue(result.getMatchingResults()
                                       .stream()
-                                      .map(matchingResult -> ((Book) matchingResult.getData()).getNumPage())
+                                      .map(matchingResult -> matchingResult.getData().getNumPage())
                                       .allMatch(pages -> pages >= 100 && pages <= 200));
         System.out.println("result.getTotal().getTotal() = " + result.getTotal().getTotal());
         Assertions.assertEquals(10, result.getMatchingResults().size());

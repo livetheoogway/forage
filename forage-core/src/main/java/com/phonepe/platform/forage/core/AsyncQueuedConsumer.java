@@ -23,13 +23,19 @@ public class AsyncQueuedConsumer<U> implements UpdateConsumer<U>, Runnable {
     public AsyncQueuedConsumer(final UpdateListener<U> listener, int queueSize,
                                final ErrorHandler errorHandler) {
         this.listener = listener;
-        queue = new LinkedBlockingDeque<>(queueSize);
+        this.queue = new LinkedBlockingDeque<>(queueSize);
         this.errorHandler = errorHandler;
     }
 
     @Override
     public void init() {
+        try {
+            listener.init();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Thread thread = new Thread(this);
+        log.info("STARTING thread log");
         System.out.println("STARTING thread");
         thread.start();
     }
@@ -51,11 +57,14 @@ public class AsyncQueuedConsumer<U> implements UpdateConsumer<U>, Runnable {
                 QueueItem<U> queueItem = queue.take();
                 if (queueItem.isPoisonPill()) {
                     System.out.println("reached POISON " );
+                    listener.finish();
                     break;
                 }
                 listener.takeUpdate(queueItem.getU());
             } catch (InterruptedException e) {
                 errorHandler.handleError(e);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }

@@ -10,9 +10,9 @@ import java.util.function.Function;
 
 @UtilityClass
 public class ResultUtil {
-    public <T> T getRepresentation(final ForageQueryResult result,
-                                   final Function<MatchingResult, T> mapper,
-                                   final BinaryOperator<T> reducer) {
+    public <T, R> R getRepresentation(final ForageQueryResult<T> result,
+                                      final Function<MatchingResult<T>, R> mapper,
+                                      final BinaryOperator<R> reducer) {
         return result.getMatchingResults()
                 .stream()
                 .map(mapper)
@@ -20,11 +20,11 @@ public class ResultUtil {
                 .orElse(null);
     }
 
-    public String getBookRepresentation(final ForageQueryResult result) {
+    public String getBookRepresentation(final ForageQueryResult<Book> result) {
         return getRepresentation(result,
                                  matchingResult -> {
-                                     final Book data = (Book) matchingResult.getData();
-                                     return matchingResult.getId()+ ":" + data.getTitle();
+                                     final Book data = matchingResult.getData();
+                                     return matchingResult.getId() + ":" + data.getTitle();
                                  },
                                  (a, b) -> a + "\n" + b);
     }

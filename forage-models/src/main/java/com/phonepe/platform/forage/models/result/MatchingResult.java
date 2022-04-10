@@ -3,8 +3,8 @@ package com.phonepe.platform.forage.models.result;
 import lombok.Value;
 
 @Value
-public class MatchingResult {
+public class MatchingResult<D> {
     String id;
-    Object data;
+    D data;
     DocScore docScore;
 }

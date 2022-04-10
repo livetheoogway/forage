@@ -7,7 +7,7 @@ import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserFactor
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
-public class LuceneSearchEngineBuilder {
+public class LuceneSearchEngineBuilder<T> {
     private static final int DEFAULT_FIELD_SIZE_SUGGESTION = 10;
 
     private ObjectMapper mapper;
@@ -15,31 +15,31 @@ public class LuceneSearchEngineBuilder {
     private int maxFieldSizeHint;
     private QueryParserFactory queryParserFactory;
 
-    public LuceneSearchEngineBuilder withMapper(final ObjectMapper mapper) {
+    public LuceneSearchEngineBuilder<T> withMapper(final ObjectMapper mapper) {
         this.mapper = mapper;
         return this;
     }
 
-    public LuceneSearchEngineBuilder withAnalyser(final Analyzer analyzer) {
+    public LuceneSearchEngineBuilder<T> withAnalyser(final Analyzer analyzer) {
         this.analyzer = analyzer;
         return this;
     }
 
-    public LuceneSearchEngineBuilder withQueryParserFactory(final QueryParserFactory queryParserFactory) {
+    public LuceneSearchEngineBuilder<T> withQueryParserFactory(final QueryParserFactory queryParserFactory) {
         this.queryParserFactory = queryParserFactory;
         return this;
     }
 
-    public LuceneSearchEngineBuilder withMaxFieldSizeHint(final int maxFieldSizeHint) {
+    public LuceneSearchEngineBuilder<T> withMaxFieldSizeHint(final int maxFieldSizeHint) {
         this.maxFieldSizeHint = maxFieldSizeHint;
         return this;
     }
 
-    public static LuceneSearchEngineBuilder builder() {
-        return new LuceneSearchEngineBuilder();
+    public static <T> LuceneSearchEngineBuilder<T> builder() {
+        return new LuceneSearchEngineBuilder<>();
     }
 
-    public LuceneSearchEngine build() throws ForageSearchError {
+    public LuceneSearchEngine<T> build() throws ForageSearchError {
         if (this.analyzer == null) {
             this.analyzer = new StandardAnalyzer();
         }
@@ -52,6 +52,6 @@ public class LuceneSearchEngineBuilder {
         if (mapper == null) {
             this.mapper = new ObjectMapper();
         }
-        return new LuceneSearchEngine(mapper, queryParserFactory, analyzer);
+        return new LuceneSearchEngine<>(mapper, queryParserFactory, analyzer);
     }
 }

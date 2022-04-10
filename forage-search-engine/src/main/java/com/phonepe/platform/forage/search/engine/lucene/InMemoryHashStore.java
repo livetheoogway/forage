@@ -7,25 +7,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class ObjectStore implements Store<Object> {
-    private Map<String, Object> hashMap;
+class InMemoryHashStore<T> implements Store<T> {
+    private Map<String, T> hashMap;
 
-    public ObjectStore() {
+    public InMemoryHashStore() {
         this.hashMap = new HashMap<>();
     }
 
     @Override
-    public void store(final StoredData<Object> storedData) {
+    public void store(final StoredData<T> storedData) {
         hashMap.putIfAbsent(storedData.id(), storedData.data());
     }
 
     @Override
-    public void store(final List<StoredData<Object>> storedData) {
+    public void store(final List<StoredData<T>> storedData) {
         storedData.forEach(this::store);
     }
 
     @Override
-    public Object get(final String id) {
+    public T get(final String id) {
         return hashMap.get(id);
     }
 

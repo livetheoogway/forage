@@ -14,20 +14,20 @@ import java.util.List;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class ForageDocument extends IndexableDocument {
+public class ForageDocument<D> extends IndexableDocument<D> {
 
     @NotNull
     @NotEmpty
     List<Field> fields;
 
     @Builder
-    public ForageDocument(final String id, final Object data, @Singular final List<Field> fields) {
+    public ForageDocument(final String id, final D data, @Singular final List<Field> fields) {
         super(DocumentType.FORAGE, id, data);
         this.fields = fields;
     }
 
     @Override
-    public <T> T accept(final DocumentVisitor<T> visitor) {
+    public <T> T accept(final DocumentVisitor<T, D> visitor) {
         return visitor.visit(this);
     }
 }

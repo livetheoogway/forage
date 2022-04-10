@@ -9,12 +9,12 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.StringField;
 
-public class LuceneDocumentHandler implements DocumentVisitor<Document> {
+public class LuceneDocumentHandler<D> implements DocumentVisitor<Document, D> {
     private static final String ID = "__ID__";
     private final LuceneFieldHandler fieldGenerator = new LuceneFieldHandler();
 
     @Override
-    public Document visit(final ForageDocument forageDocument) {
+    public Document visit(final ForageDocument<D> forageDocument) {
         val document = new Document();
         forageDocument.getFields()
                 .stream()
@@ -25,7 +25,7 @@ public class LuceneDocumentHandler implements DocumentVisitor<Document> {
     }
 
     @Override
-    public Document visit(final LuceneDocument luceneDocument) {
+    public Document visit(final LuceneDocument<D> luceneDocument) {
         val document = luceneDocument.getDocument();
         document.add(new StringField(ID, luceneDocument.id(), Field.Store.YES));
         return document;

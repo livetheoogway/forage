@@ -20,14 +20,13 @@ import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
-public class LuceneIndexInstance implements Closeable, LuceneIndex {
+public class LuceneIndexInstance implements LuceneIndex {
 
     private final Directory memoryIndex;
     private final Analyzer analyzer;
@@ -69,7 +68,7 @@ public class LuceneIndexInstance implements Closeable, LuceneIndex {
                     final DocRetriever docRetriever = new DocRetriever(indexReader, searcher);
                     final DocRetriever docRetrieverToBeClosed = indexReaderReference.get();
                     indexReaderReference.set(docRetriever);
-                    if (docRetrieverToBeClosed!=null) {
+                    if (docRetrieverToBeClosed != null) {
                         Utils.closeSafe(docRetrieverToBeClosed.getIndexReader(), "IndexReader");
                     }
                     indexWriterReferenceChanged.set(false);

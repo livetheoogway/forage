@@ -17,13 +17,13 @@ class PeriodicUpdateEngineTest {
 
     @BeforeEach
     void setUp() {
-        DataStore dataStore = new DataStore();
+        SimpleListDataStore simpleListDataStore = new SimpleListDataStore();
         collectingListener = new CollectingUpdateListener<>();
-        periodicUpdateEngine = new PeriodicUpdateEngine<>(dataStore,
+        periodicUpdateEngine = new PeriodicUpdateEngine<>(simpleListDataStore,
                                                           new AsyncQueuedConsumer<>(collectingListener), 1,
                                                           TimeUnit.SECONDS);
         for (int i = 0; i < 1000; i++) {
-            dataStore.addData(new DataItem(String.valueOf(i), "This is message: " + i));
+            simpleListDataStore.addData(new DataItem(String.valueOf(i), "This is message: " + i));
         }
     }
 

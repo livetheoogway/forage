@@ -31,32 +31,32 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LuceneSearchEngine
-        extends ForageSearchEngine<IndexableDocument, ForageQuery, ForageQueryResult> {
+public class LuceneSearchEngine<Data>
+        extends ForageSearchEngine<IndexableDocument<Data>, ForageQuery, ForageQueryResult<Data>> {
 
-    private final LuceneDocumentHandler documentHandler;
+    private final LuceneDocumentHandler<Data> documentHandler;
     private final LuceneIndex luceneIndex;
     private final LuceneQueryGenerator luceneQueryGenerator;
     private final LucenePagination lucenePagination;
-    private final ObjectStore objectStore;
+    private final InMemoryHashStore<Data> inMemoryHashStore;
     private final QueryParser queryParser;
 
     public LuceneSearchEngine(final ObjectMapper mapper,
                               final QueryParserFactory queryParserFactory,
                               final Analyzer analyzer) throws ForageSearchError {
-        this.documentHandler = new LuceneDocumentHandler();
+        this.documentHandler = new LuceneDocumentHandler<>();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
-        this.objectStore = new ObjectStore();
-        this.queryParser = new QueryParser("TEMP", analyzer);
+        this.inMemoryHashStore = new InMemoryHashStore<>(); //todo
+        this.queryParser = new QueryParser("TEMP", analyzer); //todo
     }
 
     @Override
-    public OperationResult<IndexableDocument> index(final List<IndexableDocument> documents) {
+    public OperationResult<IndexableDocument<Data>> index(final List<IndexableDocument<Data>> documents) {
         return OperationExecutor.execute(documents, document -> {
             luceneIndex.indexWriter().addDocument(document.accept(documentHandler));
-            objectStore.store(document);
+            inMemoryHashStore.store(document);
         });
     }
 
@@ -66,11 +66,11 @@ public class LuceneSearchEngine
     }
 
     @Override
-    public ForageQueryResult query(final ForageQuery forageQuery) throws ForageSearchError {
+    public ForageQueryResult<Data> query(final ForageQuery forageQuery) throws ForageSearchError {
         val searcher = luceneIndex.searcher();
         return forageQuery.accept(new ForageQueryVisitor<>() {
             @Override
-            public ForageQueryResult visit(final ForageSearchQuery forageSearchQuery) throws ForageSearchError {
+            public ForageQueryResult<Data> visit(final ForageSearchQuery forageSearchQuery) throws ForageSearchError {
                 try {
                     val query = forageSearchQuery.getQuery().accept(luceneQueryGenerator);
                     val topDocs = searcher.search(query, forageSearchQuery.getSize());
@@ -81,7 +81,7 @@ public class LuceneSearchEngine
             }
 
             @Override
-            public ForageQueryResult visit(final PageQuery pageQuery) throws ForageSearchError {
+            public ForageQueryResult<Data> visit(final PageQuery pageQuery) throws ForageSearchError {
                 try {
                     val searchAfter = lucenePagination.parsePage(pageQuery.getPage());
                     val topDocs = searcher.searchAfter(Converters.toScoreDoc(searchAfter.getAfter()),
@@ -98,10 +98,10 @@ public class LuceneSearchEngine
         });
     }
 
-    private ForageQueryResult extractResult(final String query,
+    private ForageQueryResult<Data> extractResult(final String query,
                                             final TopDocs topDocs) throws ForageSearchError {
         if (topDocs == null || topDocs.scoreDocs.length <= 0) {
-            return ForageQueryResult.builder()
+            return ForageQueryResult.<Data>builder()
                     .total(new TotalResults(0, Relation.EQUAL_TO))
                     .build();
         }
@@ -111,19 +111,23 @@ public class LuceneSearchEngine
                 .orElse(null);
         val docRetriever = luceneIndex.docRetriever();
 
-        final List<MatchingResult> matchingResults = Arrays.stream(topDocs.scoreDocs)
+        final List<MatchingResult<Data>> matchingResults = Arrays.stream(topDocs.scoreDocs)
                 .map(scoreDoc -> {
                     val doc = docRetriever.document(scoreDoc.doc);
                     final String docId = documentHandler.extractId(doc);
-                    return new MatchingResult(docId, objectStore.get(docId), Converters.toDocScore(scoreDoc));
+                    return new MatchingResult<>(docId, inMemoryHashStore.get(docId), Converters.toDocScore(scoreDoc));
                 }).collect(Collectors.toList());
 
-        return ForageQueryResult.builder()
+        return ForageQueryResult.<Data>builder()
                 .matchingResults(matchingResults)
                 .total(Converters.toTotalResults(topDocs.totalHits))
                 .nextPage(lucenePagination.generatePage(searchAfter))
                 .build();
     }
 
+    @Override
+    public void close() throws IOException {
+        luceneIndex.close();
+    }
 }
 

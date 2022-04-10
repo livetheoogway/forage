@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
         @JsonSubTypes.Type(name = "FORAGE", value = ForageDocument.class),
         @JsonSubTypes.Type(name = "LUCENE", value = LuceneDocument.class)
 })
-public abstract class IndexableDocument implements StoredData<Object> {
+public abstract class IndexableDocument<D> implements StoredData<D> {
     @Getter
     @NotNull
     private DocumentType type;
@@ -26,7 +26,7 @@ public abstract class IndexableDocument implements StoredData<Object> {
 
     @Getter
     @NotNull
-    private Object data;
+    private D data;
 
     @Override
     public String id() {
@@ -34,9 +34,9 @@ public abstract class IndexableDocument implements StoredData<Object> {
     }
 
     @Override
-    public Object data() {
+    public D data() {
         return data;
     }
 
-    public abstract <T> T accept(DocumentVisitor<T> visitor);
+    public abstract <T> T accept(DocumentVisitor<T, D> visitor);
 }
