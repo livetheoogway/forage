@@ -8,7 +8,7 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TotalHits;
 
 @UtilityClass
-public class Converters {
+public class ForageConverters {
     public DocScore toDocScore(ScoreDoc scoreDoc) {
         return new DocScore(scoreDoc.score, scoreDoc.doc, scoreDoc.shardIndex);
     }

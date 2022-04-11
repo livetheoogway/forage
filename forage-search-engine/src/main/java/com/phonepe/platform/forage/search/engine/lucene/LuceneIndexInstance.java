@@ -52,7 +52,9 @@ public class LuceneIndexInstance implements LuceneIndex {
 
     @Override
     public void close() {
-        Utils.closeSafe(indexReaderReference.get().getIndexReader(), "IndexReader");
+        if (indexReaderReference.get() != null) {
+            Utils.closeSafe(indexReaderReference.get().getIndexReader(), "IndexReader");
+        }
         Utils.closeSafe(indexWriterReference.get(), "IndexWriter");
         Utils.closeSafe(memoryIndex, "MemoryIndex");
     }

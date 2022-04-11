@@ -25,10 +25,10 @@ public class LuceneQueryEngineContainer<T>
 
     @Override
     public ForageQueryResult<T> query(final ForageQuery query) throws ForageSearchError {
-        if (indexingUpdateListener.getCurrentReference().get() == null) {
+        if (indexingUpdateListener.searchEngine() == null) {
             throw new ForageSearchError(ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET, "Engine not ready for query");
         }
-        return indexingUpdateListener.getCurrentReference().get().query(query);
+        return indexingUpdateListener.searchEngine().query(query);
     }
 
     @Override

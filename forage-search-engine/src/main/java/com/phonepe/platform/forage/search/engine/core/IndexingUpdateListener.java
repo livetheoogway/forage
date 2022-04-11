@@ -5,7 +5,6 @@ import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.LuceneSearchEngine;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
-import lombok.Getter;
 
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
@@ -13,7 +12,6 @@ import java.util.function.Supplier;
 public class IndexingUpdateListener<T> implements UpdateListener<IndexableDocument<T>> {
 
     private final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier;
-    @Getter
     private final AtomicReference<LuceneSearchEngine<T>> currentReference;
     private LuceneSearchEngine<T> engine;
 
@@ -41,12 +39,19 @@ public class IndexingUpdateListener<T> implements UpdateListener<IndexableDocume
     public void finish() throws Exception {
         synchronized (this) {
             LuceneSearchEngine<T> olderEngine = currentReference.get();
-            engine.flush();
-            currentReference.set(engine);
-            engine = null;
-            if (olderEngine != null) {
-                olderEngine.close();
+            try {
+                engine.flush();
+                currentReference.set(engine);
+            } finally {
+                engine = null;
+                if (olderEngine != null) {
+                    olderEngine.close();
+                }
             }
         }
+    }
+
+    public LuceneSearchEngine<T> searchEngine() {
+        return currentReference.get();
     }
 }

@@ -19,7 +19,7 @@ import com.phonepe.platform.forage.search.engine.model.query.PageQuery;
 import com.phonepe.platform.forage.search.engine.model.result.OperationResult;
 import com.phonepe.platform.forage.search.engine.operation.OperationExecutor;
 import com.phonepe.platform.forage.search.engine.util.ArrayUtils;
-import com.phonepe.platform.forage.search.engine.util.Converters;
+import com.phonepe.platform.forage.search.engine.util.ForageConverters;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -84,7 +84,7 @@ public class LuceneSearchEngine<Data>
             public ForageQueryResult<Data> visit(final PageQuery pageQuery) throws ForageSearchError {
                 try {
                     val searchAfter = lucenePagination.parsePage(pageQuery.getPage());
-                    val topDocs = searcher.searchAfter(Converters.toScoreDoc(searchAfter.getAfter()),
+                    val topDocs = searcher.searchAfter(ForageConverters.toScoreDoc(searchAfter.getAfter()),
                                                        queryParser.parse(searchAfter.getQuery()),
                                                        pageQuery.getSize());
                     return extractResult(searchAfter.getQuery(), topDocs);
@@ -107,7 +107,7 @@ public class LuceneSearchEngine<Data>
         }
         val last = ArrayUtils.last(topDocs.scoreDocs);
         val searchAfter = last
-                .map(value -> new SearchAfter(Converters.toDocScore(value), query))
+                .map(value -> new SearchAfter(ForageConverters.toDocScore(value), query))
                 .orElse(null);
         val docRetriever = luceneIndex.docRetriever();
 
@@ -115,12 +115,12 @@ public class LuceneSearchEngine<Data>
                 .map(scoreDoc -> {
                     val doc = docRetriever.document(scoreDoc.doc);
                     final String docId = documentHandler.extractId(doc);
-                    return new MatchingResult<>(docId, inMemoryHashStore.get(docId), Converters.toDocScore(scoreDoc));
+                    return new MatchingResult<>(docId, inMemoryHashStore.get(docId), ForageConverters.toDocScore(scoreDoc));
                 }).collect(Collectors.toList());
 
         return ForageQueryResult.<Data>builder()
                 .matchingResults(matchingResults)
-                .total(Converters.toTotalResults(topDocs.totalHits))
+                .total(ForageConverters.toTotalResults(topDocs.totalHits))
                 .nextPage(lucenePagination.generatePage(searchAfter))
                 .build();
     }
