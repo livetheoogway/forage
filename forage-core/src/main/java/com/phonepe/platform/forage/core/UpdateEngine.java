@@ -1,20 +1,51 @@
 package com.phonepe.platform.forage.core;
 
 import com.phonepe.platform.forage.models.StoredData;
+import lombok.extern.slf4j.Slf4j;
 
-public abstract class UpdateEngine<T, D extends StoredData<T>> {
-    private final Bootstrapper<T, D> bootstrapper;
-    private final UpdateConsumer<D> updateConsumer;
+/**
+ * This is the main update engine that is responsible for exposing the boostrap function
+ *
+ * @param <D> Actual data item
+ * @param <S> Stored data of type D that can be referenced with an id
+ */
+@SuppressWarnings("java:S112")
+@Slf4j
+public abstract class UpdateEngine<D, S extends StoredData<D>> {
+    private final Bootstrapper<D, S> bootstrapper;
+    private final ItemConsumer<S> itemConsumer;
+    private final ErrorHandler<S> errorHandler;
 
-    protected UpdateEngine(final Bootstrapper<T, D> bootstrapper, final UpdateConsumer<D> updateConsumer) {
+    protected UpdateEngine(final Bootstrapper<D, S> bootstrapper,
+                           final ItemConsumer<S> itemConsumer,
+                           final ErrorHandler<S> errorHandler) {
         this.bootstrapper = bootstrapper;
-        this.updateConsumer = updateConsumer;
+        this.itemConsumer = itemConsumer;
+        this.errorHandler = errorHandler;
     }
 
-    public void bootstrap() {
-        bootstrapper.bootstrap(updateConsumer);
+    /**
+     * the primary function that is supposed to bootstrap all items into the consumer
+     */
+    public void bootstrap() throws Exception {
+        itemConsumer.init();
+        bootstrapper.bootstrap(item -> {
+            try {
+                itemConsumer.consume(item);
+            } catch (Exception e) {
+                errorHandler.handleError(item, e);
+            }
+        });
+        itemConsumer.finish();
     }
 
-    public abstract void start();
-    public abstract void stop();
+    /**
+     * start and operations of boostrap (eg: schedule any thread to bootstrap at regular intervals)
+     */
+    public abstract void start() throws Exception;
+
+    /**
+     * stop resources if any
+     */
+    public abstract void stop() throws Exception;
 }

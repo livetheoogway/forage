@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.phonepe.platform.forage.core.AsyncQueuedConsumer;
 import com.phonepe.platform.forage.core.Bootstrapper;
 import com.phonepe.platform.forage.core.PeriodicUpdateEngine;
-import com.phonepe.platform.forage.core.UpdateConsumer;
 import com.phonepe.platform.forage.models.result.ForageQueryResult;
 import com.phonepe.platform.forage.search.engine.ResourceReader;
 import com.phonepe.platform.forage.search.engine.TestUtils;
@@ -26,6 +25,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 class LuceneQueryEngineContainerTest {
 
@@ -48,18 +48,16 @@ class LuceneQueryEngineContainerTest {
         }
 
         @Override
-        public void bootstrap(final UpdateConsumer<IndexableDocument<Book>> updateConsumer) {
-            updateConsumer.init();
+        public void bootstrap(final Consumer<IndexableDocument<Book>> itemConsumer) {
             for (final Book book : booksAvailableForIndexing) {
-                updateConsumer.consume(new ForageDocument<>(book.getId(), book, book.fields()));
+                itemConsumer.accept(new ForageDocument<>(book.getId(), book, book.fields()));
             }
-            updateConsumer.finish();
         }
     }
 
 
     @Test
-    void testPeriodicallyUpdatedQueryEngine() throws IOException, ForageSearchError, InterruptedException {
+    void testPeriodicallyUpdatedQueryEngine() throws Exception {
         final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<Book>(
                 LuceneSearchEngineBuilder.<Book>builder()
                         .withMapper(TestUtils.mapper()));

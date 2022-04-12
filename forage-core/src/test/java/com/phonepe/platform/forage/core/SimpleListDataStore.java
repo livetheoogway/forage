@@ -1,22 +1,21 @@
 package com.phonepe.platform.forage.core;
 
-import com.phonepe.platform.forage.core.model.DataItem;
+import com.phonepe.platform.forage.core.model.TestDataItem;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class SimpleListDataStore implements Bootstrapper<String, DataItem> {
+public class SimpleListDataStore implements Bootstrapper<String, TestDataItem> {
 
-    private final List<DataItem> database = new ArrayList<>();
+    private final List<TestDataItem> database = new ArrayList<>();
 
     @Override
-    public void bootstrap(final UpdateConsumer<DataItem> updateConsumer) {
-        updateConsumer.init();
-        database.parallelStream().forEach(updateConsumer::consume);
-        updateConsumer.finish();
+    public void bootstrap(final Consumer<TestDataItem> itemConsumer) {
+        database.parallelStream().forEach(itemConsumer);
     }
 
-    public void addData(DataItem dataItem) {
-        database.add(dataItem);
+    public void addData(TestDataItem testDataItem) {
+        database.add(testDataItem);
     }
 }

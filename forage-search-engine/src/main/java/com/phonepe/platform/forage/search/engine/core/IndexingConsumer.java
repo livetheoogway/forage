@@ -1,21 +1,22 @@
 package com.phonepe.platform.forage.search.engine.core;
 
-import com.phonepe.platform.forage.core.UpdateListener;
+import com.phonepe.platform.forage.core.ItemConsumer;
 import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.LuceneSearchEngine;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class IndexingUpdateListener<T> implements UpdateListener<IndexableDocument<T>> {
+public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument<T>> {
 
     private final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier;
     private final AtomicReference<LuceneSearchEngine<T>> currentReference;
     private LuceneSearchEngine<T> engine;
 
-    public IndexingUpdateListener(final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier) {
+    public IndexingConsumer(final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier) {
         this.newSearchEngineSupplier = newSearchEngineSupplier;
         this.currentReference = new AtomicReference<>();
     }
@@ -31,12 +32,12 @@ public class IndexingUpdateListener<T> implements UpdateListener<IndexableDocume
     }
 
     @Override
-    public void takeUpdate(final IndexableDocument<T> indexableDocument) throws Exception {
+    public void consume(final IndexableDocument<T> indexableDocument) throws Exception {
         engine.index(indexableDocument);
     }
 
     @Override
-    public void finish() throws Exception {
+    public void finish() throws IOException, ForageSearchError {
         synchronized (this) {
             LuceneSearchEngine<T> olderEngine = currentReference.get();
             try {

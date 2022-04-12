@@ -1,5 +1,10 @@
 package com.phonepe.platform.forage.core;
 
-public interface ErrorHandler {
-    void handleError(Exception e);
+/**
+ * a handler when exceptions occurs when handling an item
+ *
+ * @param <T> type of item
+ */
+public interface ErrorHandler<T> {
+    void handleError(T t, Exception e);
 }

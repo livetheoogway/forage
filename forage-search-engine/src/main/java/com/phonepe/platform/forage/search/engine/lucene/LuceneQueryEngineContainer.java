@@ -1,9 +1,9 @@
 package com.phonepe.platform.forage.search.engine.lucene;
 
-import com.phonepe.platform.forage.core.UpdateListener;
+import com.phonepe.platform.forage.core.ItemConsumer;
 import com.phonepe.platform.forage.models.result.ForageQueryResult;
 import com.phonepe.platform.forage.search.engine.QueryEngine;
-import com.phonepe.platform.forage.search.engine.core.IndexingUpdateListener;
+import com.phonepe.platform.forage.search.engine.core.IndexingConsumer;
 import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
@@ -13,22 +13,22 @@ import java.util.function.Supplier;
 
 public class LuceneQueryEngineContainer<T>
         implements QueryEngine<ForageQuery, ForageQueryResult<T>>, Supplier<LuceneSearchEngine<T>>,
-                   UpdateListener<IndexableDocument<T>> {
+                   ItemConsumer<IndexableDocument<T>> {
 
     private final LuceneSearchEngineBuilder<T> builder;
-    private final IndexingUpdateListener<T> indexingUpdateListener;
+    private final IndexingConsumer<T> indexingConsumer;
 
     public LuceneQueryEngineContainer(final LuceneSearchEngineBuilder<T> builder) {
         this.builder = builder;
-        this.indexingUpdateListener = new IndexingUpdateListener<>(this);
+        this.indexingConsumer = new IndexingConsumer<>(this);
     }
 
     @Override
     public ForageQueryResult<T> query(final ForageQuery query) throws ForageSearchError {
-        if (indexingUpdateListener.searchEngine() == null) {
+        if (indexingConsumer.searchEngine() == null) {
             throw new ForageSearchError(ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET, "Engine not ready for query");
         }
-        return indexingUpdateListener.searchEngine().query(query);
+        return indexingConsumer.searchEngine().query(query);
     }
 
     @Override
@@ -43,16 +43,16 @@ public class LuceneQueryEngineContainer<T>
 
     @Override
     public void init() throws Exception {
-        indexingUpdateListener.init();
+        indexingConsumer.init();
     }
 
     @Override
-    public void takeUpdate(final IndexableDocument<T> tIndexableDocument) throws Exception {
-        indexingUpdateListener.takeUpdate(tIndexableDocument);
+    public void consume(final IndexableDocument<T> tIndexableDocument) throws Exception {
+        indexingConsumer.consume(tIndexableDocument);
     }
 
     @Override
     public void finish() throws Exception {
-        indexingUpdateListener.finish();
+        indexingConsumer.finish();
     }
 }

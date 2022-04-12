@@ -4,7 +4,7 @@ import com.phonepe.platform.forage.models.StoredData;
 import lombok.Value;
 
 @Value
-public class DataItem implements StoredData<String> {
+public class TestDataItem implements StoredData<String> {
     String id;
     String message;
 

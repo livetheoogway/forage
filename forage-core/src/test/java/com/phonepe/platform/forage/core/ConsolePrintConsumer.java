@@ -1,18 +1,18 @@
 package com.phonepe.platform.forage.core;
 
-public class ConsoleUpdateListener<T> implements UpdateListener<T> {
+public class ConsolePrintConsumer<T> implements ItemConsumer<T> {
     @Override
     public void init() throws Exception {
 
     }
 
     @Override
-    public void takeUpdate(final T dataItem) throws Exception {
+    public void consume(final T dataItem) {
         System.out.println("Received data item " + dataItem);
     }
 
     @Override
-    public void finish() throws Exception {
+    public void finish() {
 
     }
 }

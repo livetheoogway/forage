@@ -11,8 +11,9 @@ public class DocScore {
     int shardIndex;
 
     @JsonCreator
-    public DocScore(@JsonProperty("score") final float score, @JsonProperty("doc") final int doc,
-                    @JsonProperty("shardIndexZ") final int shardIndex) {
+    public DocScore(@JsonProperty("score") final float score,
+                    @JsonProperty("doc") final int doc,
+                    @JsonProperty("shardIndex") final int shardIndex) {
         this.score = score;
         this.doc = doc;
         this.shardIndex = shardIndex;
