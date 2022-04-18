@@ -5,6 +5,7 @@ import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserSupplier;
 import com.phonepe.platform.forage.search.engine.model.query.search.BooleanQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.ClauseVisitor;
+import com.phonepe.platform.forage.search.engine.model.query.search.FuzzyMatchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.MatchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.ParsableQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.QueryVisitor;
@@ -18,6 +19,7 @@ import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -86,6 +88,11 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
                 return FloatPoint.newRangeQuery(rangeQuery.getField(), floatRange.getLow(), floatRange.getHigh());
             }
         });
+    }
+
+    @Override
+    public Query visit(final FuzzyMatchQuery fuzzyMatchQuery) {
+        return new FuzzyQuery(new Term(fuzzyMatchQuery.getField(), fuzzyMatchQuery.getValue()));
     }
 
     @SneakyThrows

@@ -39,15 +39,11 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument<T>> {
     @Override
     public void finish() throws IOException, ForageSearchError {
         synchronized (this) {
-            LuceneSearchEngine<T> olderEngine = currentReference.get();
-            try {
+            try (LuceneSearchEngine<T> ignored = currentReference.get()) {
                 engine.flush();
                 currentReference.set(engine);
             } finally {
                 engine = null;
-                if (olderEngine != null) {
-                    olderEngine.close();
-                }
             }
         }
     }

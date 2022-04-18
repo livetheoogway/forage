@@ -29,6 +29,7 @@ import org.apache.lucene.search.TopDocs;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -104,6 +105,7 @@ public class LuceneSearchEngine<D>
                                                final TopDocs topDocs) throws ForageSearchError {
         if (topDocs == null || topDocs.scoreDocs.length <= 0) {
             return ForageQueryResult.<D>builder()
+                    .matchingResults(Collections.emptyList())
                     .total(new TotalResults(0, Relation.EQUAL_TO))
                     .build();
         }

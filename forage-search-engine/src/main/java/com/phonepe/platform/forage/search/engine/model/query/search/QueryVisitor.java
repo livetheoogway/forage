@@ -9,4 +9,7 @@ public interface QueryVisitor<T> {
     T visit(ParsableQuery parsableQuery) throws Exception;
 
     T visit(RangeQuery rangeQuery);
+
+    T visit(FuzzyMatchQuery fuzzyMatchQuery);
+
 }

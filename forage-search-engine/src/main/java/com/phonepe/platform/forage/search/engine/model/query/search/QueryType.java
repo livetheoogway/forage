@@ -4,5 +4,5 @@ public enum QueryType {
     BOOLEAN,
     MATCH,
     PARSABLE_QUERY,
-    RANGE
+    FUZZY_MATCH, RANGE
 }

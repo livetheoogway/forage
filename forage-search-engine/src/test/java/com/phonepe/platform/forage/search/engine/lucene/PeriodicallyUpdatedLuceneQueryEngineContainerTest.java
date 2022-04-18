@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
-class LuceneQueryEngineContainerTest {
+class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
 
     private static class DataStore implements Bootstrapper<Book, IndexableDocument<Book>> {
         private final AtomicInteger indexPosition;
