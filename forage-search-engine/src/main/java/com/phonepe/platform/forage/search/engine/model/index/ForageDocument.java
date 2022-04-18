@@ -1,6 +1,6 @@
 package com.phonepe.platform.forage.search.engine.model.index;
 
-import com.phonepe.platform.forage.search.engine.model.field.Field;
+import com.phonepe.platform.forage.models.result.field.Field;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Singular;

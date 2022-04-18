@@ -1,9 +1,8 @@
 package com.phonepe.platform.forage.search.engine.model.query;
 
-import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
-
+@SuppressWarnings("java:S112")
 public interface ForageQueryVisitor<T> {
-    T visit(ForageSearchQuery forageSearchQuery) throws ForageSearchError;
+    T visit(ForageSearchQuery forageSearchQuery) throws Exception;
 
-    T visit(PageQuery pageQuery) throws ForageSearchError;
+    T visit(PageQuery pageQuery) throws Exception;
 }

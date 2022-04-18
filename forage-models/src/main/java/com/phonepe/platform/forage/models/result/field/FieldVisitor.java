@@ -1,11 +1,9 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 public interface FieldVisitor<T> {
     T visit(TextField textField);
 
     T visit(StringField stringField);
-
-    T visit(LuceneField luceneField);
 
     T visit(FloatField floatField);
 

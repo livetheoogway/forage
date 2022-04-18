@@ -1,6 +1,8 @@
 package com.phonepe.platform.forage.core;
 
 import com.phonepe.platform.forage.core.model.TestDataItem;
+import com.phonepe.platform.forage.core.utility.ListDataStore;
+import com.phonepe.platform.forage.core.utility.ParallelBootstrappingListDataStore;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,21 +19,22 @@ class PeriodicUpdateEngineTest {
 
     @BeforeEach
     void setUp() {
-        SimpleListDataStore simpleListDataStore = new SimpleListDataStore();
+        ListDataStore<String, TestDataItem> parallelBootstrappingListDataStore =
+                new ParallelBootstrappingListDataStore<>();
         collectingListener = new CollectingItemConsumer<>();
-        periodicUpdateEngine = new PeriodicUpdateEngine<>(simpleListDataStore,
+        periodicUpdateEngine = new PeriodicUpdateEngine<>(parallelBootstrappingListDataStore,
                                                           new AsyncQueuedConsumer<>(collectingListener),
                                                           1,
                                                           TimeUnit.SECONDS);
         for (int i = 0; i < 1000; i++) {
-            simpleListDataStore.addData(new TestDataItem(String.valueOf(i), "This is message: " + i));
+            parallelBootstrappingListDataStore.addData(new TestDataItem(String.valueOf(i), "This is message: " + i));
         }
     }
 
     @Test
     void test() {
         periodicUpdateEngine.start();
-        Awaitility.await().atMost(Duration.of(500, ChronoUnit.SECONDS))
+        Awaitility.await().atMost(Duration.of(5, ChronoUnit.SECONDS))
                 .with()
                 .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
                 .until(() -> collectingListener.size() >= 1000);

@@ -11,6 +11,11 @@ import lombok.extern.slf4j.Slf4j;
 public class OneTimeUpdateEngine<D, S extends StoredData<D>> extends UpdateEngine<D, S> {
 
     public OneTimeUpdateEngine(final Bootstrapper<D, S> bootstrapper,
+                               final ItemConsumer<S> itemConsumer) {
+        this(bootstrapper, itemConsumer, new LoggingErrorHandler<>(OneTimeUpdateEngine.class));
+    }
+
+    public OneTimeUpdateEngine(final Bootstrapper<D, S> bootstrapper,
                                final ItemConsumer<S> itemConsumer,
                                final ErrorHandler<S> errorHandler) {
         super(bootstrapper, itemConsumer, errorHandler);

@@ -1,4 +1,4 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;

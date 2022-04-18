@@ -1,20 +1,23 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
+/**
+ * Use this field to store fields verbatim (without analysis)
+ */
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class FloatField extends Field {
+public class StringField extends Field {
     String name;
-    float[] points;
+    String value;
 
-    public FloatField(final String name, final float[] points) {
-        super(FieldType.FLOAT);
+    public StringField(final String name, final String value) {
+        super(FieldType.STRING);
         this.name = name;
-        this.points = points;
+        this.value = value;
     }
 
     @Override

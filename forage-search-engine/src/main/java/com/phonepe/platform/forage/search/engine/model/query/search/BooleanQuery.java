@@ -2,13 +2,13 @@ package com.phonepe.platform.forage.search.engine.model.query.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
 import java.util.List;
 
+@SuppressWarnings("java:S112")
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -25,7 +25,7 @@ public class BooleanQuery extends Query {
     }
 
     @Override
-    public <T> T accept(final QueryVisitor<T> visitor) throws ForageSearchError {
+    public <T> T accept(final QueryVisitor<T> visitor) throws Exception {
         return visitor.visit(this);
     }
 }

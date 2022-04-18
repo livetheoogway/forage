@@ -1,4 +1,4 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 public enum FieldType {
     TEXT {
@@ -11,12 +11,6 @@ public enum FieldType {
         @Override
         public <T> T accept(final FieldTypeVisitor<T> visitor) {
             return visitor.string();
-        }
-    },
-    LUCENE {
-        @Override
-        public <T> T accept(final FieldTypeVisitor<T> visitor) {
-            return visitor.lucene();
         }
     },
     FLOAT {

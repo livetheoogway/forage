@@ -1,4 +1,4 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -7,12 +7,12 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class IntField extends Field{
+public class FloatField extends Field {
     String name;
-    int[] points;
+    float[] points;
 
-    public IntField(final String name, final int[] points) {
-        super(FieldType.INT);
+    public FloatField(final String name, final float[] points) {
+        super(FieldType.FLOAT);
         this.name = name;
         this.points = points;
     }

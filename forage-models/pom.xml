@@ -16,5 +16,9 @@
             <artifactId>jackson-annotations</artifactId>
             <version>${jackson}</version>
         </dependency>
+        <dependency>
+            <groupId>javax.validation</groupId>
+            <artifactId>validation-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

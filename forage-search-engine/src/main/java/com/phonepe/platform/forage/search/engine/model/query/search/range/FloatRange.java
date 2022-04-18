@@ -8,7 +8,10 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class FloatRange extends Range {
+    /* inclusive */
     float low;
+
+    /* inclusive */
     float high;
 
     public FloatRange(final float low, final float high) {

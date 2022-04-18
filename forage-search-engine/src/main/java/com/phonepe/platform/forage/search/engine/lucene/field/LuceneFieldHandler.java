@@ -1,11 +1,10 @@
 package com.phonepe.platform.forage.search.engine.lucene.field;
 
-import com.phonepe.platform.forage.search.engine.model.field.FieldVisitor;
-import com.phonepe.platform.forage.search.engine.model.field.FloatField;
-import com.phonepe.platform.forage.search.engine.model.field.IntField;
-import com.phonepe.platform.forage.search.engine.model.field.LuceneField;
-import com.phonepe.platform.forage.search.engine.model.field.StringField;
-import com.phonepe.platform.forage.search.engine.model.field.TextField;
+import com.phonepe.platform.forage.models.result.field.FieldVisitor;
+import com.phonepe.platform.forage.models.result.field.FloatField;
+import com.phonepe.platform.forage.models.result.field.IntField;
+import com.phonepe.platform.forage.models.result.field.StringField;
+import com.phonepe.platform.forage.models.result.field.TextField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 
@@ -25,11 +24,6 @@ public class LuceneFieldHandler implements FieldVisitor<IndexableField> {
                 stringField.getName(),
                 stringField.getValue(),
                 Field.Store.NO);
-    }
-
-    @Override
-    public IndexableField visit(final LuceneField luceneField) {
-        return luceneField.getField();
     }
 
     @Override

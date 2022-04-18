@@ -1,12 +1,10 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 public interface FieldTypeVisitor<T> {
 
     T text();
 
     T string();
-
-    T lucene();
 
     T floatPoint();
 

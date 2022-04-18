@@ -1,10 +1,10 @@
 package com.phonepe.platform.forage.search.engine.model;
 
 import com.google.common.collect.ImmutableList;
-import com.phonepe.platform.forage.search.engine.model.field.Field;
-import com.phonepe.platform.forage.search.engine.model.field.FloatField;
-import com.phonepe.platform.forage.search.engine.model.field.IntField;
-import com.phonepe.platform.forage.search.engine.model.field.TextField;
+import com.phonepe.platform.forage.models.result.field.Field;
+import com.phonepe.platform.forage.models.result.field.FloatField;
+import com.phonepe.platform.forage.models.result.field.IntField;
+import com.phonepe.platform.forage.models.result.field.TextField;
 import lombok.Value;
 
 import java.util.List;

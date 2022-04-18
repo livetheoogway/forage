@@ -2,7 +2,7 @@ package com.phonepe.platform.forage.search.engine.lucene;
 
 import com.phonepe.platform.forage.models.result.ForageQueryResult;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
-import com.phonepe.platform.forage.search.engine.model.field.TextField;
+import com.phonepe.platform.forage.models.result.field.TextField;
 import com.phonepe.platform.forage.search.engine.model.index.ForageDocument;
 import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
 import com.phonepe.platform.forage.search.engine.model.query.search.MatchQuery;

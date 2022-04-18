@@ -1,6 +1,5 @@
 package com.phonepe.platform.forage.search.engine.model.query;
 
-import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.model.query.search.Query;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -24,7 +23,7 @@ public class ForageSearchQuery extends ForageQuery {
     }
 
     @Override
-    public <T> T accept(final ForageQueryVisitor<T> visitor) throws ForageSearchError {
+    public <T> T accept(final ForageQueryVisitor<T> visitor) throws Exception {
         return visitor.visit(this);
     }
 }

@@ -1,23 +1,20 @@
-package com.phonepe.platform.forage.search.engine.model.field;
+package com.phonepe.platform.forage.models.result.field;
 
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
-/**
- * Use this field to store fields verbatim (without analysis)
- */
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class StringField extends Field {
+public class IntField extends Field{
     String name;
-    String value;
+    int[] points;
 
-    public StringField(final String name, final String value) {
-        super(FieldType.STRING);
+    public IntField(final String name, final int[] points) {
+        super(FieldType.INT);
         this.name = name;
-        this.value = value;
+        this.points = points;
     }
 
     @Override

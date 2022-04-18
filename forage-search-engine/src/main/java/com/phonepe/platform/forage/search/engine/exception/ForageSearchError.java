@@ -39,9 +39,13 @@ public class ForageSearchError extends Exception {
     }
 
     public static ForageSearchError propagate(final Throwable cause) {
+        return propagate(ForageErrorCode.SOMETHING_WENT_WRONG, cause);
+    }
+
+    public static ForageSearchError propagate(ForageErrorCode errorCode, final Throwable cause) {
         if (cause instanceof ForageSearchError) {
             return (ForageSearchError) cause;
         }
-        return new ForageSearchError(ForageErrorCode.SOMETHING_WENT_WRONG, cause);
+        return new ForageSearchError(errorCode, cause);
     }
 }

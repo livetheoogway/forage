@@ -2,7 +2,6 @@ package com.phonepe.platform.forage.search.engine.model.query.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
@@ -22,7 +21,7 @@ public class MatchQuery extends Query {
     }
 
     @Override
-    public <T> T accept(final QueryVisitor<T> visitor) throws ForageSearchError {
+    public <T> T accept(final QueryVisitor<T> visitor) throws Exception {
         return visitor.visit(this);
     }
 }
