@@ -7,7 +7,7 @@ import com.phonepe.platform.forage.search.engine.core.IndexingConsumer;
 import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
-import com.phonepe.platform.forage.search.engine.model.query.ForageQuery;
+import com.phonepe.platform.forage.models.query.ForageQuery;
 
 import java.util.function.Supplier;
 

@@ -12,11 +12,11 @@ import com.phonepe.platform.forage.search.engine.lucene.pagination.LucenePaginat
 import com.phonepe.platform.forage.search.engine.lucene.pagination.SearchAfter;
 import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserFactory;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
-import com.phonepe.platform.forage.search.engine.model.query.ForageQuery;
-import com.phonepe.platform.forage.search.engine.model.query.ForageQueryVisitor;
-import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
-import com.phonepe.platform.forage.search.engine.model.query.PageQuery;
-import com.phonepe.platform.forage.search.engine.model.result.OperationResult;
+import com.phonepe.platform.forage.models.query.ForageQuery;
+import com.phonepe.platform.forage.models.query.ForageQueryVisitor;
+import com.phonepe.platform.forage.models.query.ForageSearchQuery;
+import com.phonepe.platform.forage.models.query.PageQuery;
+import com.phonepe.platform.forage.search.engine.model.opresult.OperationResult;
 import com.phonepe.platform.forage.search.engine.operation.OperationExecutor;
 import com.phonepe.platform.forage.search.engine.util.ArrayUtils;
 import com.phonepe.platform.forage.search.engine.util.ForageConverters;

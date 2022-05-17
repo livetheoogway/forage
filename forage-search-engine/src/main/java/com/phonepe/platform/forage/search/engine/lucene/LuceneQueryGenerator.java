@@ -3,16 +3,16 @@ package com.phonepe.platform.forage.search.engine.lucene;
 import com.phonepe.platform.forage.search.engine.exception.ForageErrorCode;
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.lucene.parser.QueryParserSupplier;
-import com.phonepe.platform.forage.search.engine.model.query.search.BooleanQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.ClauseVisitor;
-import com.phonepe.platform.forage.search.engine.model.query.search.FuzzyMatchQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.MatchQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.ParsableQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.QueryVisitor;
-import com.phonepe.platform.forage.search.engine.model.query.search.RangeQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.range.FloatRange;
-import com.phonepe.platform.forage.search.engine.model.query.search.range.IntRange;
-import com.phonepe.platform.forage.search.engine.model.query.search.range.RangeVisitor;
+import com.phonepe.platform.forage.models.query.search.BooleanQuery;
+import com.phonepe.platform.forage.models.query.search.ClauseVisitor;
+import com.phonepe.platform.forage.models.query.search.FuzzyMatchQuery;
+import com.phonepe.platform.forage.models.query.search.MatchQuery;
+import com.phonepe.platform.forage.models.query.search.ParsableQuery;
+import com.phonepe.platform.forage.models.query.search.QueryVisitor;
+import com.phonepe.platform.forage.models.query.search.RangeQuery;
+import com.phonepe.platform.forage.models.query.search.range.FloatRange;
+import com.phonepe.platform.forage.models.query.search.range.IntRange;
+import com.phonepe.platform.forage.models.query.search.range.RangeVisitor;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 import org.apache.lucene.document.FloatPoint;
@@ -77,7 +77,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
 
     @Override
     public Query visit(final RangeQuery rangeQuery) {
-        return rangeQuery.getRange().accept(new RangeVisitor<Query>() {
+        return rangeQuery.getRange().accept(new RangeVisitor<>() {
             @Override
             public Query visit(final IntRange intRange) {
                 return IntPoint.newRangeQuery(rangeQuery.getField(), intRange.getLow(), intRange.getHigh());
@@ -96,7 +96,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     }
 
     @SneakyThrows
-    private Query visitThis(final com.phonepe.platform.forage.search.engine.model.query.search.Query query) {
+    private Query visitThis(final com.phonepe.platform.forage.models.query.search.Query query) {
         return query.accept(this);
     }
 }

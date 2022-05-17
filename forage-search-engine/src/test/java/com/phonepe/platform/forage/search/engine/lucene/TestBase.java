@@ -6,11 +6,9 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Query;
 import org.junit.jupiter.api.Test;
 
-public class TestBase {
-
-
+class TestBase {
     @Test
-    void name() throws ParseException {
+    void testQueryParserLogic() throws ParseException {
         String s ="author:rowling";
         final QueryParser queryParser = new QueryParser("temp", new StandardAnalyzer());
         final Query parse = queryParser.parse(s);

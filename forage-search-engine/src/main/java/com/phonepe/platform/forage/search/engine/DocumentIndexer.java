@@ -1,7 +1,7 @@
 package com.phonepe.platform.forage.search.engine;
 
 import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
-import com.phonepe.platform.forage.search.engine.model.result.OperationResult;
+import com.phonepe.platform.forage.search.engine.model.opresult.OperationResult;
 
 import java.util.Collections;
 import java.util.List;

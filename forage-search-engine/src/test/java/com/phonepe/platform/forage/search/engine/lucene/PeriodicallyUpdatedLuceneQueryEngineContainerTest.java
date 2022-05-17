@@ -12,9 +12,9 @@ import com.phonepe.platform.forage.search.engine.exception.ForageSearchError;
 import com.phonepe.platform.forage.search.engine.model.Book;
 import com.phonepe.platform.forage.search.engine.model.index.ForageDocument;
 import com.phonepe.platform.forage.search.engine.model.index.IndexableDocument;
-import com.phonepe.platform.forage.search.engine.model.query.ForageSearchQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.RangeQuery;
-import com.phonepe.platform.forage.search.engine.model.query.search.range.IntRange;
+import com.phonepe.platform.forage.models.query.ForageSearchQuery;
+import com.phonepe.platform.forage.models.query.search.RangeQuery;
+import com.phonepe.platform.forage.models.query.search.range.IntRange;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -58,7 +58,7 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
 
     @Test
     void testPeriodicallyUpdatedQueryEngine() throws Exception {
-        final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<Book>(
+        final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<>(
                 LuceneSearchEngineBuilder.<Book>builder()
                         .withMapper(TestUtils.mapper()));
 
