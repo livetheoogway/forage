@@ -4,17 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>com.phonepe</groupId>
-        <artifactId>pp-parent-pom</artifactId>
-        <version>0.51</version>
-        <relativePath/>
-    </parent>
-
-    <groupId>com.phonepe.platform</groupId>
+    <groupId>com.livetheoogway.forage</groupId>
     <artifactId>forage</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
     <modules>
         <module>forage-core</module>
         <module>forage-search-engine</module>
@@ -36,7 +29,7 @@
 
         <!--sonar settings-->
         <sonar.coverage.exclusions>
-            **com/phonepe/platform/forage/models/**
+            **com/livetheoogway/forage/models/**
         </sonar.coverage.exclusions>
 
     </properties>
