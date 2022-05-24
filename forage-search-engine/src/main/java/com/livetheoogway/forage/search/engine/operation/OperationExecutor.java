@@ -22,8 +22,13 @@ public class OperationExecutor {
             for (val item : items) {
                 failedOperations = consumeAndCheckFailure(consumer, failedOperations, item);
             }
-            if (failedOperations != null) {
+            if (failedOperations != null && failedOperations.size() < items.size()) {
                 return new PartiallyFailedResult<>(failedOperations);
+            }
+            if (failedOperations != null && failedOperations.size() == items.size()) {
+                /* if all items being indexed failed with some error */
+                return new FailedResult<>(failedOperations.stream()
+                                                  .findAny().map(FailedOperation::getError).orElse(null));
             }
         } catch (Exception e) {
             return new FailedResult<>(ForageSearchError.propagate(e));

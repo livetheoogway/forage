@@ -10,6 +10,8 @@ public interface ItemConsumer<I> {
 
     /**
      * make the consumer ready for consuming items here
+     *
+     * @throws Exception if any during init
      */
     void init() throws Exception;
 
@@ -17,11 +19,14 @@ public interface ItemConsumer<I> {
      * consumer the item
      *
      * @param item item to be consumed
+     * @throws Exception if any during consumption of item
      */
     void consume(I item) throws Exception;
 
     /**
      * this finish shall be called once all the items are consumed
+     *
+     * @throws Exception if any during finish
      */
     void finish() throws Exception;
 }

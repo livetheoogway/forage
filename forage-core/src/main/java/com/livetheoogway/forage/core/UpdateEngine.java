@@ -41,11 +41,15 @@ public abstract class UpdateEngine<D, S extends StoredData<D>> {
 
     /**
      * start and operations of boostrap (eg: schedule any thread to bootstrap at regular intervals)
+     *
+     * @throws Exception if there was an issue during start-up
      */
     public abstract void start() throws Exception;
 
     /**
      * stop resources if any
+     *
+     * @throws Exception if there was an issue during stop
      */
     public abstract void stop() throws Exception;
 }

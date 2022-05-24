@@ -43,8 +43,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
     /**
      * @param consumer                    the update listener is the one that finally consumes items one by one (need
      *                                    not be thread safe)
-     * @param maxCapacity                 max capacity of the queue, after which, the {@link this#consume(Object)}
-     *                                    will be blocked
+     * @param maxCapacity                 max capacity of the queue, after which, the consumption will get blocked
      * @param itemConsumptionErrorHandler a handler for errors during consumption of individual items (you can try
      *                                    to collect and push again, in this handler, if you wish to do so)
      */
