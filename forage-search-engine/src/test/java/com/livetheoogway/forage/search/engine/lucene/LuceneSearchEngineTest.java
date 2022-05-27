@@ -29,7 +29,7 @@ class LuceneSearchEngineTest {
     @BeforeAll
     static void setup() throws ForageSearchError, IOException {
         searchEngine = LuceneSearchEngineBuilder.<Book>builder()
-                .withMapper(TestUtils.mapper()).build();
+                                        .withMapper(TestUtils.mapper()).build();
 
         final List<IndexableDocument<Book>> documents = ResourceReader.extractBooks()
                 .stream()

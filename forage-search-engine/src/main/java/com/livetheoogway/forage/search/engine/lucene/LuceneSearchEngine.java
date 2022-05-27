@@ -1,23 +1,24 @@
 package com.livetheoogway.forage.search.engine.lucene;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.livetheoogway.forage.models.query.ForageQuery;
+import com.livetheoogway.forage.models.query.ForageQueryVisitor;
+import com.livetheoogway.forage.models.query.ForageSearchQuery;
+import com.livetheoogway.forage.models.query.PageQuery;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.models.result.MatchingResult;
 import com.livetheoogway.forage.models.result.Relation;
 import com.livetheoogway.forage.models.result.TotalResults;
 import com.livetheoogway.forage.search.engine.ForageSearchEngine;
-import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
+import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.lucene.pagination.LucenePagination;
 import com.livetheoogway.forage.search.engine.lucene.pagination.SearchAfter;
 import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserFactory;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
-import com.livetheoogway.forage.models.query.ForageQuery;
-import com.livetheoogway.forage.models.query.ForageQueryVisitor;
-import com.livetheoogway.forage.models.query.ForageSearchQuery;
-import com.livetheoogway.forage.models.query.PageQuery;
 import com.livetheoogway.forage.search.engine.model.opresult.OperationResult;
 import com.livetheoogway.forage.search.engine.operation.OperationExecutor;
+import com.livetheoogway.forage.search.engine.store.Store;
 import com.livetheoogway.forage.search.engine.util.ArrayUtils;
 import com.livetheoogway.forage.search.engine.util.ForageConverters;
 import lombok.SneakyThrows;
@@ -40,17 +41,18 @@ public class LuceneSearchEngine<D>
     private final LuceneIndex luceneIndex;
     private final LuceneQueryGenerator luceneQueryGenerator;
     private final LucenePagination lucenePagination;
-    private final InMemoryHashStore<D> inMemoryHashStore;
+    private final Store<D> dataStore;
     private final QueryParser queryParser;
 
     public LuceneSearchEngine(final ObjectMapper mapper,
                               final QueryParserFactory queryParserFactory,
+                              final Store<D> dataStore,
                               final Analyzer analyzer) throws ForageSearchError {
         this.documentHandler = new LuceneDocumentHandler<>();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
-        this.inMemoryHashStore = new InMemoryHashStore<>(); //todo
+        this.dataStore = dataStore;
         this.queryParser = new QueryParser("TEMP", analyzer); //todo
     }
 
@@ -58,7 +60,7 @@ public class LuceneSearchEngine<D>
     public OperationResult<IndexableDocument<D>> index(final List<IndexableDocument<D>> documents) {
         return OperationExecutor.execute(documents, document -> {
             luceneIndex.indexWriter().addDocument(document.accept(documentHandler));
-            inMemoryHashStore.store(document);
+//            dataStore.store(document);
         });
     }
 
@@ -119,7 +121,7 @@ public class LuceneSearchEngine<D>
                 .map(scoreDoc -> {
                     val doc = docRetriever.document(scoreDoc.doc);
                     final String docId = documentHandler.extractId(doc);
-                    return new MatchingResult<>(docId, inMemoryHashStore.get(docId), ForageConverters.toDocScore(scoreDoc));
+                    return new MatchingResult<>(docId, dataStore.get(docId), ForageConverters.toDocScore(scoreDoc));
                 }).collect(Collectors.toList());
 
         return ForageQueryResult.<D>builder()

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.lucene.parser.CachedQueryParserFactory;
 import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserFactory;
+import com.livetheoogway.forage.search.engine.store.Store;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
@@ -14,6 +15,7 @@ public class LuceneSearchEngineBuilder<T> {
     private Analyzer analyzer;
     private int maxFieldSizeHint;
     private QueryParserFactory queryParserFactory;
+    private Store<T> store;
 
     public LuceneSearchEngineBuilder<T> withMapper(final ObjectMapper mapper) {
         this.mapper = mapper;
@@ -35,6 +37,11 @@ public class LuceneSearchEngineBuilder<T> {
         return this;
     }
 
+    public LuceneSearchEngineBuilder<T> withDataStore(final Store<T> store) {
+        this.store = store;
+        return this;
+    }
+
     public static <T> LuceneSearchEngineBuilder<T> builder() {
         return new LuceneSearchEngineBuilder<>();
     }
@@ -49,9 +56,12 @@ public class LuceneSearchEngineBuilder<T> {
         if (queryParserFactory == null) {
             queryParserFactory = new CachedQueryParserFactory(analyzer, maxFieldSizeHint);
         }
+        if (this.store == null) {
+            this.store = new InMemoryHashStore<>();
+        }
         if (mapper == null) {
             this.mapper = new ObjectMapper();
         }
-        return new LuceneSearchEngine<>(mapper, queryParserFactory, analyzer);
+        return new LuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
     }
 }

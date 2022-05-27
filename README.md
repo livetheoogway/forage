@@ -8,8 +8,8 @@
 
 ### What is it?
 
-A library that helps you build an in-memory search index, out of the data residing in your database.
-This should be possible as long as you are able to pipe data out of the database, into your application.
+A library that helps you build an in-memory search index, out of the data residing in your database/persistence layer.
+This should be possible as long as you are able to pipe data out of the persistence layer, into your application.
 
 ### Why is it required?
 
@@ -35,16 +35,16 @@ The library attempts to solve the above, by creating a simple search index, in e
 ### How is it happening though?
 
 We've finished the _What_ and the _Why_, now let's look at the _How_.
-At its heart is [Lucene](https://lucene.apache.org/). Why lucene you ask? Well, lucene is what powers Nutch, Solr,
-Elasticsearch etc. It is the most evolved open-source java search engine libraries out there. It is well maintained,
+At its heart is [Lucene](https://lucene.apache.org/). Why lucene you ask? Well, lucene is the most evolved open-source
+java search engine libraries out there. It powers Nutch, Solr, Elasticsearch etc. It is well maintained,
 supported by the Apache Software Foundation, and has continuous contributions. Need I say more?!
 
-Essentially, the problem can be divided into 3 critical steps:
+Essentially, the problem can be divided into 4 critical steps:
 
-1. Bootstrapping: Ship all data from your database to Lucene:
+1. Bootstrapping: Ship all data from your database and index it in Lucene
 2. Periodic Update: Do this at regular intervals (to account for changes in your database)
-3. Indexing Rules: Be able to define what parts of the Data, you want indexed in Lucene
-4. Search Queries: Be able to retrieve documents by querying on the indexed fields.
+3. Indexing Rules: Be able to define what parts of the Data, what fields, you want indexed in Lucene
+4. Search Queries: Be able to retrieve documents by querying the indexed fields.
 
 The following is a high level sketch of what is happening:
 
@@ -67,7 +67,7 @@ You can define how often the full bootstrap happens
 
 ```xml
 
-<dependency> 
+<dependency>
     <groupId>com.livetheoogway.forage</groupId>
     <artifactId>forage-search-engine</artifactId>
     <version>${forage.version}</version> <!--look for the latest version on top-->
@@ -76,7 +76,57 @@ You can define how often the full bootstrap happens
 
 ### Usage
 
-(todo)
+Let's go the full mile and see what the complete integration might look like.
+
+You start with
+
+```java
+final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer
+        = new LuceneQueryEngineContainer<>(LuceneSearchEngineBuilder.<Book>builder()
+        .withMapper(TestUtils.mapper()));
+
+final PeriodicUpdateEngine<Book, IndexableDocument<Book>> periodicUpdateEngine =
+        new PeriodicUpdateEngine<>(dataStore, new AsyncQueuedConsumer<>(
+                luceneQueryEngineContainer), 1, TimeUnit.SECONDS);
+periodicUpdateEngine.start();
+```
+
+Below is probably how your datastore implementations could look like
+
+```java
+class DataStore implements Bootstrapper<Book, IndexableDocument<Book>> {
+    private final List<Book> books; // This would be your DB connections
+
+    public DataStore() {
+        this.books = Lists.newArrayList();  // You would be initializing your DB connections
+    }
+
+    public void saveBook(Book book) {
+        books.add(book);  // you would be saving this in your database
+    }
+
+    @Override
+    public void bootstrap(final Consumer<IndexableDocument<Book>> itemConsumer) {
+        // THIS IS THE MAIN IMPLEMENTATION
+        // You would scan all rows of your database here, and create individual ForageDocument
+        for (final Book book : books) {
+            itemConsumer.accept(new ForageDocument<>(book.getId(), book, ImmutableList
+                    .of(new TextField("title", book.getTitle()),
+                        new TextField("author", book.getAuthor()),
+                        new FloatField("rating", new float[]{book.getRating()}),
+                        new IntField("numPage", new int[]{book.getNumPage()}))));
+        }
+    }
+}
+```
+
+
+While querying
+```java
+final ForageQueryResult<Book> results = 
+        luceneQueryEngineContainer.query(
+                            new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10))
+```
 
 ### Tech Dependencies
 
