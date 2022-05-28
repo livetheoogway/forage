@@ -1,10 +1,24 @@
-# Forage
-
-[![Java CI with Maven](https://github.com/livetheoogway/forage/actions/workflows/actions.yml/badge.svg)](https://github.com/livetheoogway/teflon/actions/workflows/actions.yml)
-[![Release](https://img.shields.io/maven-central/v/com.livetheoogway.forage/forage)](https://s01.oss.sonatype.org/content/repositories/releases/com/livetheoogway/teflon/)
-[![License](https://img.shields.io/github/license/livetheoogway/forage)](https://github.com/livetheoogway/forage/blob/master/LICENSE)
-![Coverage](.github/badges/jacoco.svg)
-![Coverage](.github/badges/branches.svg)
+<p align="center">
+  <h1 align="center">Forage</h1>
+  <p align="center">In-memory Search made Easy<p>
+  <p align="center">
+    <a href="https://github.com/livetheoogway/forage/actions">
+    	<img src="https://github.com/livetheoogway/forage/actions/workflows/actions.yml/badge.svg"/>
+    </a>
+    <a href="https://s01.oss.sonatype.org/content/repositories/releases/com/livetheoogway/forage/">
+    	<img src="https://img.shields.io/maven-central/v/com.livetheoogway.forage/forage"/>
+    </a>
+    <a href="https://github.com/livetheoogway/forage/blob/master/LICENSE">
+    	<img src="https://img.shields.io/github/license/livetheoogway/forage" alt="license" />
+    </a>
+    <a href=".github/badges/jacoco.svg">
+    	<img src=".github/badges/branches.svg"/>
+    </a>
+    <a href=".github/badges/jacoco.svg">
+    	<img src=".github/badges/branches.svg"/>
+    </a>
+  </p>
+</p>
 
 ### What is it?
 

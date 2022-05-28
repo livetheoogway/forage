@@ -17,7 +17,7 @@ public class LuceneSearchEngineBuilder<T> {
     private QueryParserFactory queryParserFactory;
     private Store<T> store;
 
-    public LuceneSearchEngineBuilder<T> withMapper(final ObjectMapper mapper) {
+    public LuceneSearchEngineBuilder<T> withObjectMapper(final ObjectMapper mapper) {
         this.mapper = mapper;
         return this;
     }

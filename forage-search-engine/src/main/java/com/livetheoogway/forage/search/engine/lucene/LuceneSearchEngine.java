@@ -44,6 +44,13 @@ public class LuceneSearchEngine<D>
     private final Store<D> dataStore;
     private final QueryParser queryParser;
 
+    /**
+     * @param mapper
+     * @param queryParserFactory
+     * @param dataStore
+     * @param analyzer
+     * @throws ForageSearchError
+     */
     public LuceneSearchEngine(final ObjectMapper mapper,
                               final QueryParserFactory queryParserFactory,
                               final Store<D> dataStore,
@@ -58,10 +65,8 @@ public class LuceneSearchEngine<D>
 
     @Override
     public OperationResult<IndexableDocument<D>> index(final List<IndexableDocument<D>> documents) {
-        return OperationExecutor.execute(documents, document -> {
-            luceneIndex.indexWriter().addDocument(document.accept(documentHandler));
-//            dataStore.store(document);
-        });
+        return OperationExecutor.execute(documents, document
+                -> luceneIndex.indexWriter().addDocument(document.accept(documentHandler)));
     }
 
     @Override

@@ -44,6 +44,7 @@
         <module>forage-core</module>
         <module>forage-search-engine</module>
         <module>forage-models</module>
+        <module>forage-dropwizard-bundle</module>
     </modules>
 
     <properties>

@@ -60,7 +60,7 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
     void testPeriodicallyUpdatedQueryEngine() throws Exception {
         final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<>(
                 LuceneSearchEngineBuilder.<Book>builder()
-                        .withMapper(TestUtils.mapper()));
+                        .withObjectMapper(TestUtils.mapper()));
 
         final DataStore dataStore = new DataStore();
         dataStore.addBooks(1);
