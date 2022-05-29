@@ -13,9 +13,9 @@
     	<img src="https://img.shields.io/github/license/livetheoogway/forage" alt="license" />
     </a>
     <a href=".github/badges/jacoco.svg">
-    	<img src=".github/badges/branches.svg"/>
+    	<img src=".github/badges/jacoco.svg"/>
     </a>
-    <a href=".github/badges/jacoco.svg">
+    <a href=".github/badges/branches.svg">
     	<img src=".github/badges/branches.svg"/>
     </a>
   </p>
@@ -29,8 +29,11 @@ This should be possible as long as you are able to pipe data out of the persiste
 ### Why is it required?
 
 Say you have small amount of data in your primary datastore, but you want simple search capabilities on top of this
-data, would you spin up an entire search engine for this? Like a dedicated Elasticsearch or Solr?
-There are some obvious problems with it:
+data, would you spin up an entire search engine for this? Like a dedicated Elasticsearch or Solr? Or would you start
+creating indexes left and right, and bloat up your database? You would still not be able to do free text search on it,
+if you wanted to.
+
+There are some obvious problems with whatever approach you take:
 
 1. Overkill: It is definitely an overkill in most use-cases, like the times when your database has only a few 1000 rows
 2. Expensive: Depending on what hardware/cloud you choose to use to host the search engine
@@ -39,21 +42,18 @@ There are some obvious problems with it:
 
 The library attempts to solve the above, by creating a simple search index, in every application node's memory.
 
-### Any prerequisites and callouts?
-
-- One important prerequisite is that, you should be able to pull all data from your database, ie, you should be able to
-  stream it out as a batched select query (on your relational DB), or a scan (Aerospike, Redis, HBase or any other
-  non-relational DB), depending on what database you are using.
-- Size of data should be limited. This library has been tested for 100k rows in memory should be (todo)
-- Ensure your application is supplied with sufficient memory. A ballpark for calculating the (todo)
-
 ### How is it happening though?
+
+The following is a high level sketch of what is happening:
+
+![core-class-diagram](resources/forage-HLD.jpg)
 
 We've finished the _What_ and the _Why_, now let's look at the _How_.
 At its heart is [Lucene](https://lucene.apache.org/). Why lucene you ask? Well, lucene is the most evolved open-source
 java search engine libraries out there. It powers Nutch, Solr, Elasticsearch etc. It is well maintained,
 supported by the Apache Software Foundation, and has continuous contributions. Need I say more?!
 
+Now how do you make your database searchable?<br>
 Essentially, the problem can be divided into 4 critical steps:
 
 1. Bootstrapping: Ship all data from your database and index it in Lucene
@@ -61,9 +61,6 @@ Essentially, the problem can be divided into 4 critical steps:
 3. Indexing Rules: Be able to define what parts of the Data, what fields, you want indexed in Lucene
 4. Search Queries: Be able to retrieve documents by querying the indexed fields.
 
-The following is a high level sketch of what is happening:
-
-![core-class-diagram](resources/forage-HLD.jpg)
 
 #### 1. Bootstrapping from your database:
 
@@ -75,6 +72,18 @@ The following is a high level sketch of what is happening:
 
 A `PeriodicUpdateEngine` ensures that the bootstrapping process is called
 You can define how often the full bootstrap happens
+
+#### 3. Indexing Rules
+
+You should be able to decide which of the fields are 
+
+### Any prerequisites and callouts?
+
+- One important prerequisite is that, you should be able to pull all data from your database, ie, you should be able to
+  stream it out as a batched select query (on your relational DB), or a scan (Aerospike, Redis, HBase or any other
+  non-relational DB), depending on what database you are using.
+- Size of data should be limited. This library has been tested for 100k rows in memory should be (todo)
+- Ensure your application is supplied with sufficient memory. A ballpark for calculating the (todo)
 
 # Getting started
 
@@ -97,13 +106,13 @@ You start with
 
 ```java
 final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer
-        = new LuceneQueryEngineContainer<>(LuceneSearchEngineBuilder.<Book>builder()
+        =new LuceneQueryEngineContainer<>(LuceneSearchEngineBuilder.<Book>builder()
         .withMapper(TestUtils.mapper()));
 
-final PeriodicUpdateEngine<Book, IndexableDocument<Book>> periodicUpdateEngine =
-        new PeriodicUpdateEngine<>(dataStore, new AsyncQueuedConsumer<>(
-                luceneQueryEngineContainer), 1, TimeUnit.SECONDS);
-periodicUpdateEngine.start();
+final PeriodicUpdateEngine<Book, IndexableDocument<Book>>periodicUpdateEngine=
+        new PeriodicUpdateEngine<>(dataStore,new AsyncQueuedConsumer<>(
+        luceneQueryEngineContainer),1,TimeUnit.SECONDS);
+        periodicUpdateEngine.start();
 ```
 
 Below is probably how your datastore implementations could look like
@@ -135,12 +144,12 @@ class DataStore implements Bootstrapper<Book, IndexableDocument<Book>> {
 }
 ```
 
-
 While querying
+
 ```java
-final ForageQueryResult<Book> results = 
+final ForageQueryResult<Book> results=
         luceneQueryEngineContainer.query(
-                            new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10))
+        new ForageSearchQuery(new RangeQuery("numPage",new IntRange(0,100000)),10))
 ```
 
 ### Tech Dependencies
