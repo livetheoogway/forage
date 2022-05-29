@@ -86,6 +86,13 @@ class ForageBundleTest {
         };
 
         bundle.run(new SampleConfig(), environment);
+        lifecycleEnvironment.getManagedObjects().forEach(o -> {
+            try {
+                o.start();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         final ForageSearchError error = Assertions.assertThrows(
                 ForageSearchError.class,

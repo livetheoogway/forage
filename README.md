@@ -114,8 +114,13 @@ There are several static helpers in `QueryBuilder` which should make things easy
 ### Usage
 
 Let's go the full mile and see what the complete integration would look like.
+The sample shows how `Book` items stored in some database can be made searchable. Assume `Book` with typical properties
+like (`title`, `author`, `rating`, `numPage`)
 
-You typically start with your datastore/DAO implementations. The following is a good example of what it would look like:
+**Step 1**
+
+You would typically start with your datastore/DAO implementations. The following is a good example of what it would look
+like:
 
 ```java
 import java.util.HashMap;
@@ -151,6 +156,8 @@ class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
     }
 }
 ```
+
+**Step 2**
 
 Your next steps, would involve creating and initializing the SearchEngine and using it for retrieval
 

@@ -24,10 +24,12 @@ import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import com.livetheoogway.forage.search.engine.store.Store;
 import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
+import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ForageBundle<T extends Configuration, D> implements ConfiguredBundle<T> {
 
@@ -55,20 +57,33 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
 
     @Override
     public void run(final T configuration, final Environment environment) {
-        final ForageSearchEngineBuilder<D> engineBuilder = ForageSearchEngineBuilder.<D>builder()
-                .withObjectMapper(environment.getObjectMapper())
-                .withDataStore(dataStore(configuration));
+        AtomicReference<PeriodicUpdateEngine<IndexableDocument>> updateEngineRef = new AtomicReference<>();
+        environment.lifecycle().manage(new Managed() {
+            @Override
+            public void start() {
+                final ForageSearchEngineBuilder<D> engineBuilder = ForageSearchEngineBuilder.<D>builder()
+                        .withObjectMapper(environment.getObjectMapper())
+                        .withDataStore(dataStore(configuration));
 
-        final ForageEngineIndexer<D> forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
-        this.searchEngine = forageEngineIndexer;
+                final ForageEngineIndexer<D> forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
 
-        final PeriodicUpdateEngine<IndexableDocument> updateEngine =
-                new PeriodicUpdateEngine<>(
+                searchEngine = forageEngineIndexer;
+
+                final PeriodicUpdateEngine<IndexableDocument> updateEngine = new PeriodicUpdateEngine<>(
                         bootstrap(configuration),
                         new AsyncQueuedConsumer<>(forageEngineIndexer),
                         forageConfiguration(configuration).getRefreshIntervalInSeconds(),
                         TimeUnit.SECONDS);
 
-        updateEngine.start();
+                updateEngineRef.set(updateEngine);
+
+                updateEngineRef.get().start();
+            }
+
+            @Override
+            public void stop() {
+                updateEngineRef.get().stop();
+            }
+        });
     }
 }
