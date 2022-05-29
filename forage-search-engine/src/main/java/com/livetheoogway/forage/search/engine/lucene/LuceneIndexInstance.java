@@ -6,22 +6,15 @@ import com.livetheoogway.forage.search.engine.util.ExceptionExecution;
 import com.livetheoogway.forage.search.engine.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.document.Document;
-import org.apache.lucene.document.Field;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
-import org.apache.lucene.index.Term;
 import org.apache.lucene.search.IndexSearcher;
-import org.apache.lucene.search.TermQuery;
-import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -34,13 +27,9 @@ public class LuceneIndexInstance implements LuceneIndex {
     private final AtomicReference<DocRetriever> indexReaderReference;
     private final AtomicBoolean indexWriterReferenceChanged;
 
-    public LuceneIndexInstance(Analyzer analyzer) throws ForageSearchError {
+    public LuceneIndexInstance(Analyzer analyzer) {
         this.analyzer = analyzer;
         memoryIndex = newInMemoryIndex();
-//        final IndexReader indexReader = ExceptionExecution.get(() -> DirectoryReader.open(memoryIndex),
-//                                                               ForageErrorCode.INDEX_READER_IO_ERROR);
-//        final IndexSearcher searcher = new IndexSearcher(indexReader);
-//        final DocRetriever docRetriever = new DocRetriever(indexReader, searcher);
         indexWriterReference = new AtomicReference<>();
         indexWriterReferenceChanged = new AtomicBoolean(false);
         indexReaderReference = new AtomicReference<>(null);
@@ -120,46 +109,7 @@ public class LuceneIndexInstance implements LuceneIndex {
     }
 
     @Override
-    public LuceneIndex freshIndex() throws ForageSearchError {
+    public LuceneIndex freshIndex() {
         return new LuceneIndexInstance(this.analyzer);
-    }
-
-    public static void main(String[] args) throws IOException {
-        Directory memoryIndex = new ByteBuffersDirectory();
-        StandardAnalyzer analyzer = new StandardAnalyzer();
-        IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-        IndexWriter writter = new IndexWriter(memoryIndex, indexWriterConfig);
-        writter.addDocument(getDocument("1", "Zero to one", "Peter theil"));
-        writter.addDocument(getDocument("2", "Designing data intensive applications to do cool stuff", "Kannemann"));
-        writter.addDocument(getDocument("3", "Harry potter", "jk rowling"));
-        writter.close();
-
-
-        IndexReader ir = DirectoryReader.open(memoryIndex);
-        IndexSearcher indexSearcher = new IndexSearcher(ir);
-        TopDocs search = indexSearcher.search(new TermQuery(new Term("title", "to")), 10);
-        System.out.println("search = " + Arrays.toString(search.scoreDocs));
-        indexWriterConfig = new IndexWriterConfig(analyzer);
-        writter = new IndexWriter(memoryIndex, indexWriterConfig);
-        writter.addDocument(getDocument("4", "To many more things coming", "jk rowling"));
-        writter.close();
-
-        ir = DirectoryReader.open(memoryIndex);
-        indexSearcher = new IndexSearcher(ir);
-        search = indexSearcher.search(new TermQuery(new Term("title", "to")), 10);
-        System.out.println("search = " + Arrays.toString(search.scoreDocs));
-
-        memoryIndex.close();
-        ir.close();
-
-    }
-
-
-    public static Document getDocument(String id, String title, String author) {
-        Document document = new Document();
-        document.add(new org.apache.lucene.document.StringField("id", id, Field.Store.NO));
-        document.add(new org.apache.lucene.document.TextField("title", title, Field.Store.NO));
-        document.add(new org.apache.lucene.document.TextField("author", author, Field.Store.NO));
-        return document;
     }
 }
