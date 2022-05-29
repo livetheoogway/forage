@@ -14,10 +14,17 @@
 
 package com.livetheoogway.forage.dropwizard.bundle;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Value;
 
 @Value
 public class ForageConfiguration {
     /* signifies how often the bootstrap is called */
     int refreshIntervalInSeconds;
+
+    @JsonCreator
+    public ForageConfiguration(@JsonProperty("refreshIntervalInSeconds") final int refreshIntervalInSeconds) {
+        this.refreshIntervalInSeconds = refreshIntervalInSeconds;
+    }
 }

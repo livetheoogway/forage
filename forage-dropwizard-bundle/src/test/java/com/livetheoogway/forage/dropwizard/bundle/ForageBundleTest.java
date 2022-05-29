@@ -96,7 +96,7 @@ class ForageBundleTest {
 
         final ForageSearchError error = Assertions.assertThrows(
                 ForageSearchError.class,
-                () -> bundle.getSearchEngine().search(QueryBuilder.matchQuery("author", "rowling").build()));
+                () -> bundle.searchEngine().search(QueryBuilder.matchQuery("author", "rowling").build()));
         Assertions.assertEquals(ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET, error.getForageErrorCode());
 
         store.put(new Book("id1", "Harry Potter and the Half-Blood Prince", "J.K. Rowling", 4.57f, "eng", 652));
@@ -106,7 +106,7 @@ class ForageBundleTest {
                 .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
                 .until(() -> {
                     try {
-                        final ForageQueryResult<Book> query2 = bundle.getSearchEngine().search(
+                        final ForageQueryResult<Book> query2 = bundle.searchEngine().search(
                                 QueryBuilder.matchQuery("author", "rowling").build());
                         return query2.getTotal().getTotal() == 1;
                     } catch (ForageSearchError e) {
@@ -116,7 +116,7 @@ class ForageBundleTest {
                         return false;
                     }
                 });
-        final ForageQueryResult<Book> results = bundle.getSearchEngine().search(
+        final ForageQueryResult<Book> results = bundle.searchEngine().search(
                 QueryBuilder.matchQuery("author", "rowling").build());
         Assertions.assertEquals("id1", results.getMatchingResults().get(0).getId());
         Assertions.assertEquals("Harry Potter and the Half-Blood Prince", results.getMatchingResults()

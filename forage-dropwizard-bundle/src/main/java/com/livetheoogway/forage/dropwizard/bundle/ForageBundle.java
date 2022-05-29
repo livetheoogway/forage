@@ -26,16 +26,15 @@ import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
-import lombok.Getter;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 public abstract class ForageBundle<T extends Configuration, D> implements ConfiguredBundle<T> {
 
-    /* the reference to the search engine that you need to use */
-    @Getter
-    private ForageSearchEngine<D> searchEngine;
+    /* the reference to the search engine that will get swapped with the actual one on start up */
+    private final DelegatedForageSearchEngine<D> delegatedForageSearchEngine
+            = new DelegatedForageSearchEngine<>(new ForagePreStartEngine<>());
 
     /**
      * @param configuration application configuration
@@ -55,6 +54,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
      */
     public abstract ForageConfiguration forageConfiguration(final T configuration);
 
+    public ForageSearchEngine<D> searchEngine() {
+        return delegatedForageSearchEngine;
+    }
+
     @Override
     public void run(final T configuration, final Environment environment) {
         AtomicReference<PeriodicUpdateEngine<IndexableDocument>> updateEngineRef = new AtomicReference<>();
@@ -67,7 +70,7 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
 
                 final ForageEngineIndexer<D> forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
 
-                searchEngine = forageEngineIndexer;
+                delegatedForageSearchEngine.onStart(forageEngineIndexer);
 
                 final PeriodicUpdateEngine<IndexableDocument> updateEngine = new PeriodicUpdateEngine<>(
                         bootstrap(configuration),
