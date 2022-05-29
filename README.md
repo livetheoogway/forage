@@ -48,7 +48,7 @@ The following is a high level sketch of what is happening:
 
 ![core-class-diagram](resources/forage-HLD.jpg)
 
-We've finished the _What_ and the _Why_, now let's look at the _How_.
+We've finished the _What_ and the _Why_, now let's look at the _How_.<br>
 At its heart is [Lucene](https://lucene.apache.org/). Why lucene you ask? Well, lucene is the most evolved open-source
 java search engine libraries out there. It powers Nutch, Solr, Elasticsearch etc. It is well maintained,
 supported by the Apache Software Foundation, and has continuous contributions. Need I say more?!
@@ -92,7 +92,9 @@ There are several static helpers in `QueryBuilder` which should make things easy
 - One important prerequisite is that, you should be able to pull all data from your database, ie, you should be able to
   stream it out as a batched select query (on your relational DB), or a scan (Aerospike, Redis, HBase or any other
   non-relational DB), depending on what database you are using.
-- Size of data should be limited. This library has been tested for 100k rows in memory should be (todo)
+- Size of data should be limited. While it totally depends on how much heap you supply to your java application,
+  it presume it shouldn't be in the range of 10s of millions. This library has been tested for 100k rows in memory.
+  (todo) mention details
 - Ensure your application is supplied with sufficient memory. A ballpark for calculating the memory for your base java
   application is to (todo)
 
@@ -278,7 +280,7 @@ QueryBuilder.booleanQuery()
 
 ```java
 ForageQueryResult<Book> result=searchEngine.search(QueryBuilder.matchQuery("author","rowling").build());
-        result2=searchEngine.search(new PageQuery(result.getNextPage(),10));
+        ForageQueryResult<Book> result2=searchEngine.search(new PageQuery(result.getNextPage(),10));
 ```
 
 ## Tech Dependencies
@@ -289,8 +291,9 @@ ForageQueryResult<Book> result=searchEngine.search(QueryBuilder.matchQuery("auth
 
 ## Contributions
 
-Please raise Issues, Bugs or any feature requests at [Github Issues](https://github.com/livetheoogway/forage/issues).
-If contributing to the code, fork the repository and raise a Pull Request back to the Parent.
+Please raise Issues, Bugs or any feature requests at [Github Issues](https://github.com/livetheoogway/forage/issues)
+. <br>
+If you plan on contributing to the code, fork the repository and raise a Pull Request back here.
 
 ## Under the Hood
 
