@@ -23,6 +23,7 @@ jobs:
           jacoco-csv-file: >
             forage-core/target/site/jacoco/jacoco.csv
             forage-search-engine/target/site/jacoco/jacoco.csv
+            forage-dropwizard-bundle/target/site/jacoco/jacoco.csv
       - name: Log coverage percentage
         run: |
           echo "coverage = ${{ steps.jacoco.outputs.coverage }}"

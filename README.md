@@ -243,6 +243,44 @@ public class MyApplication extends Application<MyConfiguration> {
 
 ```
 
+## Features
+
+1. Simple Term Match
+
+```java
+QueryBuilder.matchQuery("title","sawyer").build()
+```
+
+2. Fuzzy Query: You can try a fuzzy query match for retrieving results
+
+```java
+QueryBuilder.fuzzyMatchQuery("title","sayyer").build()
+```
+
+3. Range Queries
+
+```java
+QueryBuilder.intRangeQuery("numPage",600,800).build()
+```
+
+5. Boolean Queries
+
+```java
+QueryBuilder.booleanQuery()
+        .query(new MatchQuery("author","rowling"))
+        .query(new MatchQuery("title","prince"))
+        .clauseType(ClauseType.MUST)  // or SHOULD, MUST_NOT, FILTER
+        .build();
+
+```
+
+6. Page Queries and Paginated Results
+
+```java
+ForageQueryResult<Book> result=searchEngine.search(QueryBuilder.matchQuery("author","rowling").build());
+        result2=searchEngine.search(new PageQuery(result.getNextPage(),10));
+```
+
 ## Tech Dependencies
 
 - Java 11

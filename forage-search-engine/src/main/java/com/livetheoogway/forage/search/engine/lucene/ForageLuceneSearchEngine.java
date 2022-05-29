@@ -1,3 +1,17 @@
+/*
+ * Copyright 2022. Live the Oogway, Tushar Naik
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.livetheoogway.forage.search.engine.lucene;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -47,22 +61,21 @@ public class ForageLuceneSearchEngine<D>
     private final QueryParser queryParser;
 
     /**
-     * @param mapper
-     * @param queryParserFactory
-     * @param dataStore
-     * @param analyzer
-     * @throws ForageSearchError
+     * @param mapper             mapper for encoding page info
+     * @param queryParserFactory supplier of query parsers
+     * @param dataStore          store that gives the data element given anid
+     * @param analyzer           lucene analyser class
      */
     public ForageLuceneSearchEngine(final ObjectMapper mapper,
                                     final QueryParserFactory queryParserFactory,
                                     final Store<D> dataStore,
-                                    final Analyzer analyzer) throws ForageSearchError {
+                                    final Analyzer analyzer) {
         this.documentHandler = new LuceneDocumentHandler();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
         this.dataStore = dataStore;
-        this.queryParser = new QueryParser("TEMP", analyzer); //todo
+        this.queryParser = new QueryParser("TEMP", analyzer); //todo needs a more elegant solution for page parsing
     }
 
     @Override

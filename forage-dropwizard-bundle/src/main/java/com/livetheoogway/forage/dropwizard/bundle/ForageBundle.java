@@ -1,3 +1,17 @@
+/*
+ * Copyright 2022. Live the Oogway, Tushar Naik
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software distributed under the License is
+ * distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package com.livetheoogway.forage.dropwizard.bundle;
 
 import com.livetheoogway.forage.core.AsyncQueuedConsumer;
@@ -17,13 +31,26 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class ForageBundle<T extends Configuration, D> implements ConfiguredBundle<T> {
 
+    /* the reference to the search engine that you need to use */
     @Getter
     private ForageSearchEngine<D> searchEngine;
 
+    /**
+     * @param configuration application configuration
+     * @return supply the Store that can retrieve data given a document id
+     */
     public abstract Store<D> dataStore(final T configuration);
 
+    /**
+     * @param configuration application configuration
+     * @return Supply the Bootstrapper, that can create a bunch of indexable documents
+     */
     public abstract Bootstrapper<IndexableDocument> bootstrap(final T configuration);
 
+    /**
+     * @param configuration application configuration
+     * @return the forage configuration with refresh details
+     */
     public abstract ForageConfiguration forageConfiguration(final T configuration);
 
     @Override
