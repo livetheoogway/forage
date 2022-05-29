@@ -8,7 +8,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class QueryEngineTest {
+class SearchEngineTest {
 
     @Test
     void testBooksReader() throws IOException {

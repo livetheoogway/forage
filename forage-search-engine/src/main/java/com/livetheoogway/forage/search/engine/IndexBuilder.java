@@ -10,5 +10,5 @@ import java.util.List;
  */
 public interface IndexBuilder<D, Q, R> {
     void writeDocument(List<D> documents);
-    QueryEngine<Q, R> build();
+    SearchEngine<Q, R> build();
 }

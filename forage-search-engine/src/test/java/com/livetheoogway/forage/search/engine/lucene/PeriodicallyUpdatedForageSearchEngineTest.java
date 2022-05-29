@@ -31,7 +31,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
+class PeriodicallyUpdatedForageSearchEngineTest {
 
     private static class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
         private final AtomicInteger indexPosition;
@@ -54,9 +54,8 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
 
         @Override
         public void bootstrap(final Consumer<IndexableDocument> itemConsumer) {
-            for (final Book book : booksAvailableForIndexing.values()) {
-                itemConsumer.accept(new ForageDocument(book.getId(), book.fields()));
-            }
+            booksAvailableForIndexing
+                    .forEach((key, value) -> itemConsumer.accept(new ForageDocument(key, value.fields())));
         }
 
         @Override
@@ -69,8 +68,8 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
     @Test
     void testPeriodicallyUpdatedQueryEngine() throws Exception {
         final DataStore dataStore = new DataStore();
-        final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<>(
-                LuceneSearchEngineBuilder.<Book>builder()
+        final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
+                ForageSearchEngineBuilder.<Book>builder()
                         .withDataStore(dataStore)
                         .withObjectMapper(TestUtils.mapper()));
 
@@ -89,7 +88,7 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
                         && ((ForageSearchError) throwable).getForageErrorCode()
                         == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
                 .until(() -> {
-                    final ForageQueryResult<Book> query = luceneQueryEngineContainer.query(
+                    final ForageQueryResult<Book> query = luceneQueryEngineContainer.search(
                             new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
                     return query.getTotal().getTotal() == 1;
                 });
@@ -103,12 +102,12 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
                 .with()
                 .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
                 .until(() -> {
-                    final ForageQueryResult<Book> query = luceneQueryEngineContainer.query(
+                    final ForageQueryResult<Book> query = luceneQueryEngineContainer.search(
                             new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
                     return query.getTotal().getTotal() == 5;
                 });
 
-        final ForageQueryResult<Book> query = luceneQueryEngineContainer.query(
+        final ForageQueryResult<Book> query = luceneQueryEngineContainer.search(
                 new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
         Assertions.assertEquals(5, query.getTotal().getTotal());
 
@@ -118,12 +117,12 @@ class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
                 .with()
                 .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
                 .until(() -> {
-                    final ForageQueryResult<Book> query2 = luceneQueryEngineContainer.query(
+                    final ForageQueryResult<Book> query2 = luceneQueryEngineContainer.search(
                             new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
                     return query2.getTotal().getTotal() == 7;
                 });
 
-        final ForageQueryResult<Book> query2 = luceneQueryEngineContainer.query(
+        final ForageQueryResult<Book> query2 = luceneQueryEngineContainer.search(
                 new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
         Assertions.assertEquals(7, query2.getTotal().getTotal());
 

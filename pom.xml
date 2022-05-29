@@ -53,11 +53,11 @@
         <maven.compiler.release>11</maven.compiler.release>
         <guava.version>31.1-jre</guava.version>
         <junit.jupiter.version>5.8.2</junit.jupiter.version>
+        <mockito.version>3.2.4</mockito.version>
         <slf4j.api>1.7.36</slf4j.api>
         <lombok.version>1.18.22</lombok.version>
-        <jackson>2.13.2</jackson>
-        <jackson-databind>2.13.2.2</jackson-databind>
-        <awaitility.version>4.1.1</awaitility.version>
+        <jackson>2.13.3</jackson>
+        <awaitility.version>4.2.0</awaitility.version>
         <javax.validation>2.0.1.Final</javax.validation>
 
         <!--sonar settings-->
@@ -73,21 +73,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter</artifactId>
-                <version>${junit.jupiter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-api</artifactId>
-                <version>${junit.jupiter.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.junit.jupiter</groupId>
-                <artifactId>junit-jupiter-engine</artifactId>
-                <version>${junit.jupiter.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -112,16 +97,37 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-junit-jupiter</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>${awaitility.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

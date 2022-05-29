@@ -15,13 +15,13 @@ import org.junit.jupiter.api.Test;
 
 class LuceneSearchEngineIndexingTest {
 
-    private LuceneSearchEngine<SomeObject> searchEngine;
+    private ForageLuceneSearchEngine<SomeObject> searchEngine;
     private InMemoryHashStore<SomeObject> store;
 
     @BeforeEach
     void setUp() throws ForageSearchError {
         store = new InMemoryHashStore<>();
-        searchEngine = LuceneSearchEngineBuilder.<SomeObject>builder()
+        searchEngine = ForageSearchEngineBuilder.<SomeObject>builder()
                 .withDataStore(store).build();
     }
 
@@ -37,7 +37,7 @@ class LuceneSearchEngineIndexingTest {
 
 
         final ForageQueryResult<SomeObject> result
-                = searchEngine.query(QueryBuilder.matchQuery("pod", "nexus").build());
+                = searchEngine.search(QueryBuilder.matchQuery("pod", "nexus").build());
         Assertions.assertEquals(1, result.getMatchingResults().size());
         final String representation = ResultUtil.getRepresentation(result,
                                                                    data -> data.getData().getData(),

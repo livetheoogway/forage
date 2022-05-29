@@ -3,7 +3,7 @@ package com.livetheoogway.forage.search.engine.core;
 import com.livetheoogway.forage.core.ItemConsumer;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.LuceneSearchEngine;
+import com.livetheoogway.forage.search.engine.lucene.ForageLuceneSearchEngine;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 
 import java.io.IOException;
@@ -12,11 +12,11 @@ import java.util.function.Supplier;
 
 public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
-    private final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier;
-    private final AtomicReference<LuceneSearchEngine<T>> currentReference;
-    private LuceneSearchEngine<T> engine;
+    private final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier;
+    private final AtomicReference<ForageLuceneSearchEngine<T>> currentReference;
+    private ForageLuceneSearchEngine<T> engine;
 
-    public IndexingConsumer(final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier) {
+    public IndexingConsumer(final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier) {
         this.newSearchEngineSupplier = newSearchEngineSupplier;
         this.currentReference = new AtomicReference<>();
     }
@@ -39,7 +39,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
     @Override
     public void finish() throws IOException, ForageSearchError {
         synchronized (this) {
-            try (LuceneSearchEngine<T> ignored = currentReference.get()) {
+            try (ForageLuceneSearchEngine<T> ignored = currentReference.get()) {
                 engine.flush();
                 currentReference.set(engine);
             } finally {
@@ -48,7 +48,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
         }
     }
 
-    public LuceneSearchEngine<T> searchEngine() {
+    public ForageLuceneSearchEngine<T> searchEngine() {
         return currentReference.get();
     }
 }

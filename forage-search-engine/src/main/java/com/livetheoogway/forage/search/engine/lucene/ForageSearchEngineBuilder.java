@@ -9,7 +9,7 @@ import com.livetheoogway.forage.search.engine.store.Store;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 
-public class LuceneSearchEngineBuilder<T> {
+public class ForageSearchEngineBuilder<T> {
     private static final int DEFAULT_FIELD_SIZE_SUGGESTION = 10;
 
     private ObjectMapper mapper;
@@ -18,36 +18,36 @@ public class LuceneSearchEngineBuilder<T> {
     private QueryParserFactory queryParserFactory;
     private Store<T> store;
 
-    public LuceneSearchEngineBuilder<T> withObjectMapper(final ObjectMapper mapper) {
+    public ForageSearchEngineBuilder<T> withObjectMapper(final ObjectMapper mapper) {
         this.mapper = mapper;
         return this;
     }
 
-    public LuceneSearchEngineBuilder<T> withAnalyser(final Analyzer analyzer) {
+    public ForageSearchEngineBuilder<T> withAnalyser(final Analyzer analyzer) {
         this.analyzer = analyzer;
         return this;
     }
 
-    public LuceneSearchEngineBuilder<T> withQueryParserFactory(final QueryParserFactory queryParserFactory) {
+    public ForageSearchEngineBuilder<T> withQueryParserFactory(final QueryParserFactory queryParserFactory) {
         this.queryParserFactory = queryParserFactory;
         return this;
     }
 
-    public LuceneSearchEngineBuilder<T> withMaxFieldSizeHint(final int maxFieldSizeHint) {
+    public ForageSearchEngineBuilder<T> withMaxFieldSizeHint(final int maxFieldSizeHint) {
         this.maxFieldSizeHint = maxFieldSizeHint;
         return this;
     }
 
-    public LuceneSearchEngineBuilder<T> withDataStore(final Store<T> store) {
+    public ForageSearchEngineBuilder<T> withDataStore(final Store<T> store) {
         this.store = store;
         return this;
     }
 
-    public static <T> LuceneSearchEngineBuilder<T> builder() {
-        return new LuceneSearchEngineBuilder<>();
+    public static <T> ForageSearchEngineBuilder<T> builder() {
+        return new ForageSearchEngineBuilder<>();
     }
 
-    public LuceneSearchEngine<T> build() throws ForageSearchError {
+    public ForageLuceneSearchEngine<T> build() throws ForageSearchError {
         /* validations */
         if (this.store == null) {
             throw ForageSearchError.raise(ForageErrorCode.DATASTORE_INVALID, "no datastore passed to builder");
@@ -68,6 +68,6 @@ public class LuceneSearchEngineBuilder<T> {
         }
 
         /* create a new engine */
-        return new LuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
+        return new ForageLuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
     }
 }

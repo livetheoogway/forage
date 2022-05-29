@@ -9,6 +9,7 @@ import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.models.result.MatchingResult;
 import com.livetheoogway.forage.models.result.Relation;
 import com.livetheoogway.forage.models.result.TotalResults;
+import com.livetheoogway.forage.search.engine.DocumentIndexer;
 import com.livetheoogway.forage.search.engine.ForageSearchEngine;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
@@ -28,14 +29,15 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class LuceneSearchEngine<D>
-        extends ForageSearchEngine<IndexableDocument, ForageQuery, ForageQueryResult<D>> {
+public class ForageLuceneSearchEngine<D>
+        implements ForageSearchEngine<D>, DocumentIndexer<IndexableDocument>, Closeable {
 
     private final LuceneDocumentHandler documentHandler;
     private final LuceneIndex luceneIndex;
@@ -51,10 +53,10 @@ public class LuceneSearchEngine<D>
      * @param analyzer
      * @throws ForageSearchError
      */
-    public LuceneSearchEngine(final ObjectMapper mapper,
-                              final QueryParserFactory queryParserFactory,
-                              final Store<D> dataStore,
-                              final Analyzer analyzer) throws ForageSearchError {
+    public ForageLuceneSearchEngine(final ObjectMapper mapper,
+                                    final QueryParserFactory queryParserFactory,
+                                    final Store<D> dataStore,
+                                    final Analyzer analyzer) throws ForageSearchError {
         this.documentHandler = new LuceneDocumentHandler();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
@@ -76,7 +78,7 @@ public class LuceneSearchEngine<D>
 
     @SneakyThrows
     @Override
-    public ForageQueryResult<D> query(final ForageQuery forageQuery) throws ForageSearchError {
+    public ForageQueryResult<D> search(final ForageQuery forageQuery) throws ForageSearchError {
         val searcher = luceneIndex.searcher();
         return forageQuery.accept(new ForageQueryVisitor<>() {
             @Override

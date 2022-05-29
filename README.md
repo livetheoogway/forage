@@ -21,12 +21,12 @@
   </p>
 </p>
 
-### What is it?
+## What is it?
 
 A library that helps you build an in-memory search index, out of the data residing in your database/persistence layer.
 This should be possible as long as you are able to pipe data out of the persistence layer, into your application.
 
-### Why is it required?
+## Why would it be required?
 
 Say you have small amount of data in your primary datastore, but you want simple search capabilities on top of this
 data, would you spin up an entire search engine for this? Like a dedicated Elasticsearch or Solr? Or would you start
@@ -42,7 +42,7 @@ There are some obvious problems with whatever approach you take:
 
 The library attempts to solve the above, by creating a simple search index, in every application node's memory.
 
-### How is it happening though?
+## How it works?
 
 The following is a high level sketch of what is happening:
 
@@ -61,29 +61,40 @@ Essentially, the problem can be divided into 4 critical steps:
 3. Indexing Rules: Be able to define what parts of the Data, what fields, you want indexed in Lucene
 4. Search Queries: Be able to retrieve documents by querying the indexed fields.
 
-
 #### 1. Bootstrapping from your database:
 
-- handles parallel callbacks
-- ensure single threaded  
-  (todo)
+This is where we retrieve all data elements from your database and send it to the Consumer.
+Your DAO layer, should implement a `Bootstrapper` class, and its `bootstrap()` method is where you would scan your
+persistence layer. In this method, you can call the `consumer.consumer()` method, for all those data items you want
+indexed in the search engine.
 
-#### 2. Periodic
+- The consumer handles parallel callbacks
+- it also ensures single threaded processing of those callbacks (ie, indexing into lucene)
 
-A `PeriodicUpdateEngine` ensures that the bootstrapping process is called
-You can define how often the full bootstrap happens
+#### 2. Periodic Update
+
+You can define how often the full bootstrap happens. A `PeriodicUpdateEngine` ensures that the bootstrapping process is
+called at regular intervals. The interval is configurable, based on what you think is right for your use-case.
 
 #### 3. Indexing Rules
 
-You should be able to decide which of the fields are 
+You should be able to decide which of the fields are being indexed. As such, the `Bootstrapper`
+implementation's `Consumer` takes in a `IndexableDocument`, where-in, you can choose how the item is indexed as a
+document. The examples in the Usage section, should make this more clear.
 
-### Any prerequisites and callouts?
+#### 4. Search Queries
+
+You should be able to express your retrieval strategies, using the `ForageQuery` class.
+There are several static helpers in `QueryBuilder` which should make things easy when constructing the query.
+
+## Any prerequisites and callouts?
 
 - One important prerequisite is that, you should be able to pull all data from your database, ie, you should be able to
   stream it out as a batched select query (on your relational DB), or a scan (Aerospike, Redis, HBase or any other
   non-relational DB), depending on what database you are using.
 - Size of data should be limited. This library has been tested for 100k rows in memory should be (todo)
-- Ensure your application is supplied with sufficient memory. A ballpark for calculating the (todo)
+- Ensure your application is supplied with sufficient memory. A ballpark for calculating the memory for your base java
+  application is to (todo)
 
 # Getting started
 
@@ -100,66 +111,150 @@ You should be able to decide which of the fields are
 
 ### Usage
 
-Let's go the full mile and see what the complete integration might look like.
+Let's go the full mile and see what the complete integration would look like.
 
-You start with
-
-```java
-final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer
-        =new LuceneQueryEngineContainer<>(LuceneSearchEngineBuilder.<Book>builder()
-        .withMapper(TestUtils.mapper()));
-
-final PeriodicUpdateEngine<Book, IndexableDocument<Book>>periodicUpdateEngine=
-        new PeriodicUpdateEngine<>(dataStore,new AsyncQueuedConsumer<>(
-        luceneQueryEngineContainer),1,TimeUnit.SECONDS);
-        periodicUpdateEngine.start();
-```
-
-Below is probably how your datastore implementations could look like
+You typically start with your datastore/DAO implementations. The following is a good example of what it would look like:
 
 ```java
-class DataStore implements Bootstrapper<Book, IndexableDocument<Book>> {
-    private final List<Book> books; // This would be your DB connections
+import java.util.HashMap;
+
+class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
+    private final HashMap<String, Book> books; // This would be your DB connections
 
     public DataStore() {
-        this.books = Lists.newArrayList();  // You would be initializing your DB connections
+        this.books = Lists.newArrayList();  // You would be initializing your DB connections here
     }
 
-    public void saveBook(Book book) {
-        books.add(book);  // you would be saving this in your database
+    public void saveBook(final Book book) {
+        books.put(book.getId(), book);  // you would be saving this in your database
     }
 
     @Override
-    public void bootstrap(final Consumer<IndexableDocument<Book>> itemConsumer) {
+    public void bootstrap(final Consumer<IndexableDocument> itemConsumer) {
         // THIS IS THE MAIN IMPLEMENTATION
-        // You would scan all rows of your database here, and create individual ForageDocument
+        // You would scan all rows of your database here, and create individual ForageDocument and supply to the consumer
+        // All rules on which fields need to be indexed how, should ideally happen here
         for (final Book book : books) {
-            itemConsumer.accept(new ForageDocument<>(book.getId(), book, ImmutableList
+            itemConsumer.accept(new ForageDocument(book.getId(), book, ImmutableList
                     .of(new TextField("title", book.getTitle()),
                         new TextField("author", book.getAuthor()),
                         new FloatField("rating", new float[]{book.getRating()}),
                         new IntField("numPage", new int[]{book.getNumPage()}))));
         }
     }
+
+    @Override
+    public Book get(final String id) {
+        return books.get(id);
+    }
 }
 ```
 
-While querying
+Your next steps, would involve creating and initializing the SearchEngine and using it for retrieval
 
 ```java
-final ForageQueryResult<Book> results=
-        luceneQueryEngineContainer.query(
-        new ForageSearchQuery(new RangeQuery("numPage",new IntRange(0,100000)),10))
+
+import java.awt.print.Book;
+
+@Singleton
+public class Container {
+
+    private SearchEngine<ForageQuery, ForageQueryResult<Book>> searchEngine;
+
+    public Container() {
+        final ForageSearchEngineBuilder<Book> engineBuilder = ForageSearchEngineBuilder.<Book>builder()
+                .withDataStore(dataStore)
+                .withObjectMapper(new ObjectMapper());
+
+        this.searchEngine = new ForageEngine<>(engineBuilder);
+
+        final PeriodicUpdateEngine<IndexableDocument> updateEngine =
+                new PeriodicUpdateEngine<>(
+                        dataStore,
+                        new AsyncQueuedConsumer<>(searchEngine),
+                        60, TimeUnit.SECONDS // depicts how often you want to bootstrap from the database
+                );
+
+        updateEngine.start();
+    }
+
+    // And while searching, you can do this:
+    public void sampleSearch() {
+
+        // retrieve top 10 books that have numPages between 600 and 1000
+        final ForageQueryResult<Book> results =
+                searchEngine.search(new ForageSearchQuery(
+                        new RangeQuery("numPage", new IntRange(600, 1000)),
+                        10));
+
+        // retrieve all books that have "rowling" in Author, and "prince" in Title
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.booleanQuery()
+                        .query(new MatchQuery("author", "rowling"))
+                        .query(new MatchQuery("title", "prince"))
+                        .clauseType(ClauseType.MUST)
+                        .build());
+    }
+}
 ```
 
-### Tech Dependencies
+## Dropwizard Bundle
+
+There is a much simple integration available if your application is a [Dropwizard](https://www.dropwizard.io/en/latest/)
+application.
+
+Add the following dependency
+
+```xml
+
+<dependency>
+    <groupId>com.livetheoogway.forage</groupId>
+    <artifactId>forage-dropwizard-bundle</artifactId>
+    <version>${forage.version}</version> <!--look for the latest version on top-->
+</dependency>
+```
+
+In your Application, register the `ForageBundle`
+
+```java
+public class MyApplication extends Application<MyConfiguration> {
+    // other stuff
+    @Override
+    public void initialize(final Bootstrap<MyConfiguration> bootstrap) {
+        bootstrap.addBundle(new ForageBundle<>() {
+
+            @Override
+            public Store<Book> dataStore(final MyConfiguration configuration) {
+                return store;  // the one that retrieves data given id
+            }
+
+            @Override
+            public Bootstrapper<IndexableDocument> bootstrap(final MyConfiguration configuration) {
+                return store;  // the one that implements the bootstrap
+            }
+
+            @Override
+            public ForageConfiguration forageConfiguration(final MyConfiguration configuration) {
+                return configuration.getForageConfiguration(); // have ForageConfiguration as part of your main config class
+            }
+        });
+    }
+}
+
+```
+
+## Tech Dependencies
 
 - Java 11
 - Lucene 9.1.0
+- Dropwizard 2.1.0 (Optional)
 
-# Contributions
+## Contributions
 
-# Under the Hood
+Please raise Issues, Bugs or any feature requests at [Github Issues](https://github.com/livetheoogway/forage/issues).
+If contributing to the code, fork the repository and raise a Pull Request back to the Parent.
+
+## Under the Hood
 
 ![core-class-diagram](resources/forage-core-classDiagram.png)
 (todo)
@@ -171,6 +266,11 @@ final ForageQueryResult<Book> results=
 
 ## Todos
 
+- [x] Helpers for query creation
+- [x] Fuzzy Query Support
+- [x] Dropwizard bundle for simpler integrations
 - [ ] Expose Scoring and boosting
+- [ ] Phrase Query Support
+- [ ] Auto complete query Support
 - [ ] Expose explain query IndexSearcher.explain(Query, doc)
 
