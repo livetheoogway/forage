@@ -1,9 +1,11 @@
 package com.livetheoogway.forage.search.engine.lucene;
 
-import com.google.common.collect.Lists;
 import com.livetheoogway.forage.core.AsyncQueuedConsumer;
 import com.livetheoogway.forage.core.Bootstrapper;
 import com.livetheoogway.forage.core.PeriodicUpdateEngine;
+import com.livetheoogway.forage.models.query.ForageSearchQuery;
+import com.livetheoogway.forage.models.query.search.RangeQuery;
+import com.livetheoogway.forage.models.query.search.range.IntRange;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.search.engine.ResourceReader;
 import com.livetheoogway.forage.search.engine.TestUtils;
@@ -12,9 +14,7 @@ import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.model.Book;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
-import com.livetheoogway.forage.models.query.ForageSearchQuery;
-import com.livetheoogway.forage.models.query.search.RangeQuery;
-import com.livetheoogway.forage.models.query.search.range.IntRange;
+import com.livetheoogway.forage.search.engine.store.Store;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -22,49 +22,61 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 class PeriodicallyUpdatedLuceneQueryEngineContainerTest {
 
-    private static class DataStore implements Bootstrapper<Book, IndexableDocument<Book>> {
+    private static class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
         private final AtomicInteger indexPosition;
-        private final List<Book> booksAvailableForIndexing;
+        private final Map<String, Book> booksAvailableForIndexing;
         private final List<Book> fullGlossaryOfBook;
 
         public DataStore() throws IOException {
             this.fullGlossaryOfBook = ResourceReader.extractBooks();
             this.indexPosition = new AtomicInteger(0);
-            this.booksAvailableForIndexing = Lists.newArrayList();
+            this.booksAvailableForIndexing = new HashMap<>();
         }
 
         public void addBooks(int numberOfBooksToBeAddedForIndexing) {
-            this.booksAvailableForIndexing.addAll(
+            this.booksAvailableForIndexing.putAll(
                     fullGlossaryOfBook.subList(indexPosition.get(),
-                                               indexPosition.get() + numberOfBooksToBeAddedForIndexing));
+                                               indexPosition.get() + numberOfBooksToBeAddedForIndexing)
+                            .stream().collect(Collectors.toMap(Book::id, Function.identity())));
             indexPosition.compareAndSet(indexPosition.get(), indexPosition.get() + numberOfBooksToBeAddedForIndexing);
         }
 
         @Override
-        public void bootstrap(final Consumer<IndexableDocument<Book>> itemConsumer) {
-            for (final Book book : booksAvailableForIndexing) {
-                itemConsumer.accept(new ForageDocument<>(book.getId(), book, book.fields()));
+        public void bootstrap(final Consumer<IndexableDocument> itemConsumer) {
+            for (final Book book : booksAvailableForIndexing.values()) {
+                itemConsumer.accept(new ForageDocument(book.getId(), book.fields()));
             }
+        }
+
+        @Override
+        public Book get(final String id) {
+            return booksAvailableForIndexing.get(id);
         }
     }
 
 
     @Test
     void testPeriodicallyUpdatedQueryEngine() throws Exception {
+        final DataStore dataStore = new DataStore();
         final LuceneQueryEngineContainer<Book> luceneQueryEngineContainer = new LuceneQueryEngineContainer<>(
                 LuceneSearchEngineBuilder.<Book>builder()
+                        .withDataStore(dataStore)
                         .withObjectMapper(TestUtils.mapper()));
 
-        final DataStore dataStore = new DataStore();
         dataStore.addBooks(1);
-        final PeriodicUpdateEngine<Book, IndexableDocument<Book>> periodicUpdateEngine =
+
+        final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =
                 new PeriodicUpdateEngine<>(
                         dataStore, new AsyncQueuedConsumer<>(luceneQueryEngineContainer),
                         1, TimeUnit.SECONDS

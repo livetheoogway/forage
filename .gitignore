@@ -4,3 +4,4 @@ target/
 *dependency-reduced-pom.xml
 *.iws
 *.ipr
+.DS_Store

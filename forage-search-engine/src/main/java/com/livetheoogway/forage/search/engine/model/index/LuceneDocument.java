@@ -11,19 +11,19 @@ import javax.validation.constraints.NotNull;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class LuceneDocument<D> extends IndexableDocument<D> {
+public class LuceneDocument extends IndexableDocument {
 
     @NotNull
     Document document;
 
     @Builder
-    public LuceneDocument(final String id, final D data, final Document document) {
-        super(DocumentType.LUCENE, id, data);
+    public LuceneDocument(final String id, final Document document) {
+        super(DocumentType.LUCENE, id);
         this.document = document;
     }
 
     @Override
-    public <T> T accept(final DocumentVisitor<T, D> visitor) {
+    public <T> T accept(final DocumentVisitor<T> visitor) {
         return visitor.visit(this);
     }
 }

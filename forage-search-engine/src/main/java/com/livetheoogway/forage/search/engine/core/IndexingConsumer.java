@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument<T>> {
+public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
     private final Supplier<LuceneSearchEngine<T>> newSearchEngineSupplier;
     private final AtomicReference<LuceneSearchEngine<T>> currentReference;
@@ -32,7 +32,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument<T>> {
     }
 
     @Override
-    public void consume(final IndexableDocument<T> indexableDocument) throws Exception {
+    public void consume(final IndexableDocument indexableDocument) throws Exception {
         engine.index(indexableDocument);
     }
 

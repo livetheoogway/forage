@@ -1,6 +1,5 @@
 package com.livetheoogway.forage.models;
 
-public interface StoredData<T> {
+public interface DataId {
     String id();
-    T data();
 }

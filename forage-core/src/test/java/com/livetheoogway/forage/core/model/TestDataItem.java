@@ -1,10 +1,10 @@
 package com.livetheoogway.forage.core.model;
 
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 import lombok.Value;
 
 @Value
-public class TestDataItem implements StoredData<String> {
+public class TestDataItem implements DataId {
     String id;
     String message;
 
@@ -13,8 +13,4 @@ public class TestDataItem implements StoredData<String> {
         return id;
     }
 
-    @Override
-    public String data() {
-        return message;
-    }
 }

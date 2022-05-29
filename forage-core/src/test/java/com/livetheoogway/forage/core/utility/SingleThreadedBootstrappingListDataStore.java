@@ -1,12 +1,12 @@
 package com.livetheoogway.forage.core.utility;
 
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 
 import java.util.function.Consumer;
 
-public class SingleThreadedBootstrappingListDataStore<D, S extends StoredData<D>> extends ListDataStore<D, S> {
+public class SingleThreadedBootstrappingListDataStore<D extends DataId> extends ListDataStore<D> {
     @Override
-    public void bootstrap(final Consumer<S> itemConsumer) {
+    public void bootstrap(final Consumer<D> itemConsumer) {
         database.forEach(itemConsumer);
     }
 }

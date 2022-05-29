@@ -13,9 +13,9 @@ import java.time.temporal.ChronoUnit;
 
 class OneTimeUpdateEngineTest {
 
-    private OneTimeUpdateEngine<String, TestDataItem> oneTimeUpdateEngine;
+    private OneTimeUpdateEngine<TestDataItem> oneTimeUpdateEngine;
     private CollectingItemConsumer<TestDataItem> itemConsumer;
-    private ListDataStore<String, TestDataItem> listDataStore;
+    private ListDataStore<TestDataItem> listDataStore;
 
     @BeforeEach
     void setUp() {

@@ -1,6 +1,6 @@
 package com.livetheoogway.forage.core;
 
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -11,14 +11,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @SuppressWarnings("java:S112")
 @Slf4j
-public abstract class UpdateEngine<D, S extends StoredData<D>> {
-    private final Bootstrapper<D, S> bootstrapper;
-    private final ItemConsumer<S> itemConsumer;
-    private final ErrorHandler<S> errorHandler;
+public abstract class UpdateEngine<D extends DataId> {
+    private final Bootstrapper<D> bootstrapper;
+    private final ItemConsumer<D> itemConsumer;
+    private final ErrorHandler<D> errorHandler;
 
-    protected UpdateEngine(final Bootstrapper<D, S> bootstrapper,
-                           final ItemConsumer<S> itemConsumer,
-                           final ErrorHandler<S> errorHandler) {
+    protected UpdateEngine(final Bootstrapper<D> bootstrapper,
+                           final ItemConsumer<D> itemConsumer,
+                           final ErrorHandler<D> errorHandler) {
         this.bootstrapper = bootstrapper;
         this.itemConsumer = itemConsumer;
         this.errorHandler = errorHandler;

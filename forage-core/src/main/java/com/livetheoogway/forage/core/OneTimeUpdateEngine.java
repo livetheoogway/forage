@@ -1,6 +1,6 @@
 package com.livetheoogway.forage.core;
 
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -8,16 +8,16 @@ import lombok.extern.slf4j.Slf4j;
  * Use this class, if you do not wish to periodically perform the bootstrap process at regular intervals
  */
 @Slf4j
-public class OneTimeUpdateEngine<D, S extends StoredData<D>> extends UpdateEngine<D, S> {
+public class OneTimeUpdateEngine<D extends DataId> extends UpdateEngine<D> {
 
-    public OneTimeUpdateEngine(final Bootstrapper<D, S> bootstrapper,
-                               final ItemConsumer<S> itemConsumer) {
+    public OneTimeUpdateEngine(final Bootstrapper<D> bootstrapper,
+                               final ItemConsumer<D> itemConsumer) {
         this(bootstrapper, itemConsumer, new LoggingErrorHandler<>(OneTimeUpdateEngine.class));
     }
 
-    public OneTimeUpdateEngine(final Bootstrapper<D, S> bootstrapper,
-                               final ItemConsumer<S> itemConsumer,
-                               final ErrorHandler<S> errorHandler) {
+    public OneTimeUpdateEngine(final Bootstrapper<D> bootstrapper,
+                               final ItemConsumer<D> itemConsumer,
+                               final ErrorHandler<D> errorHandler) {
         super(bootstrapper, itemConsumer, errorHandler);
     }
 

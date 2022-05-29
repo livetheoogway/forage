@@ -2,7 +2,7 @@ package com.livetheoogway.forage.search.engine.model.index;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -15,7 +15,7 @@ import javax.validation.constraints.NotNull;
         @JsonSubTypes.Type(name = "FORAGE", value = ForageDocument.class),
         @JsonSubTypes.Type(name = "LUCENE", value = LuceneDocument.class)
 })
-public abstract class IndexableDocument<D> implements StoredData<D> {
+public abstract class IndexableDocument implements DataId {
     @Getter
     @NotNull
     private DocumentType type;
@@ -24,19 +24,10 @@ public abstract class IndexableDocument<D> implements StoredData<D> {
     @NotNull
     private String id;
 
-    @Getter
-    @NotNull
-    private D data;
-
     @Override
     public String id() {
         return id;
     }
 
-    @Override
-    public D data() {
-        return data;
-    }
-
-    public abstract <T> T accept(DocumentVisitor<T, D> visitor);
+    public abstract <T> T accept(DocumentVisitor<T> visitor);
 }

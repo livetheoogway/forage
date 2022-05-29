@@ -1,4 +1,5 @@
 <p align="center">
+  <img height="150" src="./resources/forage-logo.png" />
   <h1 align="center">Forage</h1>
   <p align="center">In-memory Search made Easy<p>
   <p align="center">

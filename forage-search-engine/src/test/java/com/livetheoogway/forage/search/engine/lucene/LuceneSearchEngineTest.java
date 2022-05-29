@@ -4,15 +4,14 @@ import com.livetheoogway.forage.models.query.PageQuery;
 import com.livetheoogway.forage.models.query.search.ClauseType;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
+import com.livetheoogway.forage.search.engine.ResourceReader;
+import com.livetheoogway.forage.search.engine.ResultUtil;
+import com.livetheoogway.forage.search.engine.TestUtils;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.lucene.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.Book;
-import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
-import com.livetheoogway.forage.search.engine.ResourceReader;
-import com.livetheoogway.forage.search.engine.ResultUtil;
-import com.livetheoogway.forage.search.engine.TestIdUtils;
-import com.livetheoogway.forage.search.engine.TestUtils;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
+import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,18 +27,20 @@ class LuceneSearchEngineTest {
 
     @BeforeAll
     static void setup() throws ForageSearchError, IOException {
+        InMemoryHashStore<Book> dataStore = new InMemoryHashStore<>();
         searchEngine = LuceneSearchEngineBuilder.<Book>builder()
-                                        .withObjectMapper(TestUtils.mapper()).build();
+                                        .withObjectMapper(TestUtils.mapper())
+                .withDataStore(dataStore).build();
 
-        final List<IndexableDocument<Book>> documents = ResourceReader.extractBooks()
+        final List<Book> books = ResourceReader.extractBooks();
+        final List<IndexableDocument> documents = books
                 .stream()
                 .map(book -> ForageDocument.<Book>builder()
                         .fields(book.fields())
-                        .data(book)
-                        .id(TestIdUtils.generateBookId())
+                        .id(book.id())
                         .build())
                 .collect(Collectors.toList());
-
+        dataStore.store(books);
         searchEngine.index(documents);
         searchEngine.flush();
     }

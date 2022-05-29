@@ -14,12 +14,12 @@ import java.util.concurrent.TimeUnit;
 
 class PeriodicUpdateEngineTest {
 
-    private PeriodicUpdateEngine<String, TestDataItem> periodicUpdateEngine;
+    private PeriodicUpdateEngine<TestDataItem> periodicUpdateEngine;
     private CollectingItemConsumer<TestDataItem> collectingListener;
 
     @BeforeEach
     void setUp() {
-        ListDataStore<String, TestDataItem> parallelBootstrappingListDataStore =
+        ListDataStore<TestDataItem> parallelBootstrappingListDataStore =
                 new ParallelBootstrappingListDataStore<>();
         collectingListener = new CollectingItemConsumer<>();
         periodicUpdateEngine = new PeriodicUpdateEngine<>(parallelBootstrappingListDataStore,

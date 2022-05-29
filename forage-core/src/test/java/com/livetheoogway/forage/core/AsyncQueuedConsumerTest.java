@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit;
 
 class AsyncQueuedConsumerTest {
 
-    private UpdateEngine<String, TestDataItem> updateEngine;
+    private UpdateEngine<TestDataItem> updateEngine;
     private CollectingItemConsumer<TestDataItem> itemConsumer;
-    private ListDataStore<String, TestDataItem> listDataStore;
+    private ListDataStore<TestDataItem> listDataStore;
 
     @BeforeEach
     void setUp() {

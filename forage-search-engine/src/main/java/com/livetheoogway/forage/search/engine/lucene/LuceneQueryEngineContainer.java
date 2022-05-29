@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 
 public class LuceneQueryEngineContainer<T>
         implements QueryEngine<ForageQuery, ForageQueryResult<T>>, Supplier<LuceneSearchEngine<T>>,
-                   ItemConsumer<IndexableDocument<T>> {
+                   ItemConsumer<IndexableDocument> {
 
     private final LuceneSearchEngineBuilder<T> builder;
     private final IndexingConsumer<T> indexingConsumer;
@@ -47,8 +47,8 @@ public class LuceneQueryEngineContainer<T>
     }
 
     @Override
-    public void consume(final IndexableDocument<T> tIndexableDocument) throws Exception {
-        indexingConsumer.consume(tIndexableDocument);
+    public void consume(final IndexableDocument indexableDocument) throws Exception {
+        indexingConsumer.consume(indexableDocument);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.livetheoogway.forage.search.engine.lucene;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.lucene.parser.CachedQueryParserFactory;
 import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserFactory;
@@ -47,6 +48,12 @@ public class LuceneSearchEngineBuilder<T> {
     }
 
     public LuceneSearchEngine<T> build() throws ForageSearchError {
+        /* validations */
+        if (this.store == null) {
+            throw ForageSearchError.raise(ForageErrorCode.DATASTORE_INVALID, "no datastore passed to builder");
+        }
+
+        /* defaults */
         if (this.analyzer == null) {
             this.analyzer = new StandardAnalyzer();
         }
@@ -56,12 +63,11 @@ public class LuceneSearchEngineBuilder<T> {
         if (queryParserFactory == null) {
             queryParserFactory = new CachedQueryParserFactory(analyzer, maxFieldSizeHint);
         }
-        if (this.store == null) {
-            this.store = new InMemoryHashStore<>();
-        }
         if (mapper == null) {
             this.mapper = new ObjectMapper();
         }
+
+        /* create a new engine */
         return new LuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
     }
 }

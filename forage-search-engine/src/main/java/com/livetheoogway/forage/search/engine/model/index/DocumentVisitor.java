@@ -1,8 +1,8 @@
 package com.livetheoogway.forage.search.engine.model.index;
 
-public interface DocumentVisitor<T, D> {
-    T visit(ForageDocument<D> forageDocument);
+public interface DocumentVisitor<T> {
+    T visit(ForageDocument forageDocument);
 
-    T visit(LuceneDocument<D> luceneDocument);
+    T visit(LuceneDocument luceneDocument);
 
 }

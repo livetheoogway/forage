@@ -1,6 +1,6 @@
 package com.livetheoogway.forage.core;
 
-import com.livetheoogway.forage.models.StoredData;
+import com.livetheoogway.forage.models.DataId;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.Executors;
@@ -16,14 +16,14 @@ import java.util.concurrent.TimeUnit;
  * (ie, it is taking more time than the delay interval specified during init), it will not schedule the next bootstrap
  */
 @Slf4j
-public class PeriodicUpdateEngine<D, S extends StoredData<D>> extends UpdateEngine<D, S> {
+public class PeriodicUpdateEngine<D extends DataId> extends UpdateEngine<D> {
 
     private final ScheduledExecutorService executorService;
     private final int delay;
     private final TimeUnit timeUnit;
 
-    public PeriodicUpdateEngine(final Bootstrapper<D, S> bootstrapper,
-                                final ItemConsumer<S> itemConsumer,
+    public PeriodicUpdateEngine(final Bootstrapper<D> bootstrapper,
+                                final ItemConsumer<D> itemConsumer,
                                 final int delay,
                                 final TimeUnit timeUnit) {
         this(bootstrapper, itemConsumer, delay, timeUnit, new LoggingErrorHandler<>(PeriodicUpdateEngine.class));
@@ -37,11 +37,11 @@ public class PeriodicUpdateEngine<D, S extends StoredData<D>> extends UpdateEngi
      * @param timeUnit     time unit of the delay specified above
      * @param errorHandler a handler for errors when individual items are being consumed
      */
-    public PeriodicUpdateEngine(final Bootstrapper<D, S> bootstrapper,
-                                final ItemConsumer<S> itemConsumer,
+    public PeriodicUpdateEngine(final Bootstrapper<D> bootstrapper,
+                                final ItemConsumer<D> itemConsumer,
                                 final int delay,
                                 final TimeUnit timeUnit,
-                                final ErrorHandler<S> errorHandler) {
+                                final ErrorHandler<D> errorHandler) {
         super(bootstrapper, itemConsumer, errorHandler);
         this.delay = delay;
         this.timeUnit = timeUnit;

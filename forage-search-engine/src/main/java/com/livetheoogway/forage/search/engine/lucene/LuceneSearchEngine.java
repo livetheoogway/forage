@@ -35,9 +35,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class LuceneSearchEngine<D>
-        extends ForageSearchEngine<IndexableDocument<D>, ForageQuery, ForageQueryResult<D>> {
+        extends ForageSearchEngine<IndexableDocument, ForageQuery, ForageQueryResult<D>> {
 
-    private final LuceneDocumentHandler<D> documentHandler;
+    private final LuceneDocumentHandler documentHandler;
     private final LuceneIndex luceneIndex;
     private final LuceneQueryGenerator luceneQueryGenerator;
     private final LucenePagination lucenePagination;
@@ -55,7 +55,7 @@ public class LuceneSearchEngine<D>
                               final QueryParserFactory queryParserFactory,
                               final Store<D> dataStore,
                               final Analyzer analyzer) throws ForageSearchError {
-        this.documentHandler = new LuceneDocumentHandler<>();
+        this.documentHandler = new LuceneDocumentHandler();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
         this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
@@ -64,7 +64,7 @@ public class LuceneSearchEngine<D>
     }
 
     @Override
-    public OperationResult<IndexableDocument<D>> index(final List<IndexableDocument<D>> documents) {
+    public OperationResult<IndexableDocument> index(final List<IndexableDocument> documents) {
         return OperationExecutor.execute(documents, document
                 -> luceneIndex.indexWriter().addDocument(document.accept(documentHandler)));
     }
