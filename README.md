@@ -133,16 +133,18 @@ class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
     }
 
     public void saveBook(final Book book) {
-        books.put(book.getId(), book);  // you would be saving this in your database
+        books.put(book.getId(), book);  // You would be saving this in your database
     }
 
     @Override
     public void bootstrap(final Consumer<IndexableDocument> itemConsumer) {
+        
         // THIS IS THE MAIN IMPLEMENTATION
-        // You would scan all rows of your database here, and create individual ForageDocument and supply to the consumer
-        // All rules on which fields need to be indexed how, should ideally happen here
+        
         for (final Book book : books) {
-            itemConsumer.accept(new ForageDocument(book.getId(), book, ImmutableList
+          // You would scan all rows of your database here, and create individual ForageDocument and supply to the consumer
+          // All rules on which fields need to be indexed how, should be happening here
+          itemConsumer.accept(new ForageDocument(book.getId(), book, ImmutableList
                     .of(new TextField("title", book.getTitle()),
                         new TextField("author", book.getAuthor()),
                         new FloatField("rating", new float[]{book.getRating()}),
@@ -286,8 +288,8 @@ QueryBuilder.booleanQuery()
 6. Page Queries and Paginated Results
 
 ```java
-ForageQueryResult<Book> result=searchEngine.search(QueryBuilder.matchQuery("author","rowling").build());
-        ForageQueryResult<Book> result2=searchEngine.search(new PageQuery(result.getNextPage(),10));
+ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").build());
+ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNextPage(), 10));
 ```
 
 ## Tech Dependencies
