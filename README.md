@@ -194,9 +194,7 @@ public class Container {
 
         // retrieve top 10 books that have numPages between 600 and 1000
         final ForageQueryResult<Book> results =
-                searchEngine.search(new ForageSearchQuery(
-                        new RangeQuery("numPage", new IntRange(600, 1000)),
-                        10));
+                searchEngine.search(QueryBuilder.intRangeQuery("numPage", 600, 800).buildForageQuery(10));   
 
         // retrieve all books that have "rowling" in Author, and "prince" in Title
         ForageQueryResult<Book> result = searchEngine.search(
@@ -204,7 +202,7 @@ public class Container {
                         .query(new MatchQuery("author", "rowling"))
                         .query(new MatchQuery("title", "prince"))
                         .clauseType(ClauseType.MUST)
-                        .build());
+                        .buildForageQuery());
     }
 }
 ```
@@ -288,8 +286,8 @@ QueryBuilder.booleanQuery()
 6. Page Queries and Paginated Results
 
 ```java
-ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
-ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNextPage(), 10));
+ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery(15)); // first 15 items
+ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNextPage(), 20)); // next 20 items
 ```
 
 7. Phrase match query
