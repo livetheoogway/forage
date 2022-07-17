@@ -12,7 +12,7 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.search.engine.lucene.util;
+package com.livetheoogway.forage.models.query.util;
 
 import lombok.experimental.UtilityClass;
 
@@ -31,6 +31,10 @@ public class QueryBuilder {
         return new Builders.InnerFuzzyMatchQueryBuilder(field, value);
     }
 
+    public Builders.InnerPhraseMatchQueryBuilder phraseMatchQuery(String field, String phrase) {
+        return new Builders.InnerPhraseMatchQueryBuilder(field, phrase);
+    }
+
     public Builders.InnerIntRangeQueryBuilder intRangeQuery(String field, int low, int high) {
         return new Builders.InnerIntRangeQueryBuilder(field, low, high);
     }
@@ -38,4 +42,9 @@ public class QueryBuilder {
     public Builders.InnerFloatRangeQueryBuilder floatRangeQuery(String field, float low, float high) {
         return new Builders.InnerFloatRangeQueryBuilder(field, low, high);
     }
+
+    public Builders.InnerMatchAllQueryBuilder matchAllQuery() {
+        return new Builders.InnerMatchAllQueryBuilder();
+    }
+
 }

@@ -19,7 +19,7 @@ import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.models.result.field.TextField;
 import com.livetheoogway.forage.search.engine.ResultUtil;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.util.QueryBuilder;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -51,7 +51,7 @@ class LuceneSearchEngineIndexingTest {
 
 
         final ForageQueryResult<SomeObject> result
-                = searchEngine.search(QueryBuilder.matchQuery("pod", "nexus").build());
+                = searchEngine.search(QueryBuilder.matchQuery("pod", "nexus").buildForageQuery());
         Assertions.assertEquals(1, result.getMatchingResults().size());
         final String representation = ResultUtil.getRepresentation(result,
                                                                    data -> data.getData().getData(),

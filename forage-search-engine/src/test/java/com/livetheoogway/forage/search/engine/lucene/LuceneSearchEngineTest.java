@@ -22,7 +22,7 @@ import com.livetheoogway.forage.search.engine.ResourceReader;
 import com.livetheoogway.forage.search.engine.ResultUtil;
 import com.livetheoogway.forage.search.engine.TestUtils;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.util.QueryBuilder;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.Book;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
@@ -55,13 +55,14 @@ class LuceneSearchEngineTest {
                         .build())
                 .collect(Collectors.toList());
         dataStore.store(books);
+        System.out.println("documents.size() = " + documents.size());
         searchEngine.index(documents);
         searchEngine.flush();
     }
 
     @Test
     void testSearchResultWithTermMatch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").build());
+        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertTrue(result.getTotal().getTotal() > 10);
@@ -70,7 +71,7 @@ class LuceneSearchEngineTest {
 
     @Test
     void testPaginatedSearch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").build());
+        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertEquals(25, result.getTotal().getTotal());
@@ -84,7 +85,7 @@ class LuceneSearchEngineTest {
 
     @Test
     void testMultipleSearch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").build());
+        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         result = searchEngine.search(new PageQuery(result.getNextPage(), 10));
@@ -98,7 +99,7 @@ class LuceneSearchEngineTest {
                         .query(new MatchQuery("author", "rowling"))
                         .query(new MatchQuery("title", "prince"))
                         .clauseType(ClauseType.MUST)
-                        .build());
+                        .buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(2, result.getMatchingResults().size());
     }
@@ -111,7 +112,7 @@ class LuceneSearchEngineTest {
                         .query(new MatchQuery("author", "rowling"))
                         .query(new MatchQuery("title", "prince"))
                         .clauseType(ClauseType.MUST)
-                        .build());
+                        .buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(2, result.getMatchingResults().size());
     }
@@ -123,7 +124,7 @@ class LuceneSearchEngineTest {
                         .query(new MatchQuery("author", "rowling"))
                         .query(new MatchQuery("title", "prince"))
                         .clauseType(ClauseType.SHOULD)
-                        .build());
+                        .buildForageQuery());
 
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertTrue(10 < result.getTotal().getTotal());
@@ -133,7 +134,7 @@ class LuceneSearchEngineTest {
     void testIntRangeSearch() throws ForageSearchError {
         ForageQueryResult<Book> result;
 
-        result = searchEngine.search(QueryBuilder.intRangeQuery("numPage", 600, 800).build());
+        result = searchEngine.search(QueryBuilder.intRangeQuery("numPage", 600, 800).buildForageQuery());
         Assertions.assertTrue(result.getMatchingResults()
                                       .stream()
                                       .map(matchingResult -> matchingResult.getData().getNumPage())
@@ -143,7 +144,7 @@ class LuceneSearchEngineTest {
         Assertions.assertEquals(644, result.getTotal().getTotal());
 
 
-        result = searchEngine.search(QueryBuilder.intRangeQuery("numPage", 100, 200).build());
+        result = searchEngine.search(QueryBuilder.intRangeQuery("numPage", 100, 200).buildForageQuery());
         Assertions.assertTrue(result.getMatchingResults()
                                       .stream()
                                       .map(matchingResult -> matchingResult.getData().getNumPage())
@@ -157,14 +158,35 @@ class LuceneSearchEngineTest {
     void testFuzzyMatchSearch() throws ForageSearchError {
 
         /* Match query for sayyer, should give 0 results */
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("title", "sayyer").build());
+        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("title", "sayyer").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(0, result.getMatchingResults().size());
         Assertions.assertEquals(0, result.getTotal().getTotal());
 
         /* Fuzzy Match query for sayyer should give tom sawyer type results */
-        result = searchEngine.search(QueryBuilder.fuzzyMatchQuery("title", "sayyer").build());
+        result = searchEngine.search(QueryBuilder.fuzzyMatchQuery("title", "sayyer").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertTrue(0 < result.getMatchingResults().size());
+    }
+
+    @Test
+    void testPhraseMatchSearch() throws ForageSearchError {
+
+        /* Match query for phrase Tom Sawyer, should give 0 results */
+        ForageQueryResult<Book> result =
+                searchEngine.search(QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").buildForageQuery());
+        System.out.println(ResultUtil.getBookRepresentation(result));
+        Assertions.assertEquals(6, result.getMatchingResults().size());
+        Assertions.assertEquals(6, result.getTotal().getTotal());
+    }
+
+    @Test
+    void testAllMatchSearch() throws ForageSearchError {
+
+        /* Match all query should give all books */
+        ForageQueryResult<Book> result =
+                searchEngine.search(QueryBuilder.matchAllQuery().buildForageQuery());
+        Assertions.assertEquals(10, result.getMatchingResults().size());
+        Assertions.assertEquals(1001, result.getTotal().getTotal());
     }
 }

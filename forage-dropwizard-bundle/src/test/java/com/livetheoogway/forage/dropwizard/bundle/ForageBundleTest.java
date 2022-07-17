@@ -22,7 +22,7 @@ import com.livetheoogway.forage.dropwizard.bundle.model.Book;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.util.QueryBuilder;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import com.livetheoogway.forage.search.engine.store.Store;
@@ -96,7 +96,7 @@ class ForageBundleTest {
 
         final ForageSearchError error = Assertions.assertThrows(
                 ForageSearchError.class,
-                () -> bundle.searchEngine().search(QueryBuilder.matchQuery("author", "rowling").build()));
+                () -> bundle.searchEngine().search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery()));
         Assertions.assertEquals(ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET, error.getForageErrorCode());
 
         store.put(new Book("id1", "Harry Potter and the Half-Blood Prince", "J.K. Rowling", 4.57f, "eng", 652));
@@ -107,7 +107,7 @@ class ForageBundleTest {
                 .until(() -> {
                     try {
                         final ForageQueryResult<Book> query2 = bundle.searchEngine().search(
-                                QueryBuilder.matchQuery("author", "rowling").build());
+                                QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
                         return query2.getTotal().getTotal() == 1;
                     } catch (ForageSearchError e) {
                         if (e.getForageErrorCode() != ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET) {
@@ -117,7 +117,7 @@ class ForageBundleTest {
                     }
                 });
         final ForageQueryResult<Book> results = bundle.searchEngine().search(
-                QueryBuilder.matchQuery("author", "rowling").build());
+                QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         Assertions.assertEquals("id1", results.getMatchingResults().get(0).getId());
         Assertions.assertEquals("Harry Potter and the Half-Blood Prince", results.getMatchingResults()
                 .get(0)

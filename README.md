@@ -259,19 +259,19 @@ public class MyApplication extends Application<MyConfiguration> {
 1. Simple Term Match
 
 ```java
-QueryBuilder.matchQuery("title","sawyer").build()
+QueryBuilder.matchQuery("title","sawyer").buildForageQuery()
 ```
 
 2. Fuzzy Query: You can try a fuzzy query match for retrieving results
 
 ```java
-QueryBuilder.fuzzyMatchQuery("title","sayyer").build()
+QueryBuilder.fuzzyMatchQuery("title","sayyer").buildForageQuery()
 ```
 
 3. Range Queries
 
 ```java
-QueryBuilder.intRangeQuery("numPage",600,800).build()
+QueryBuilder.intRangeQuery("numPage",600,800).buildForageQuery()
 ```
 
 5. Boolean Queries
@@ -281,15 +281,28 @@ QueryBuilder.booleanQuery()
         .query(new MatchQuery("author","rowling"))
         .query(new MatchQuery("title","prince"))
         .clauseType(ClauseType.MUST)  // or SHOULD, MUST_NOT, FILTER
-        .build();
+        .buildForageQuery();
 
 ```
 
 6. Page Queries and Paginated Results
 
 ```java
-ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").build());
+ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
 ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNextPage(), 10));
+```
+
+7. Phrase match query
+
+```java
+ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").buildForageQuery());
+```
+
+
+8. All match query
+
+```java
+ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchAllQuery().buildForageQuery());
 ```
 
 ## Tech Dependencies
@@ -320,7 +333,7 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [x] Fuzzy Query Support
 - [x] Dropwizard bundle for simpler integrations
 - [ ] Expose Scoring and boosting
-- [ ] Phrase Query Support
+- [x] Phrase Query Support
 - [ ] Auto complete query Support
 - [ ] Expose explain query IndexSearcher.explain(Query, doc)
 

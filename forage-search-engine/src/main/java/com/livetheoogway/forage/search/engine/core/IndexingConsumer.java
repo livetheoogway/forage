@@ -22,6 +22,7 @@ import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
 
 /**
@@ -38,6 +39,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
     private final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier;
     private final AtomicReference<ForageLuceneSearchEngine<T>> currentReference;
+    private final StampedLock lock = new StampedLock();
     private ForageLuceneSearchEngine<T> engine;
 
     public IndexingConsumer(final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier) {
@@ -47,11 +49,17 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
     @Override
     public void init() throws Exception {
-        if (engine == null) {
-            engine = newSearchEngineSupplier.get();
-        } else {
-            throw ForageSearchError.raise(ForageErrorCode.INVALID_STATE,
-                                          "Update listeners init is being called twice. This should not be happening");
+        final long readStamp = lock.readLock();
+        try {
+            if (engine == null) {
+                engine = newSearchEngineSupplier.get();
+            } else {
+                throw ForageSearchError.raise(ForageErrorCode.INVALID_STATE,
+                                              "Update listeners init is being called twice. This should not be "
+                                                      + "happening");
+            }
+        } finally {
+            lock.unlockRead(readStamp);
         }
     }
 
@@ -62,13 +70,13 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
     @Override
     public void finish() throws IOException, ForageSearchError {
-        synchronized (this) {
-            try (ForageLuceneSearchEngine<T> ignored = currentReference.get()) {
-                engine.flush();
-                currentReference.set(engine);
-            } finally {
-                engine = null;
-            }
+        final long writeStamp = lock.writeLock();
+        try (ForageLuceneSearchEngine<T> ignored = currentReference.get()) {
+            engine.flush();
+            currentReference.set(engine);
+        } finally {
+            engine = null;
+            lock.unlockWrite(writeStamp);
         }
     }
 

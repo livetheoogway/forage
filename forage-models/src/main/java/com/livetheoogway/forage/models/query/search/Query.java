@@ -26,8 +26,10 @@ import lombok.Data;
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "MATCH", value = MatchQuery.class),
         @JsonSubTypes.Type(name = "FUZZY_MATCH", value = FuzzyMatchQuery.class),
+        @JsonSubTypes.Type(name = "MATCH_ALL", value = MatchAllQuery.class),
         @JsonSubTypes.Type(name = "PARSABLE_QUERY", value = ParsableQuery.class),
         @JsonSubTypes.Type(name = "RANGE", value = RangeQuery.class),
+        @JsonSubTypes.Type(name = "PHRASE", value = PhraseMatchQuery.class),
         @JsonSubTypes.Type(name = "BOOLEAN", value = BooleanQuery.class)
 })
 @Data

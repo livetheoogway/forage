@@ -12,34 +12,30 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query;
+package com.livetheoogway.forage.models.query.search;
 
-import com.livetheoogway.forage.models.query.search.Query;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-
 @Value
-@ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class ForageSearchQuery extends ForageQuery {
-    Query query;
+@ToString(callSuper = true)
+public class PhraseMatchQuery extends Query {
+    String field;
+    String phrase;
 
-    @Min(1)
-    @Max(1024)
-    int size;
-
-    public ForageSearchQuery(final Query query, final int size) {
-        super(ForageQueryType.FORAGE_SEARCH);
-        this.query = query;
-        this.size = size;
+    @JsonCreator
+    public PhraseMatchQuery(@JsonProperty("field") final String field, @JsonProperty("phrase") final String phrase) {
+        super(QueryType.PHRASE);
+        this.field = field;
+        this.phrase = phrase;
     }
 
     @Override
-    public <T> T accept(final ForageQueryVisitor<T> visitor) throws Exception {
+    public <T> T accept(final QueryVisitor<T> visitor) throws Exception {
         return visitor.visit(this);
     }
 }

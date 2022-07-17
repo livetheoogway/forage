@@ -14,28 +14,37 @@
 
 package com.livetheoogway.forage.search.engine.lucene;
 
-import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
-import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserSupplier;
 import com.livetheoogway.forage.models.query.search.BooleanQuery;
 import com.livetheoogway.forage.models.query.search.ClauseVisitor;
 import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
+import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.search.ParsableQuery;
+import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
 import com.livetheoogway.forage.models.query.search.QueryVisitor;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.FloatRange;
 import com.livetheoogway.forage.models.query.search.range.IntRange;
 import com.livetheoogway.forage.models.query.search.range.RangeVisitor;
+import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
+import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
+import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserSupplier;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.MatchAllDocsQuery;
+import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
+
+import java.io.IOException;
 
 @AllArgsConstructor
 public class LuceneQueryGenerator implements QueryVisitor<Query> {
@@ -60,6 +69,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
             return BooleanClause.Occur.FILTER;
         }
     };
+    private Analyzer analyzer;
     private QueryParserSupplier queryParserSupplier;
 
     @Override
@@ -107,6 +117,28 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     @Override
     public Query visit(final FuzzyMatchQuery fuzzyMatchQuery) {
         return new FuzzyQuery(new Term(fuzzyMatchQuery.getField(), fuzzyMatchQuery.getValue()));
+    }
+
+    @Override
+    public Query visit(final PhraseMatchQuery phraseMatchQuery) throws ForageSearchError {
+
+        final MultiPhraseQuery.Builder builder = new MultiPhraseQuery.Builder();
+        try (final TokenStream tokenStream = analyzer.tokenStream(phraseMatchQuery.getField(), phraseMatchQuery.getPhrase())) {
+            CharTermAttribute charTermAttribute = tokenStream.addAttribute(CharTermAttribute.class);
+            tokenStream.reset(); // Resets this stream to the beginning. (Required)
+            while (tokenStream.incrementToken()) {
+                builder.add(new Term(phraseMatchQuery.getField(), charTermAttribute.toString()));
+            }
+            tokenStream.end();   // Perform end-of-stream operations, e.g. set the final offset.
+        } catch (IOException e) {
+            throw new ForageSearchError(ForageErrorCode.QUERY_PARSE_ERROR, e);
+        }
+        return builder.build();
+    }
+
+    @Override
+    public Query visit(final MatchAllQuery matchAllQuery) {
+        return new MatchAllDocsQuery();
     }
 
     @SneakyThrows

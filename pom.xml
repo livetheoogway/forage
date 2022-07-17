@@ -7,7 +7,7 @@
     <groupId>com.livetheoogway.forage</groupId>
     <artifactId>forage</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
 
     <name>forage</name>
     <description>
@@ -64,7 +64,6 @@
         <sonar.coverage.exclusions>
             **com/livetheoogway/forage/models/**
         </sonar.coverage.exclusions>
-
     </properties>
 
     <dependencyManagement>
@@ -177,20 +176,6 @@
                 <configuration>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>

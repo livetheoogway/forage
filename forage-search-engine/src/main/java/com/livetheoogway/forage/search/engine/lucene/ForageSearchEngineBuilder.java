@@ -32,6 +32,10 @@ public class ForageSearchEngineBuilder<T> {
     private QueryParserFactory queryParserFactory;
     private Store<T> store;
 
+    public static <T> ForageSearchEngineBuilder<T> builder() {
+        return new ForageSearchEngineBuilder<>();
+    }
+
     public ForageSearchEngineBuilder<T> withObjectMapper(final ObjectMapper mapper) {
         this.mapper = mapper;
         return this;
@@ -57,10 +61,6 @@ public class ForageSearchEngineBuilder<T> {
         return this;
     }
 
-    public static <T> ForageSearchEngineBuilder<T> builder() {
-        return new ForageSearchEngineBuilder<>();
-    }
-
     public ForageLuceneSearchEngine<T> build() throws ForageSearchError {
         /* validations */
         if (this.store == null) {
@@ -82,6 +82,6 @@ public class ForageSearchEngineBuilder<T> {
         }
 
         /* create a new engine */
-        return new ForageLuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
+        return new StampedLockCloseForageLuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
     }
 }

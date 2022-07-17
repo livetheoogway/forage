@@ -37,6 +37,7 @@ import com.livetheoogway.forage.search.engine.store.Store;
 import com.livetheoogway.forage.search.engine.util.ArrayUtils;
 import com.livetheoogway.forage.search.engine.util.ForageConverters;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
@@ -50,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class ForageLuceneSearchEngine<D>
         implements ForageSearchEngine<D>, DocumentIndexer<IndexableDocument>, Closeable {
 
@@ -72,7 +74,7 @@ public class ForageLuceneSearchEngine<D>
                                     final Analyzer analyzer) {
         this.documentHandler = new LuceneDocumentHandler();
         this.luceneIndex = new LuceneIndexInstance(analyzer);
-        this.luceneQueryGenerator = new LuceneQueryGenerator(queryParserFactory);
+        this.luceneQueryGenerator = new LuceneQueryGenerator(analyzer, queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
         this.dataStore = dataStore;
         this.queryParser = new QueryParser("TEMP", analyzer); //todo needs a more elegant solution for page parsing
@@ -86,7 +88,9 @@ public class ForageLuceneSearchEngine<D>
 
     @Override
     public void flush() throws ForageSearchError {
+        log.info("Flushing lucene with all newly indexed items");
         luceneIndex.flush();
+        log.info("Flushing done");
     }
 
     @SneakyThrows

@@ -41,6 +41,7 @@ public abstract class UpdateEngine<D extends DataId> {
      * the primary function that is supposed to bootstrap all items into the consumer
      */
     public void bootstrap() throws Exception {
+        log.info("Bootstrapping forage ...");
         itemConsumer.init();
         bootstrapper.bootstrap(item -> {
             try {
@@ -50,6 +51,7 @@ public abstract class UpdateEngine<D extends DataId> {
             }
         });
         itemConsumer.finish();
+        log.info("... Bootstrapping forage done");
     }
 
     /**

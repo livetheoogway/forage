@@ -19,6 +19,7 @@ import lombok.ToString;
 import lombok.Value;
 
 import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 
 @Value
 @ToString(callSuper = true)
@@ -26,6 +27,7 @@ import javax.validation.constraints.Max;
 public class PageQuery extends ForageQuery {
     String page;
 
+    @Min(1)
     @Max(1024)
     int size;
 

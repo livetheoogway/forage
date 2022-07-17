@@ -12,39 +12,41 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.search.engine.lucene.util;
+package com.livetheoogway.forage.models.query.util;
 
 import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.ForageSearchQuery;
 import com.livetheoogway.forage.models.query.search.BooleanQuery;
 import com.livetheoogway.forage.models.query.search.ClauseType;
 import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
+import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
+import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
 import com.livetheoogway.forage.models.query.search.Query;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.FloatRange;
 import com.livetheoogway.forage.models.query.search.range.IntRange;
 import lombok.AllArgsConstructor;
 
-class Builders {
+public class Builders {
 
     interface Builder {
-        ForageQuery build();
+        ForageQuery buildForageQuery();
 
-        ForageQuery build(int size);
+        ForageQuery buildForageQuery(int size);
     }
 
-    abstract static class InnerQueryBuilder implements Builder {
-        abstract Query query();
+    public abstract static class InnerQueryBuilder implements Builder {
+        public abstract Query build();
 
         @Override
-        public ForageQuery build() {
-            return new ForageSearchQuery(query(), 10);
+        public ForageQuery buildForageQuery() {
+            return new ForageSearchQuery(build(), 10);
         }
 
         @Override
-        public ForageQuery build(final int size) {
-            return new ForageSearchQuery(query(), size);
+        public ForageQuery buildForageQuery(final int size) {
+            return new ForageSearchQuery(build(), size);
         }
     }
 
@@ -54,7 +56,7 @@ class Builders {
         private String value;
 
         @Override
-        Query query() {
+        public Query build() {
             return new MatchQuery(field, value);
         }
     }
@@ -65,8 +67,26 @@ class Builders {
         private String value;
 
         @Override
-        Query query() {
+        public Query build() {
             return new FuzzyMatchQuery(field, value);
+        }
+    }
+
+    @AllArgsConstructor
+    public static class InnerPhraseMatchQueryBuilder extends InnerQueryBuilder {
+        private String field;
+        private String phrase;
+
+        @Override
+        public Query build() {
+            return new PhraseMatchQuery(field, phrase);
+        }
+    }
+
+    public static final class InnerMatchAllQueryBuilder extends InnerQueryBuilder {
+        @Override
+        public Query build() {
+            return new MatchAllQuery();
         }
     }
 
@@ -77,7 +97,7 @@ class Builders {
         private int high;
 
         @Override
-        Query query() {
+        public Query build() {
             return new RangeQuery(field, new IntRange(low, high));
         }
     }
@@ -89,7 +109,7 @@ class Builders {
         private float high;
 
         @Override
-        Query query() {
+        public Query build() {
             return new RangeQuery(field, new FloatRange(low, high));
         }
     }
@@ -108,7 +128,7 @@ class Builders {
         }
 
         @Override
-        Query query() {
+        public Query build() {
             return innerBuilder.build();
         }
     }

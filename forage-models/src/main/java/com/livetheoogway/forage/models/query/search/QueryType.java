@@ -17,6 +17,9 @@ package com.livetheoogway.forage.models.query.search;
 public enum QueryType {
     BOOLEAN,
     MATCH,
+    PHRASE,
+    MATCH_ALL,
     PARSABLE_QUERY,
-    FUZZY_MATCH, RANGE
+    FUZZY_MATCH,
+    RANGE
 }

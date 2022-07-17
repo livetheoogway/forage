@@ -14,12 +14,15 @@
 
 package com.livetheoogway.forage.core;
 
+import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * This consumer is designed to make the Item consumption thread safe
@@ -83,20 +86,34 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
     }
 
     @Override
-    public void finish() {
-        log.info("Finished has been called, we shall now add the poison pill");
+    public void finish() throws InterruptedException {
+        log.info("finish() has been called, we shall now add the poison pill");
         queue.add(new QueueItem<>(null, true));
+
+        /* Since the consumption is async, we need to now wait for all items pushed to the queue, to be consumed.
+         * If we don't do this, the scheduler might start a new Init process, which can potentially cause multiple
+         * inits to be running in parallel. We don't want that to happen
+         */
+        synchronized (queue) {
+            while (!queue.isEmpty()) {
+                log.info("Waiting till all queue items are consumed, including the poison pill");
+                queue.wait(); // wait until the queue consumption has finished
+            }
+        }
+        log.info("Finished with the entire consumer process");
     }
 
     @Override
+    @SneakyThrows
     public void run() {
+        val consumedCounter = new AtomicInteger(0);
         while (true) {
             QueueItem<I> queueItem;
             try {
                 queueItem = queue.take();
             } catch (InterruptedException e) {
                 log.info("Queue consumption has been interrupted", e);
-                break;  /* we are breaking here to close the thread */
+                throw e;
             }
             if (queueItem.isPoisonPill()) {
                 log.info("We have now reached the poison pill, we will finish listening now");
@@ -105,11 +122,17 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
             }
             try {
                 consumer.consume(queueItem.getItem());
+                consumedCounter.incrementAndGet();
             } catch (Exception e) {
                 log.info("Error while taking the update for item:{}", queueItem, e);
                 itemConsumptionErrorHandler.handleError(queueItem.getItem(), e);
                 /* we are not breaking here, to continue consuming next items */
             }
+        }
+        synchronized (queue) {
+            log.info("Consumed:{} items. Notifying all threads waiting for the queue to become empty",
+                     consumedCounter.get());
+            queue.notifyAll(); // ensure that the wait was finished
         }
     }
 

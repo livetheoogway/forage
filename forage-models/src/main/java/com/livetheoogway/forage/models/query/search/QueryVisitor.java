@@ -16,14 +16,19 @@ package com.livetheoogway.forage.models.query.search;
 
 @SuppressWarnings("java:S112")
 public interface QueryVisitor<T> {
+
     T visit(BooleanQuery booleanQuery) throws Exception;
 
     T visit(MatchQuery matchQuery) throws Exception;
 
     T visit(ParsableQuery parsableQuery) throws Exception;
 
-    T visit(RangeQuery rangeQuery);
+    T visit(RangeQuery rangeQuery) throws Exception;
 
-    T visit(FuzzyMatchQuery fuzzyMatchQuery);
+    T visit(FuzzyMatchQuery fuzzyMatchQuery) throws Exception;
+
+    T visit(PhraseMatchQuery phraseMatchQuery) throws Exception;
+
+    T visit(MatchAllQuery matchAllQuery) throws Exception;
 
 }
