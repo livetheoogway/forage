@@ -293,14 +293,14 @@ ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNe
 7. Phrase match query
 
 ```java
-ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").buildForageQuery());
+QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").buildForageQuery();
 ```
 
 
 8. All match query
 
 ```java
-ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchAllQuery().buildForageQuery());
+QueryBuilder.matchAllQuery().buildForageQuery();
 ```
 
 ## Tech Dependencies
