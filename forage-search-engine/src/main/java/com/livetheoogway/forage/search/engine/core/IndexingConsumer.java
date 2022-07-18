@@ -15,10 +15,11 @@
 package com.livetheoogway.forage.search.engine.core;
 
 import com.livetheoogway.forage.core.ItemConsumer;
-import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.lucene.ForageLuceneSearchEngine;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
+import lombok.extern.slf4j.Slf4j;
+import lombok.val;
 
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,52 +36,60 @@ import java.util.function.Supplier;
  *
  * @param <T> Type of data being stored in the main database
  */
+@Slf4j
 public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
 
     private final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier;
-    private final AtomicReference<ForageLuceneSearchEngine<T>> currentReference;
+    private final AtomicReference<ForageLuceneSearchEngine<T>> liveReference;
+    private final AtomicReference<ForageLuceneSearchEngine<T>> newReferenceBeingBuilt;
     private final StampedLock lock = new StampedLock();
-    private ForageLuceneSearchEngine<T> engine;
 
     public IndexingConsumer(final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier) {
         this.newSearchEngineSupplier = newSearchEngineSupplier;
-        this.currentReference = new AtomicReference<>();
+        this.liveReference = new AtomicReference<>();
+        this.newReferenceBeingBuilt = new AtomicReference<>();
     }
 
     @Override
     public void init() throws Exception {
-        final long readStamp = lock.readLock();
+        var stamp = lock.readLock();
         try {
-            if (engine == null) {
-                engine = newSearchEngineSupplier.get();
-            } else {
-                throw ForageSearchError.raise(ForageErrorCode.INVALID_STATE,
-                                              "Update listeners init is being called twice. This should not be "
-                                                      + "happening");
+            if (newReferenceBeingBuilt.get() != null) {
+                log.warn("The previous engine was not entirely swapped out. We are now going to clean it up and then "
+                                 + "recreate a new searchEngine");
+                val writeLock = lock.tryConvertToWriteLock(stamp);
+                if (writeLock == 0) {
+                    lock.unlockRead(stamp);
+                    stamp = lock.writeLock();
+                } else {
+                    stamp = writeLock;
+                }
+                newReferenceBeingBuilt.get().close();
             }
+            newReferenceBeingBuilt.set(newSearchEngineSupplier.get());
         } finally {
-            lock.unlockRead(readStamp);
+            lock.unlock(stamp);
         }
     }
 
     @Override
     public void consume(final IndexableDocument indexableDocument) throws Exception {
-        engine.index(indexableDocument);
+        newReferenceBeingBuilt.get().index(indexableDocument);
     }
 
     @Override
     public void finish() throws IOException, ForageSearchError {
-        final long writeStamp = lock.writeLock();
-        try (ForageLuceneSearchEngine<T> ignored = currentReference.get()) {
-            engine.flush();
-            currentReference.set(engine);
+        val writeStamp = lock.writeLock();
+        try (ForageLuceneSearchEngine<T> ignored = liveReference.get()) {
+            newReferenceBeingBuilt.get().flush();
+            liveReference.set(newReferenceBeingBuilt.get());
         } finally {
-            engine = null;
+            newReferenceBeingBuilt.set(null);
             lock.unlockWrite(writeStamp);
         }
     }
 
     public ForageLuceneSearchEngine<T> searchEngine() {
-        return currentReference.get();
+        return liveReference.get();
     }
 }

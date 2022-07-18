@@ -103,17 +103,6 @@ class PeriodicallyUpdatedForageSearchEngineTest {
     }
 
     @Test
-    void test() throws Exception {
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-        System.out.println(" ========================================================= ");
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-        testPeriodicallyUpdatedQueryEngineWithFrequentQueries();
-    }
-
-    @Test
     void testPeriodicallyUpdatedQueryEngineWithFrequentQueries() throws Exception {
         final BookDataStore dataStore = new BookDataStore();
         final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
@@ -121,34 +110,10 @@ class PeriodicallyUpdatedForageSearchEngineTest {
                         .withDataStore(dataStore)
                         .withObjectMapper(TestUtils.mapper()));
 
-        performTest(dataStore, luceneQueryEngineContainer);
+        performParallelSearchExecutions(dataStore, luceneQueryEngineContainer);
     }
 
-//    @Test
-//    void testPeriodicallyUpdatedQueryEngineWithFrequentQueriesSemaphore() throws Exception {
-//        final BookDataStore dataStore = new BookDataStore();
-//        final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
-//                ForageSearchEngineBuilder.<Book>builder()
-//                        .withDataStore(dataStore)
-//                        .semaphore()
-//                        .withObjectMapper(TestUtils.mapper()));
-//
-//        performTest(dataStore, luceneQueryEngineContainer);
-//    }
-//
-//    @Test
-//    void testPeriodicallyUpdatedQueryEngineWithFrequentQueriesStampedLock() throws Exception {
-//        final BookDataStore dataStore = new BookDataStore();
-//        final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
-//                ForageSearchEngineBuilder.<Book>builder()
-//                        .withDataStore(dataStore)
-//                        .lock()
-//                        .withObjectMapper(TestUtils.mapper()));
-//
-//        performTest(dataStore, luceneQueryEngineContainer);
-//    }
-
-    private void performTest(final BookDataStore dataStore, final ForageEngineIndexer<Book> luceneQueryEngineContainer)
+    private void performParallelSearchExecutions(final BookDataStore dataStore, final ForageEngineIndexer<Book> luceneQueryEngineContainer)
             throws Exception {
         dataStore.addBooks(1);
 
