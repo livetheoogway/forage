@@ -15,10 +15,14 @@
 package com.livetheoogway.forage.search.engine.store;
 
 
+import java.util.List;
+import java.util.Map;
+
 /**
- * A simple key value store
+ * An interface to retrieve data from a store in bulk
+ *
  * @param <T>
  */
 public interface Store<T> {
-    T get(String id);
+    Map<String, T> get(List<String> ids);
 }

@@ -19,6 +19,7 @@ import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.ForageQueryVisitor;
 import com.livetheoogway.forage.models.query.ForageSearchQuery;
 import com.livetheoogway.forage.models.query.PageQuery;
+import com.livetheoogway.forage.models.result.DocScore;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.models.result.MatchingResult;
 import com.livetheoogway.forage.models.result.Relation;
@@ -37,6 +38,7 @@ import com.livetheoogway.forage.search.engine.store.Store;
 import com.livetheoogway.forage.search.engine.util.ArrayUtils;
 import com.livetheoogway.forage.search.engine.util.ForageConverters;
 import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
@@ -49,6 +51,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -141,12 +144,20 @@ public class ForageLuceneSearchEngine<D>
                 .orElse(null);
         val docRetriever = luceneIndex.docRetriever();
 
-        final List<MatchingResult<D>> matchingResults = Arrays.stream(topDocs.scoreDocs)
+        final List<IntermediateDocResult> intermediateDocResults = Arrays.stream(topDocs.scoreDocs)
                 .map(scoreDoc -> {
                     val doc = docRetriever.document(scoreDoc.doc);
                     final String docId = documentHandler.extractId(doc);
-                    return new MatchingResult<>(docId, dataStore.get(docId), ForageConverters.toDocScore(scoreDoc));
+                    return new IntermediateDocResult(docId, ForageConverters.toDocScore(scoreDoc));
                 }).collect(Collectors.toList());
+
+        final Map<String, D> dataStoreResults = dataStore.get(
+                intermediateDocResults.stream().map(IntermediateDocResult::getDocId).collect(Collectors.toList()));
+
+        final List<MatchingResult<D>> matchingResults = intermediateDocResults
+                .stream()
+                .map(docResult -> new MatchingResult<>(docResult.getDocId(), dataStoreResults.get(docResult.getDocId()),
+                                                   docResult.getDocScore())).collect(Collectors.toList());
 
         return ForageQueryResult.<D>builder()
                 .matchingResults(matchingResults)
@@ -158,6 +169,12 @@ public class ForageLuceneSearchEngine<D>
     @Override
     public void close() throws IOException {
         luceneIndex.close();
+    }
+
+    @Value
+    public static class IntermediateDocResult {
+        String docId;
+        DocScore docScore;
     }
 }
 

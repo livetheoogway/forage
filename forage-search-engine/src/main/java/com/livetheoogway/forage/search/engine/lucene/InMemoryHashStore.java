@@ -16,6 +16,7 @@ package com.livetheoogway.forage.search.engine.lucene;
 
 import com.livetheoogway.forage.models.DataId;
 import com.livetheoogway.forage.search.engine.store.Store;
+import com.livetheoogway.forage.search.engine.util.MapEntry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -36,12 +37,12 @@ class InMemoryHashStore<T extends DataId> implements Store<T> {
         dataItems.forEach(this::store);
     }
 
-    @Override
-    public T get(final String id) {
-        return hashMap.get(id);
-    }
-
     public void cleanup() {
         hashMap = new HashMap<>();
+    }
+
+    @Override
+    public Map<String, T> get(final List<String> ids) {
+        return ids.stream().map(k -> MapEntry.of(k, hashMap.get(k))).collect(MapEntry.mapCollector());
     }
 }

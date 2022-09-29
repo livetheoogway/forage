@@ -26,6 +26,7 @@ import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import com.livetheoogway.forage.search.engine.store.Store;
+import com.livetheoogway.forage.search.engine.util.MapEntry;
 import io.dropwizard.Configuration;
 import io.dropwizard.jersey.DropwizardResourceConfig;
 import io.dropwizard.jersey.setup.JerseyEnvironment;
@@ -40,6 +41,8 @@ import org.junit.jupiter.api.Test;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.mockito.Mockito.mock;
@@ -133,8 +136,8 @@ class ForageBundleTest {
         }
 
         @Override
-        public Book get(final String id) {
-            return books.get(id);
+        public Map<String, Book> get(final List<String> ids) {
+            return ids.stream().map(k -> MapEntry.of(k, books.get(k))).collect(MapEntry.mapCollector());
         }
 
         @Override

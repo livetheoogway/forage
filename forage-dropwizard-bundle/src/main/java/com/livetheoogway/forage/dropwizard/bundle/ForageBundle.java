@@ -26,10 +26,12 @@ import io.dropwizard.Configuration;
 import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public abstract class ForageBundle<T extends Configuration, D> implements ConfiguredBundle<T> {
 
     /* the reference to the search engine that will get swapped with the actual one on start up */
@@ -64,6 +66,7 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
         environment.lifecycle().manage(new Managed() {
             @Override
             public void start() {
+                log.info("[forage][startup] Starting the engine...");
                 final ForageSearchEngineBuilder<D> engineBuilder = ForageSearchEngineBuilder.<D>builder()
                         .withObjectMapper(environment.getObjectMapper())
                         .withDataStore(dataStore(configuration));
@@ -81,6 +84,7 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
                 updateEngineRef.set(updateEngine);
 
                 updateEngineRef.get().start();
+                log.info("[forage][startup] .. Done starting engine and setting up periodic updates");
             }
 
             @Override

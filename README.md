@@ -152,9 +152,12 @@ class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
         }
     }
 
+    // The following function will be called during search operations.
+    // This is to get the current stored data for the matching doc ids during the search operation, you just have to replace 
+    // this with the implementation that retrieves the ids from your actual datastore
     @Override
-    public Book get(final String id) {
-        return books.get(id);
+    public Map<String, Book> get(final List<String> ids) {
+        return ids.stream().map(id -> MapEntry.of(id, books.get(id))).collect(MapEntry.mapCollector());
     }
 }
 ```

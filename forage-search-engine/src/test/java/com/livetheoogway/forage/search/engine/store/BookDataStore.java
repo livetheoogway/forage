@@ -19,6 +19,7 @@ import com.livetheoogway.forage.search.engine.ResourceReader;
 import com.livetheoogway.forage.search.engine.model.Book;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
+import com.livetheoogway.forage.search.engine.util.MapEntry;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -49,7 +50,7 @@ public class BookDataStore implements Bootstrapper<IndexableDocument>, Store<Boo
     }
 
     public void addAllBooks() {
-        this.addBooks(fullGlossaryOfBook.size() -1);
+        this.addBooks(fullGlossaryOfBook.size() - 1);
     }
 
     @Override
@@ -59,7 +60,7 @@ public class BookDataStore implements Bootstrapper<IndexableDocument>, Store<Boo
     }
 
     @Override
-    public Book get(final String id) {
-        return booksAvailableForIndexing.get(id);
+    public Map<String, Book> get(final List<String> ids) {
+        return ids.stream().map(k -> MapEntry.of(k, booksAvailableForIndexing.get(k))).collect(MapEntry.mapCollector());
     }
 }
