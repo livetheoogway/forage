@@ -17,6 +17,7 @@ package com.livetheoogway.forage.dropwizard.bundle;
 import com.livetheoogway.forage.core.AsyncQueuedConsumer;
 import com.livetheoogway.forage.core.Bootstrapper;
 import com.livetheoogway.forage.core.PeriodicUpdateEngine;
+import com.livetheoogway.forage.core.UpdateEngine;
 import com.livetheoogway.forage.search.engine.ForageSearchEngine;
 import com.livetheoogway.forage.search.engine.lucene.ForageEngineIndexer;
 import com.livetheoogway.forage.search.engine.lucene.ForageSearchEngineBuilder;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 @Slf4j
 public abstract class ForageBundle<T extends Configuration, D> implements ConfiguredBundle<T> {
@@ -37,6 +39,8 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
     /* the reference to the search engine that will get swapped with the actual one on start up */
     private final DelegatedForageSearchEngine<D> delegatedForageSearchEngine
             = new DelegatedForageSearchEngine<>(new ForagePreStartEngine<>());
+
+    private final AtomicReference<PeriodicUpdateEngine<IndexableDocument>> updateEngineRef = new AtomicReference<>();
 
     /**
      * @param configuration application configuration
@@ -60,9 +64,18 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
         return delegatedForageSearchEngine;
     }
 
+    /**
+     * Use this to do adhoc {@link UpdateEngine#bootstrap()}, other than the periodic bootstrap that happens as part
+     * of this bundle.
+     *
+     * @return supplier of the {@link UpdateEngine}
+     */
+    public Supplier<UpdateEngine<IndexableDocument>> updateEngine() {
+        return updateEngineRef::get;
+    }
+
     @Override
     public void run(final T configuration, final Environment environment) {
-        AtomicReference<PeriodicUpdateEngine<IndexableDocument>> updateEngineRef = new AtomicReference<>();
         environment.lifecycle().manage(new Managed() {
             @Override
             public void start() {
