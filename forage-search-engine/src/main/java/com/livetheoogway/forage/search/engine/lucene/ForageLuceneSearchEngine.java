@@ -46,7 +46,6 @@ import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
 
-import java.io.Closeable;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,7 +55,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ForageLuceneSearchEngine<D>
-        implements ForageSearchEngine<D>, DocumentIndexer<IndexableDocument>, Closeable {
+        implements ForageSearchEngine<D>, DocumentIndexer<IndexableDocument> {
 
     private final LuceneDocumentHandler documentHandler;
     private final LuceneIndex luceneIndex;

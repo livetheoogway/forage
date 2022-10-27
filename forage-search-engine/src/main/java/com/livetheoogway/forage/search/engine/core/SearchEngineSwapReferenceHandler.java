@@ -15,9 +15,8 @@
 package com.livetheoogway.forage.search.engine.core;
 
 import com.livetheoogway.forage.core.ItemConsumer;
+import com.livetheoogway.forage.search.engine.DocumentIndexer;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.lucene.ForageLuceneSearchEngine;
-import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -37,14 +36,14 @@ import java.util.function.Supplier;
  * @param <T> Type of data being stored in the main database
  */
 @Slf4j
-public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
+public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> implements ItemConsumer<T> {
 
-    private final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier;
-    private final AtomicReference<ForageLuceneSearchEngine<T>> liveReference;
-    private final AtomicReference<ForageLuceneSearchEngine<T>> newReferenceBeingBuilt;
+    private final Supplier<R> newSearchEngineSupplier;
+    private final AtomicReference<R> liveReference;
+    private final AtomicReference<R> newReferenceBeingBuilt;
     private final StampedLock lock = new StampedLock();
 
-    public IndexingConsumer(final Supplier<ForageLuceneSearchEngine<T>> newSearchEngineSupplier) {
+    public SearchEngineSwapReferenceHandler(final Supplier<R> newSearchEngineSupplier) {
         this.newSearchEngineSupplier = newSearchEngineSupplier;
         this.liveReference = new AtomicReference<>();
         this.newReferenceBeingBuilt = new AtomicReference<>();
@@ -55,6 +54,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
         var stamp = lock.readLock();
         try {
             if (newReferenceBeingBuilt.get() != null) {
+                /* This can happen if the previous thread trying to bootstrap, did not finish() entirely */
                 log.warn("The previous engine was not entirely swapped out. We are now going to clean it up and then "
                                  + "recreate a new searchEngine");
                 val writeLock = lock.tryConvertToWriteLock(stamp);
@@ -73,14 +73,14 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
     }
 
     @Override
-    public void consume(final IndexableDocument indexableDocument) throws Exception {
+    public void consume(final T indexableDocument) throws Exception {
         newReferenceBeingBuilt.get().index(indexableDocument);
     }
 
     @Override
     public void finish() throws IOException, ForageSearchError {
         val writeStamp = lock.writeLock();
-        try (ForageLuceneSearchEngine<T> ignored = liveReference.get()) {
+        try (DocumentIndexer<T> ignored = liveReference.get()) {
             newReferenceBeingBuilt.get().flush();
             liveReference.set(newReferenceBeingBuilt.get());
         } finally {
@@ -89,7 +89,7 @@ public class IndexingConsumer<T> implements ItemConsumer<IndexableDocument> {
         }
     }
 
-    public ForageLuceneSearchEngine<T> searchEngine() {
+    public R searchEngine() {
         return liveReference.get();
     }
 }

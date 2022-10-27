@@ -103,10 +103,7 @@ public class LuceneIndexInstance implements LuceneIndex {
 
     @Override
     public synchronized void flush() throws ForageSearchError {
-        if (indexWriterReference.get() == null) {
-            throw ForageSearchError.raise(ForageErrorCode.INDEX_FLUSH_ERROR, "Nothing to flush");
-        }
-        final IndexWriter indexWriter = indexWriterReference.get();
+        final IndexWriter indexWriter = indexWriter();
         try {
             indexWriter.flush();
             Utils.closeSafe(indexWriter, "IndexWriter");
