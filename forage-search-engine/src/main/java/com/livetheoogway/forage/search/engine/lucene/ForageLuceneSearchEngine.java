@@ -90,9 +90,9 @@ public class ForageLuceneSearchEngine<D>
 
     @Override
     public void flush() throws ForageSearchError {
-        log.info("Flushing lucene with all newly indexed items");
+        log.info("[forage] Flushing lucene with all newly indexed items");
         luceneIndex.flush();
-        log.info("Flushing done");
+        log.info("[forage] Flushing done");
     }
 
     @SneakyThrows

@@ -24,6 +24,6 @@ public class LoggingErrorHandler<T> implements ErrorHandler<T> {
 
     @Override
     public void handleError(final T o, final Exception e) {
-        log.error("[{}] Error during execution for item: {}", callerClass.getSimpleName(), o, e);
+        log.error("[forage][{}] Error during execution for item: {}", callerClass.getSimpleName(), o, e);
     }
 }

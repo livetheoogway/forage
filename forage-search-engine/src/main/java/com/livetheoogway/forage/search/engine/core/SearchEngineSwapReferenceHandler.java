@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.StampedLock;
 import java.util.function.Supplier;
@@ -41,6 +42,7 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
     private final Supplier<R> newSearchEngineSupplier;
     private final AtomicReference<R> liveReference;
     private final AtomicReference<R> newReferenceBeingBuilt;
+    private final AtomicInteger counter = new AtomicInteger(0);
     private final StampedLock lock = new StampedLock();
 
     public SearchEngineSwapReferenceHandler(final Supplier<R> newSearchEngineSupplier) {
@@ -55,8 +57,8 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
         try {
             if (newReferenceBeingBuilt.get() != null) {
                 /* This can happen if the previous thread trying to bootstrap, did not finish() entirely */
-                log.warn("The previous engine was not entirely swapped out. We are now going to clean it up and then "
-                                 + "recreate a new searchEngine");
+                log.warn("[forage] The previous engine was not entirely swapped out. We are now going to clean it up "
+                                 + "and then recreate a new searchEngine");
                 val writeLock = lock.tryConvertToWriteLock(stamp);
                 if (writeLock == 0) {
                     lock.unlockRead(stamp);
@@ -67,6 +69,7 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
                 newReferenceBeingBuilt.get().close();
             }
             newReferenceBeingBuilt.set(newSearchEngineSupplier.get());
+            counter.set(0);
         } finally {
             lock.unlock(stamp);
         }
@@ -75,6 +78,7 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
     @Override
     public void consume(final T indexableDocument) throws Exception {
         newReferenceBeingBuilt.get().index(indexableDocument);
+        counter.incrementAndGet();
     }
 
     @Override
@@ -83,6 +87,7 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
         try (DocumentIndexer<T> ignored = liveReference.get()) {
             newReferenceBeingBuilt.get().flush();
             liveReference.set(newReferenceBeingBuilt.get());
+            log.info("[forage] reference successfully swapped. Indexed: {}", counter.get());
         } finally {
             newReferenceBeingBuilt.set(null);
             lock.unlockWrite(writeStamp);

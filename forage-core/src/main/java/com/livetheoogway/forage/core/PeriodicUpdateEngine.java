@@ -68,7 +68,7 @@ public class PeriodicUpdateEngine<D extends DataId> extends UpdateEngine<D> {
             try {
                 bootstrap();
             } catch (Exception e) {
-                log.error("Error while doing bootstrap", e);
+                log.error("[forage] Error while doing bootstrap", e);
             }
         }, 0, delay, timeUnit);
     }

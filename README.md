@@ -12,11 +12,19 @@
     <a href="https://github.com/livetheoogway/forage/blob/master/LICENSE">
     	<img src="https://img.shields.io/github/license/livetheoogway/forage" alt="license" />
     </a>
-    <a href=".github/badges/jacoco.svg">
-    	<img src=".github/badges/jacoco.svg"/>
+  </p>
+  <p align="center">
+    <a href="https://sonarcloud.io/project/overview?id=livetheoogway_forage">
+    	<img src="https://sonarcloud.io/api/project_badges/measure?project=livetheoogway_forage&metric=alert_status"/>
     </a>
-    <a href=".github/badges/branches.svg">
-    	<img src=".github/badges/branches.svg"/>
+    <a href="https://sonarcloud.io/project/overview?id=livetheoogway_forage">
+    	<img src="https://sonarcloud.io/api/project_badges/measure?project=livetheoogway_forage&metric=coverage"/>
+    </a>
+    <a href="https://sonarcloud.io/project/overview?id=livetheoogway_forage">
+    	<img src="https://sonarcloud.io/api/project_badges/measure?project=livetheoogway_forage&metric=bugs"/>
+    </a>
+    <a href="https://sonarcloud.io/project/overview?id=livetheoogway_forage">
+    	<img src="https://sonarcloud.io/api/project_badges/measure?project=livetheoogway_forage&metric=vulnerabilities"/>
     </a>
   </p>
 </p>
