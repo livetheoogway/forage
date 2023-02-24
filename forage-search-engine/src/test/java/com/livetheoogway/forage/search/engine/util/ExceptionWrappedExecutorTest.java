@@ -16,18 +16,18 @@ package com.livetheoogway.forage.search.engine.util;
 
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import lombok.experimental.UtilityClass;
+import org.junit.jupiter.api.Test;
 
-@UtilityClass
-public class ExceptionWrappedExecutor {
-    public <T> T get(final ESupplier<T> supplier, final ForageErrorCode errorCode) throws ForageSearchError {
-        try {
-            return supplier.get();
-        } catch (Exception e) {
-            if (e instanceof ForageSearchError) {
-                throw (ForageSearchError) e;
-            }
-            throw new ForageSearchError(errorCode, e);
-        }
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class ExceptionWrappedExecutorTest {
+    @Test
+    void testThatExceptionWrappedExecutorDoesItsJob() {
+        assertThrows(ForageSearchError.class, () -> ExceptionWrappedExecutor.get(() -> {
+            throw ForageSearchError.raise(ForageErrorCode.SOMETHING_WENT_WRONG, "");
+        }, ForageErrorCode.SOMETHING_WENT_WRONG));
+        assertThrows(ForageSearchError.class, () -> ExceptionWrappedExecutor.get(() -> {
+            throw new RuntimeException();
+        }, ForageErrorCode.SOMETHING_WENT_WRONG));
     }
 }
