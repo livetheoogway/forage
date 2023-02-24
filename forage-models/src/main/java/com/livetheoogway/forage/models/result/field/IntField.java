@@ -15,13 +15,13 @@
 package com.livetheoogway.forage.models.result.field;
 
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.Value;
+
+import java.util.Arrays;
 
 @Value
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class IntField extends Field{
+public class IntField extends Field {
     String name;
     int[] points;
 
@@ -34,5 +34,11 @@ public class IntField extends Field{
     @Override
     public <T> T accept(final FieldVisitor<T> fieldVisitor) {
         return fieldVisitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append("INT[").append(name)
+                .append(":").append(Arrays.toString(points)).append("]").toString();
     }
 }

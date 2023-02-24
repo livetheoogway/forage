@@ -28,6 +28,4 @@ public interface LuceneIndex extends Closeable {
     void flush() throws ForageSearchError;
 
     DocRetriever docRetriever();
-
-    LuceneIndex freshIndex() throws ForageSearchError;
 }

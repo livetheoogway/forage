@@ -84,10 +84,12 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
     @Override
     public void finish() throws IOException, ForageSearchError {
         val writeStamp = lock.writeLock();
-        try (DocumentIndexer<T> ignored = liveReference.get()) {
+        try {
+            final DocumentIndexer<T> referenceToBeSwapped = liveReference.get();
             newReferenceBeingBuilt.get().flush();
             liveReference.set(newReferenceBeingBuilt.get());
             log.info("[forage] reference successfully swapped. Indexed: {}", counter.get());
+            referenceToBeSwapped.close();
         } finally {
             newReferenceBeingBuilt.set(null);
             lock.unlockWrite(writeStamp);

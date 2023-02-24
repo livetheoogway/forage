@@ -14,8 +14,9 @@
 
 package com.livetheoogway.forage.search.engine.lucene;
 
-import com.livetheoogway.forage.search.engine.model.index.DocumentVisitor;
 import com.livetheoogway.forage.search.engine.lucene.field.LuceneFieldHandler;
+import com.livetheoogway.forage.search.engine.lucene.field.LuceneFieldValidator;
+import com.livetheoogway.forage.search.engine.model.index.DocumentVisitor;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.LuceneDocument;
 import lombok.val;
@@ -26,12 +27,14 @@ import org.apache.lucene.document.StringField;
 public class LuceneDocumentHandler implements DocumentVisitor<Document> {
     private static final String ID = "__ID__";
     private final LuceneFieldHandler fieldGenerator = new LuceneFieldHandler();
+    private final LuceneFieldValidator fieldValidator = new LuceneFieldValidator();
 
     @Override
     public Document visit(final ForageDocument forageDocument) {
         val document = new Document();
         forageDocument.getFields()
                 .stream()
+                .filter(field -> field.accept(fieldValidator))
                 .map(field -> field.accept(fieldGenerator))
                 .forEach(document::add);
         document.add(new StringField(ID, forageDocument.id(), Field.Store.YES));

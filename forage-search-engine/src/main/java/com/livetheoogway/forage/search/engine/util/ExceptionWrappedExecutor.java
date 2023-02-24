@@ -19,7 +19,7 @@ import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-public class ExceptionExecution {
+public class ExceptionWrappedExecutor {
     public <T> T get(final ESupplier<T> supplier, final ForageErrorCode errorCode) throws ForageSearchError {
         try {
             return supplier.get();

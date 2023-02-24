@@ -16,7 +16,7 @@ package com.livetheoogway.forage.search.engine.lucene;
 
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.search.engine.util.ExceptionExecution;
+import com.livetheoogway.forage.search.engine.util.ExceptionWrappedExecutor;
 import com.livetheoogway.forage.search.engine.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.analysis.Analyzer;
@@ -49,26 +49,30 @@ public class LuceneIndexInstance implements LuceneIndex {
         indexReaderReference = new AtomicReference<>(null);
     }
 
-    public static Directory newInMemoryIndex() {
+    private static Directory newInMemoryIndex() {
         return new ByteBuffersDirectory();
     }
 
     @Override
     public void close() {
+        log.info("Closing all references..");
         if (indexReaderReference.get() != null) {
             Utils.closeSafe(indexReaderReference.get().getIndexReader(), "IndexReader");
         }
         Utils.closeSafe(indexWriterReference.get(), "IndexWriter");
         Utils.closeSafe(memoryIndex, "MemoryIndex");
+        log.info("All references closed successfully..");
     }
 
     @Override
     public IndexSearcher searcher() throws ForageSearchError {
         if (indexWriterReferenceChanged.get()) {
-            synchronized (indexWriterReferenceChanged) {
+            synchronized (indexWriterReference) {
                 if (indexWriterReferenceChanged.get()) {
-                    final IndexReader indexReader = ExceptionExecution.get(() -> DirectoryReader.open(memoryIndex),
-                                                                           ForageErrorCode.INDEX_READER_IO_ERROR);
+                    log.info("[forage] indexReader is being initialized");
+                    final IndexReader indexReader = ExceptionWrappedExecutor.get(
+                            () -> DirectoryReader.open(memoryIndex),
+                            ForageErrorCode.INDEX_READER_IO_ERROR);
                     final IndexSearcher searcher = new IndexSearcher(indexReader);
                     final DocRetriever docRetriever = new DocRetriever(indexReader, searcher);
                     final DocRetriever docRetrieverToBeClosed = indexReaderReference.get();
@@ -80,6 +84,9 @@ public class LuceneIndexInstance implements LuceneIndex {
                 }
             }
         }
+        log.info("[forage] returning reference to searcher id:{}, numDocs:{}", this.hashCode(),
+                 indexReaderReference.get().getIndexReader().numDocs());
+
         return indexReaderReference.get().getSearcher();
     }
 
@@ -91,13 +98,16 @@ public class LuceneIndexInstance implements LuceneIndex {
                 current writer */
                 if (indexWriterReference.get() == null) {
                     IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
-                    final IndexWriter indexWriter = ExceptionExecution.get(
+                    final IndexWriter indexWriter = ExceptionWrappedExecutor.get(
                             () -> new IndexWriter(memoryIndex, indexWriterConfig),
                             ForageErrorCode.INDEX_WRITER_IO_ERROR);
                     indexWriterReference.set(indexWriter);
                 }
             }
         }
+        log.info("[forage] returning reference to writer id:{}, ramDocs:{} pendingDocs:{}", this.hashCode(),
+                 indexWriterReference.get().numRamDocs(), indexWriterReference.get().getPendingNumDocs());
+
         return indexWriterReference.get();
     }
 
@@ -117,10 +127,5 @@ public class LuceneIndexInstance implements LuceneIndex {
     @Override
     public DocRetriever docRetriever() {
         return indexReaderReference.get();
-    }
-
-    @Override
-    public LuceneIndex freshIndex() {
-        return new LuceneIndexInstance(this.analyzer);
     }
 }

@@ -18,6 +18,8 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
 
+import java.util.Arrays;
+
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
@@ -34,5 +36,15 @@ public class FloatField extends Field {
     @Override
     public <T> T accept(final FieldVisitor<T> fieldVisitor) {
         return fieldVisitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append("FLOAT[")
+                .append(name)
+                .append(":")
+                .append(Arrays.toString(points))
+                .append("]")
+                .toString();
     }
 }
