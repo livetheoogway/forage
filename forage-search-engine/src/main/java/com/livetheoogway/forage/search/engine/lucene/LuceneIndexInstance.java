@@ -84,7 +84,7 @@ public class LuceneIndexInstance implements LuceneIndex {
                 }
             }
         }
-        log.info("[forage] returning reference to searcher id:{}, numDocs:{}", this.hashCode(),
+        log.debug("[forage] returning reference to searcher id:{}, numDocs:{}", this.hashCode(),
                  indexReaderReference.get().getIndexReader().numDocs());
 
         return indexReaderReference.get().getSearcher();
@@ -105,7 +105,7 @@ public class LuceneIndexInstance implements LuceneIndex {
                 }
             }
         }
-        log.info("[forage] returning reference to writer id:{}, ramDocs:{} pendingDocs:{}", this.hashCode(),
+        log.debug("[forage] returning reference to writer id:{}, ramDocs:{} pendingDocs:{}", this.hashCode(),
                  indexWriterReference.get().numRamDocs(), indexWriterReference.get().getPendingNumDocs());
 
         return indexWriterReference.get();
