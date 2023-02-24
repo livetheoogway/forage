@@ -97,7 +97,8 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
                 updateEngineRef.set(updateEngine);
 
                 updateEngineRef.get().start();
-                log.info("[forage][startup] .. Done starting engine and setting up periodic updates");
+                log.info("[forage][startup] .. Done starting engine and setting up periodic updates, every {}s",
+                         forageConfiguration(configuration).getRefreshIntervalInSeconds());
             }
 
             @Override

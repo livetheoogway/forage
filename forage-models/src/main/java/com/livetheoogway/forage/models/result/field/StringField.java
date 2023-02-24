@@ -15,7 +15,6 @@
 package com.livetheoogway.forage.models.result.field;
 
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
 import lombok.Value;
 
 /**
@@ -23,7 +22,6 @@ import lombok.Value;
  */
 @Value
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 public class StringField extends Field {
     String name;
     String value;
@@ -37,5 +35,10 @@ public class StringField extends Field {
     @Override
     public <T> T accept(final FieldVisitor<T> fieldVisitor) {
         return fieldVisitor.visit(this);
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder().append("STRING[").append(name).append(":").append(value).append("]").toString();
     }
 }

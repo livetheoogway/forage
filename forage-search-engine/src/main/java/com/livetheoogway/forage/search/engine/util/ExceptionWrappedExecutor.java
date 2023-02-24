@@ -14,25 +14,20 @@
 
 package com.livetheoogway.forage.search.engine.util;
 
+import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
+import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-
-import java.io.Closeable;
-import java.io.IOException;
 
 @UtilityClass
-@Slf4j
-public class Utils {
-
-    public void closeSafe(Closeable closeable, String type) {
-        if (closeable == null) {
-            return;
-        }
+public class ExceptionWrappedExecutor {
+    public <T> T get(final ESupplier<T> supplier, final ForageErrorCode errorCode) throws ForageSearchError {
         try {
-            closeable.close();
-            log.info("[forage] Safely closed {}", type);
-        } catch (IOException e) {
-            log.error("[forage] Error closing {}", type, e);
+            return supplier.get();
+        } catch (Exception e) {
+            if (e instanceof ForageSearchError) {
+                throw (ForageSearchError) e;
+            }
+            throw new ForageSearchError(errorCode, e);
         }
     }
 }

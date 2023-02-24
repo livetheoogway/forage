@@ -28,7 +28,7 @@ import java.util.concurrent.locks.StampedLock;
 
 /**
  * This class uses a {@link StampedLock} to ensure that the {@link StampedLockCloseForageLuceneSearchEngine#close()}
- * happens only after taking a write lock, and no more new search queries are accepted
+ * happens only after taking a write-lock, and no more new search queries are accepted
  */
 public class StampedLockCloseForageLuceneSearchEngine<D>
         extends ForageLuceneSearchEngine<D> {

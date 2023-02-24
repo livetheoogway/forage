@@ -35,6 +35,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 class PeriodicallyUpdatedForageSearchEngineTest {
 
@@ -103,6 +104,52 @@ class PeriodicallyUpdatedForageSearchEngineTest {
     }
 
     @Test
+    void testErrorsWhenBootstrappingSimultaneously() throws Exception {
+        /* This test is being written because we observe an NPE when parallel bootstrap runs happen */
+
+        final BookDataStore dataStore = new BookDataStore();
+        final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
+                ForageSearchEngineBuilder.<Book>builder()
+                        .withDataStore(dataStore)
+                        .withObjectMapper(TestUtils.mapper()));
+
+        dataStore.addBooks(1);
+
+        AtomicBoolean wasErrorTrapped = new AtomicBoolean(false);
+
+        /* we will set up a trap using the error handler in AsyncQueuedConsumer */
+        final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =
+                new PeriodicUpdateEngine<>(
+                        dataStore, new AsyncQueuedConsumer<>(luceneQueryEngineContainer, 10,
+                                                             (indexableDocument, e) -> wasErrorTrapped.set(true)),
+                        1, TimeUnit.SECONDS
+                );
+
+        /* while the periodic update happens in background (and calls the bootstrap), we will invoke bootstrap
+        forcefully */
+        periodicUpdateEngine.start();
+        periodicUpdateEngine.bootstrap();
+
+        Awaitility.await().atMost(Duration.of(50, ChronoUnit.SECONDS))
+                .with()
+                .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
+                .ignoreExceptionsMatching(throwable -> throwable instanceof ForageSearchError
+                        && ((ForageSearchError) throwable).getForageErrorCode()
+                        == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
+                .until(() -> {
+                    final ForageQueryResult<Book> query = luceneQueryEngineContainer.search(
+                            new ForageSearchQuery(new RangeQuery("numPage", new IntRange(0, 100000)), 10));
+                    return query.getTotal().getTotal() == 1;
+                });
+
+        if (wasErrorTrapped.get()) {
+            Assertions.fail("There was an error in the async handler");
+        }
+
+        periodicUpdateEngine.stop();
+    }
+
+    @Test
     void testPeriodicallyUpdatedQueryEngineWithFrequentQueries() throws Exception {
         final BookDataStore dataStore = new BookDataStore();
         final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
@@ -113,7 +160,8 @@ class PeriodicallyUpdatedForageSearchEngineTest {
         performParallelSearchExecutions(dataStore, luceneQueryEngineContainer);
     }
 
-    private void performParallelSearchExecutions(final BookDataStore dataStore, final ForageEngineIndexer<Book> luceneQueryEngineContainer)
+    private void performParallelSearchExecutions(final BookDataStore dataStore,
+                                                 final ForageEngineIndexer<Book> luceneQueryEngineContainer)
             throws Exception {
         dataStore.addBooks(1);
 

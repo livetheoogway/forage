@@ -40,12 +40,32 @@ class LuceneSearchEngineIndexingTest {
     }
 
     @Test
-    void simpleIndexedSearch() throws ForageSearchError {
+    void simpleIndexedSearchShouldWorkOnValidFields() throws ForageSearchError {
         store.store(new SomeObject("Some data"));
         searchEngine.index(ForageDocument.<String>builder()
                                    .id("ID1")
                                    .field(new TextField("pod", "nexus"))
                                    .field(new TextField("app", "android"))
+                                   .build());
+        searchEngine.flush();
+
+
+        final ForageQueryResult<SomeObject> result
+                = searchEngine.search(QueryBuilder.matchQuery("pod", "nexus").buildForageQuery());
+        Assertions.assertEquals(1, result.getMatchingResults().size());
+        final String representation = ResultUtil.getRepresentation(result,
+                                                                   data -> data.getData().getData(),
+                                                                   (a, b) -> a + "\n" + b);
+        Assertions.assertEquals("Some data", representation);
+    }
+
+    @Test
+    void indexingFieldsWithNullValuesShouldContinueToWork() throws ForageSearchError {
+        store.store(new SomeObject("Some data"));
+        searchEngine.index(ForageDocument.<String>builder()
+                                   .id("ID1")
+                                   .field(new TextField("pod", "nexus"))
+                                   .field(new TextField("app", null))
                                    .build());
         searchEngine.flush();
 

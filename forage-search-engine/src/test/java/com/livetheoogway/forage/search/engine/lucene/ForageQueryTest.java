@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-class LuceneSearchEngineTest {
+class ForageQueryTest {
     private static ForageLuceneSearchEngine<Book> searchEngine;
 
     @BeforeAll

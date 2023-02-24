@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 class ForageLuceneSearchEngineTest {
 
     @Test
-    void testScenarioWhereThereIsNothingToIndex() throws ForageSearchError {
+    void testThatThereAreNoErrorsWhenThereIsNothingToIndex() throws ForageSearchError {
         ForageLuceneSearchEngine<Book> searchEngine;
         InMemoryHashStore<Book> dataStore = new InMemoryHashStore<>();
         searchEngine = ForageSearchEngineBuilder.<Book>builder()

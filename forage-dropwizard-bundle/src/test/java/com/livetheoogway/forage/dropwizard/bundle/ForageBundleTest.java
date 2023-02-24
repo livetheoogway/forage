@@ -19,10 +19,10 @@ import com.codahale.metrics.health.HealthCheckRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.livetheoogway.forage.core.Bootstrapper;
 import com.livetheoogway.forage.dropwizard.bundle.model.Book;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import com.livetheoogway.forage.search.engine.store.Store;
@@ -33,6 +33,7 @@ import io.dropwizard.jersey.setup.JerseyEnvironment;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.AdminEnvironment;
 import io.dropwizard.setup.Environment;
+import lombok.extern.slf4j.Slf4j;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,11 +44,14 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@Slf4j
 class ForageBundleTest {
     private final HealthCheckRegistry healthChecks = mock(HealthCheckRegistry.class);
     private final MetricRegistry metricRegistry = new MetricRegistry();
@@ -55,6 +59,8 @@ class ForageBundleTest {
     private final LifecycleEnvironment lifecycleEnvironment = new LifecycleEnvironment(metricRegistry);
     private final Environment environment = mock(Environment.class);
     private final AdminEnvironment adminEnvironment = mock(AdminEnvironment.class);
+
+    private final CountDownLatch countDownLatch = new CountDownLatch(1);
 
     @BeforeEach
     public void setUp() {
@@ -68,7 +74,7 @@ class ForageBundleTest {
     }
 
     @Test
-    void testBundleExecution() throws ForageSearchError {
+    void testBundleExecution() throws ForageSearchError, InterruptedException {
         final BookStore store = new BookStore();
         final ForageBundle<SampleConfig, Book> bundle = new ForageBundle<>() {
 
@@ -119,6 +125,14 @@ class ForageBundleTest {
                         return false;
                     }
                 });
+
+        log.info("Pausing for 3 seconds...");
+        final boolean await = countDownLatch.await(3, TimeUnit.SECONDS);
+        if (await) {
+            Assertions.fail();
+        }
+
+        /* query should work even after a few more refreshes */
         final ForageQueryResult<Book> results = bundle.searchEngine().search(
                 QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         Assertions.assertEquals("id1", results.getMatchingResults().get(0).getId());
