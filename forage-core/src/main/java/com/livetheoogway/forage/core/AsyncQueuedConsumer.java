@@ -141,6 +141,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
             consumer.finish();
         } catch (Exception e) {
             log.error("[forage] Error while finishing the listener", e);
+            itemConsumptionErrorHandler.handleError(null, e);
         }
     }
 

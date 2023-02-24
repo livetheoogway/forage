@@ -17,6 +17,8 @@ package com.livetheoogway.forage.core;
 import com.livetheoogway.forage.models.DataId;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 /**
  * This is the main update engine that is responsible for exposing the boostrap function
  *
@@ -28,6 +30,7 @@ public abstract class UpdateEngine<D extends DataId> {
     private final Bootstrapper<D> bootstrapper;
     private final ItemConsumer<D> itemConsumer;
     private final ErrorHandler<D> errorHandler;
+    private final AtomicBoolean alreadyRunning;
 
     protected UpdateEngine(final Bootstrapper<D> bootstrapper,
                            final ItemConsumer<D> itemConsumer,
@@ -35,23 +38,33 @@ public abstract class UpdateEngine<D extends DataId> {
         this.bootstrapper = bootstrapper;
         this.itemConsumer = itemConsumer;
         this.errorHandler = errorHandler;
+        this.alreadyRunning = new AtomicBoolean(false);
     }
 
     /**
      * the primary function that is supposed to bootstrap all items into the consumer
      */
     public void bootstrap() throws Exception {
-        log.info("[forage] Bootstrapping forage ...");
-        itemConsumer.init();
-        bootstrapper.bootstrap(item -> {
-            try {
-                itemConsumer.consume(item);
-            } catch (Exception e) {
-                errorHandler.handleError(item, e);
-            }
-        });
-        itemConsumer.finish();
-        log.info("[forage] ... Bootstrapping forage done");
+        if (alreadyRunning.get()) {
+            log.warn("A bootstrap is already running, not bootstrapping again..");
+            return;
+        }
+        alreadyRunning.set(true);
+        try {
+            log.info("[forage] Bootstrapping forage ...");
+            itemConsumer.init();
+            bootstrapper.bootstrap(item -> {
+                try {
+                    itemConsumer.consume(item);
+                } catch (Exception e) {
+                    errorHandler.handleError(item, e);
+                }
+            });
+            itemConsumer.finish();
+            log.info("[forage] ... Bootstrapping forage done");
+        } finally {
+            alreadyRunning.set(false);
+        }
     }
 
     /**

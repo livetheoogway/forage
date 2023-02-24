@@ -17,6 +17,7 @@ package com.livetheoogway.forage.search.engine.core;
 import com.livetheoogway.forage.core.ItemConsumer;
 import com.livetheoogway.forage.search.engine.DocumentIndexer;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
+import com.livetheoogway.forage.search.engine.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 
@@ -89,7 +90,7 @@ public class SearchEngineSwapReferenceHandler<T, R extends DocumentIndexer<T>> i
             newReferenceBeingBuilt.get().flush();
             liveReference.set(newReferenceBeingBuilt.get());
             log.info("[forage] reference successfully swapped. Indexed: {}", counter.get());
-            referenceToBeSwapped.close();
+            Utils.closeSafe(referenceToBeSwapped, "referenceToBeSwapped");
         } finally {
             newReferenceBeingBuilt.set(null);
             lock.unlockWrite(writeStamp);
