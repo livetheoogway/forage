@@ -2,12 +2,25 @@
 
 ## [Unreleased](https://github.com/livetheoogway/forage/tree/HEAD)
 
-[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.7...HEAD)
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.8...HEAD)
+
+**Fixed bugs:**
+
+- Bootstrap called outside of the Periodic refreshes, causes NPEs [\#5](https://github.com/livetheoogway/forage/issues/5)
+- Documents having fields with null values don't get indexed entirely [\#4](https://github.com/livetheoogway/forage/issues/4)
+
+## [1.0.8](https://github.com/livetheoogway/forage/tree/1.0.8) (2023-02-24)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.7...1.0.8)
 
 **Implemented enhancements:**
 
 - Sonar integration and analysis [\#2](https://github.com/livetheoogway/forage/issues/2)
 - Automate changelog/releaselog generation [\#1](https://github.com/livetheoogway/forage/issues/1)
+
+**Merged pull requests:**
+
+- Handling bugs on indexing null values [\#6](https://github.com/livetheoogway/forage/pull/6) ([Tushar-Naik](https://github.com/Tushar-Naik))
 
 ## [1.0.7](https://github.com/livetheoogway/forage/tree/1.0.7) (2022-11-11)
 
