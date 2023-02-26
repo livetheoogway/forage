@@ -30,7 +30,7 @@ public class Utils {
         }
         try {
             closeable.close();
-            log.info("[forage] Safely closed {}", type);
+            log.debug("[forage] Safely closed {}", type);
         } catch (IOException e) {
             log.error("[forage] Error closing {}", type, e);
         }

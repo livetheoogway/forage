@@ -33,31 +33,43 @@ import java.util.concurrent.TimeUnit;
 public class PeriodicUpdateEngine<D extends DataId> extends UpdateEngine<D> {
 
     private final ScheduledExecutorService executorService;
-    private final int delay;
+    private final int interval;
+    private final int initialDelay;
     private final TimeUnit timeUnit;
 
     public PeriodicUpdateEngine(final Bootstrapper<D> bootstrapper,
                                 final ItemConsumer<D> itemConsumer,
-                                final int delay,
+                                final int interval,
                                 final TimeUnit timeUnit) {
-        this(bootstrapper, itemConsumer, delay, timeUnit, new LoggingErrorHandler<>(PeriodicUpdateEngine.class));
+        this(bootstrapper, itemConsumer, interval, 0, timeUnit, new LoggingErrorHandler<>(PeriodicUpdateEngine.class));
+    }
+
+    public PeriodicUpdateEngine(final Bootstrapper<D> bootstrapper,
+                                final ItemConsumer<D> itemConsumer,
+                                final int interval,
+                                final int initialDelay,
+                                final TimeUnit timeUnit) {
+        this(bootstrapper, itemConsumer, interval, initialDelay, timeUnit,
+             new LoggingErrorHandler<>(PeriodicUpdateEngine.class));
     }
 
     /**
      * @param bootstrapper bootstrapper of data items
      * @param itemConsumer item consumer
-     * @param delay        delay between each bootstrap (not guaranteed if the bootstrap operation itself, takes more
-     *                     time)
+     * @param interval     interval between each bootstrap (not guaranteed if the bootstrap operation itself, takes
+     *                     more time)
      * @param timeUnit     time unit of the delay specified above
      * @param errorHandler a handler for errors when individual items are being consumed
      */
     public PeriodicUpdateEngine(final Bootstrapper<D> bootstrapper,
                                 final ItemConsumer<D> itemConsumer,
-                                final int delay,
+                                final int interval,
+                                final int initialDelay,
                                 final TimeUnit timeUnit,
                                 final ErrorHandler<D> errorHandler) {
         super(bootstrapper, itemConsumer, errorHandler);
-        this.delay = delay;
+        this.interval = interval;
+        this.initialDelay = initialDelay;
         this.timeUnit = timeUnit;
         this.executorService = Executors.newSingleThreadScheduledExecutor();
     }
@@ -70,7 +82,7 @@ public class PeriodicUpdateEngine<D extends DataId> extends UpdateEngine<D> {
             } catch (Exception e) {
                 log.error("[forage] Error while doing bootstrap", e);
             }
-        }, 0, delay, timeUnit);
+        }, initialDelay, interval, timeUnit);
     }
 
     @Override

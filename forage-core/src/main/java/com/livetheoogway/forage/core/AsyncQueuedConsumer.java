@@ -75,7 +75,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
     @Override
     public void init() throws Exception {
         consumer.init();
-        log.info("[forage] Initializing and starting consumer thread");
+        log.debug("[forage] Initializing and starting consumer thread");
         Thread thread = new Thread(this);
         thread.start();
     }
@@ -87,7 +87,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
 
     @Override
     public void finish() throws InterruptedException {
-        log.info("[forage] finish() has been called, we shall now add the poison pill");
+        log.debug("[forage] finish() has been called, we shall now add the poison pill");
         queue.add(new QueueItem<>(null, true));
 
         /* Since the consumption is async, we need to now wait for all items pushed to the queue, to be consumed.
@@ -100,7 +100,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
                 queue.wait(); // wait until the queue consumption has finished
             }
         }
-        log.info("[forage] Finished with the entire consumer process");
+        log.debug("[forage] Finished with the entire consumer process");
     }
 
     @Override
@@ -112,7 +112,7 @@ public class AsyncQueuedConsumer<I> implements ItemConsumer<I>, Runnable {
             try {
                 queueItem = queue.take();
             } catch (InterruptedException e) {
-                log.info("[forage] Queue consumption has been interrupted", e);
+                log.error("[forage] Queue consumption has been interrupted", e);
                 throw e;
             }
             if (queueItem.isPoisonPill()) {
