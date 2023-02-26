@@ -1,13 +1,29 @@
 # Changelog
 
-## [Unreleased](https://github.com/livetheoogway/forage/tree/HEAD)
+## [1.0.10](https://github.com/livetheoogway/forage/tree/1.0.10) (2023-02-26)
 
-[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.8...HEAD)
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.9...1.0.10)
+
+**Implemented enhancements:**
+
+- Support for Prefix match queries [\#8](https://github.com/livetheoogway/forage/issues/8)
+
+**Closed issues:**
+
+- Reduce log noise during background refresh [\#7](https://github.com/livetheoogway/forage/issues/7)
+
+## [1.0.9](https://github.com/livetheoogway/forage/tree/1.0.9) (2023-02-26)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.8...1.0.9)
 
 **Fixed bugs:**
 
 - Bootstrap called outside of the Periodic refreshes, causes NPEs [\#5](https://github.com/livetheoogway/forage/issues/5)
 - Documents having fields with null values don't get indexed entirely [\#4](https://github.com/livetheoogway/forage/issues/4)
+
+**Merged pull requests:**
+
+- Prefix match query support [\#9](https://github.com/livetheoogway/forage/pull/9) ([Tushar-Naik](https://github.com/Tushar-Naik))
 
 ## [1.0.8](https://github.com/livetheoogway/forage/tree/1.0.8) (2023-02-24)
 
