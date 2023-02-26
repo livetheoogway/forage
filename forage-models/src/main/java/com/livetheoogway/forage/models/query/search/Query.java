@@ -30,6 +30,7 @@ import lombok.Data;
         @JsonSubTypes.Type(name = "PARSABLE_QUERY", value = ParsableQuery.class),
         @JsonSubTypes.Type(name = "RANGE", value = RangeQuery.class),
         @JsonSubTypes.Type(name = "PHRASE", value = PhraseMatchQuery.class),
+        @JsonSubTypes.Type(name = "PREFIX", value = PrefixMatchQuery.class),
         @JsonSubTypes.Type(name = "BOOLEAN", value = BooleanQuery.class)
 })
 @Data

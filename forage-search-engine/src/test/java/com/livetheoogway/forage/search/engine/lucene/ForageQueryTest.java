@@ -17,12 +17,12 @@ package com.livetheoogway.forage.search.engine.lucene;
 import com.livetheoogway.forage.models.query.PageQuery;
 import com.livetheoogway.forage.models.query.search.ClauseType;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.search.engine.ResourceReader;
 import com.livetheoogway.forage.search.engine.ResultUtil;
 import com.livetheoogway.forage.search.engine.TestUtils;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
-import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.search.engine.model.Book;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
@@ -163,8 +163,23 @@ class ForageQueryTest {
         Assertions.assertEquals(0, result.getMatchingResults().size());
         Assertions.assertEquals(0, result.getTotal().getTotal());
 
-        /* Fuzzy Match query for sayyer should give tom sawyer type results */
+        /* Fuzzy Match query for sayyer should give "tom sawyer" type results */
         result = searchEngine.search(QueryBuilder.fuzzyMatchQuery("title", "sayyer").buildForageQuery());
+        System.out.println(ResultUtil.getBookRepresentation(result));
+        Assertions.assertTrue(0 < result.getMatchingResults().size());
+    }
+
+    @Test
+    void testPrefixMatchSearch() throws ForageSearchError {
+
+        /* Match query for treas, should give 0 results */
+        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("title", "treas").buildForageQuery());
+        System.out.println(ResultUtil.getBookRepresentation(result));
+        Assertions.assertEquals(0, result.getMatchingResults().size());
+        Assertions.assertEquals(0, result.getTotal().getTotal());
+
+        /* Prefix Match query for treas should give "treasure island" type results */
+        result = searchEngine.search(QueryBuilder.prefixMatchQuery("title", "treas").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertTrue(0 < result.getMatchingResults().size());
     }

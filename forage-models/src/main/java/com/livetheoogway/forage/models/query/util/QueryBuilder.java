@@ -31,6 +31,10 @@ public class QueryBuilder {
         return new Builders.InnerFuzzyMatchQueryBuilder(field, value);
     }
 
+    public Builders.InnerPrefixMatchQueryBuilder prefixMatchQuery(String field, String value) {
+        return new Builders.InnerPrefixMatchQueryBuilder(field, value);
+    }
+
     public Builders.InnerPhraseMatchQueryBuilder phraseMatchQuery(String field, String phrase) {
         return new Builders.InnerPhraseMatchQueryBuilder(field, phrase);
     }

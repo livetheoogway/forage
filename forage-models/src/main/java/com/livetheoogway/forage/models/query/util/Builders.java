@@ -22,6 +22,7 @@ import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
 import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
+import com.livetheoogway.forage.models.query.search.PrefixMatchQuery;
 import com.livetheoogway.forage.models.query.search.Query;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.FloatRange;
@@ -87,6 +88,17 @@ public class Builders {
         @Override
         public Query build() {
             return new MatchAllQuery();
+        }
+    }
+
+    @AllArgsConstructor
+    public static class InnerPrefixMatchQueryBuilder extends InnerQueryBuilder {
+        private String field;
+        private String phrase;
+
+        @Override
+        public Query build() {
+            return new PrefixMatchQuery(field, phrase);
         }
     }
 

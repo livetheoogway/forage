@@ -21,6 +21,7 @@ import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.search.ParsableQuery;
 import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
+import com.livetheoogway.forage.models.query.search.PrefixMatchQuery;
 import com.livetheoogway.forage.models.query.search.QueryVisitor;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.FloatRange;
@@ -41,6 +42,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.FuzzyQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiPhraseQuery;
+import org.apache.lucene.search.PrefixQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 
@@ -139,6 +141,11 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     @Override
     public Query visit(final MatchAllQuery matchAllQuery) {
         return new MatchAllDocsQuery();
+    }
+
+    @Override
+    public Query visit(final PrefixMatchQuery prefixMatchQuery) {
+        return new PrefixQuery(new Term(prefixMatchQuery.getField(), prefixMatchQuery.getValue()));
     }
 
     @SneakyThrows

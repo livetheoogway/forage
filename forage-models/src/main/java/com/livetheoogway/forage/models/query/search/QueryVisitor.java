@@ -31,4 +31,5 @@ public interface QueryVisitor<T> {
 
     T visit(MatchAllQuery matchAllQuery) throws Exception;
 
+    T visit(PrefixMatchQuery prefixMatchQuery);
 }
