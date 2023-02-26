@@ -55,13 +55,13 @@ public class LuceneIndexInstance implements LuceneIndex {
 
     @Override
     public void close() {
-        log.info("Closing all references..");
+        log.debug("Closing all references..");
         if (indexReaderReference.get() != null) {
             Utils.closeSafe(indexReaderReference.get().getIndexReader(), "IndexReader");
         }
         Utils.closeSafe(indexWriterReference.get(), "IndexWriter");
         Utils.closeSafe(memoryIndex, "MemoryIndex");
-        log.info("All references closed successfully..");
+        log.debug("All references closed successfully..");
     }
 
     @Override
@@ -69,7 +69,7 @@ public class LuceneIndexInstance implements LuceneIndex {
         if (indexWriterReferenceChanged.get()) {
             synchronized (indexWriterReference) {
                 if (indexWriterReferenceChanged.get()) {
-                    log.info("[forage] indexReader is being initialized");
+                    log.debug("[forage] indexReader is being initialized");
                     final IndexReader indexReader = ExceptionWrappedExecutor.get(
                             () -> DirectoryReader.open(memoryIndex),
                             ForageErrorCode.INDEX_READER_IO_ERROR);

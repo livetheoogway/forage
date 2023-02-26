@@ -23,10 +23,10 @@ public class ExceptionWrappedExecutor {
     public <T> T get(final ESupplier<T> supplier, final ForageErrorCode errorCode) throws ForageSearchError {
         try {
             return supplier.get();
-        } catch (Exception e) {
-            if (e instanceof ForageSearchError) {
-                throw (ForageSearchError) e;
-            }
+        } catch (ForageSearchError e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new ForageSearchError(errorCode, e);
         }
     }

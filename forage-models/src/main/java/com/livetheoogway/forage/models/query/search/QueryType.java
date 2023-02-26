@@ -21,5 +21,6 @@ public enum QueryType {
     MATCH_ALL,
     PARSABLE_QUERY,
     FUZZY_MATCH,
+    PREFIX_MATCH,
     RANGE
 }
