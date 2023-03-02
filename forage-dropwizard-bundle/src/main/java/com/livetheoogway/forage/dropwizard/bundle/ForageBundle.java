@@ -28,6 +28,8 @@ import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
+import lombok.val;
+import org.apache.lucene.analysis.Analyzer;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -64,6 +66,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
         return delegatedForageSearchEngine;
     }
 
+    public Analyzer analyser() {
+        return null;
+    }
+
     /**
      * Use this to do adhoc {@link UpdateEngine#bootstrap()}, other than the periodic bootstrap that happens as part
      * of this bundle.
@@ -80,11 +86,15 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
             @Override
             public void start() {
                 log.info("[forage][startup] Starting the engine...");
-                final ForageSearchEngineBuilder<D> engineBuilder = ForageSearchEngineBuilder.<D>builder()
+                val engineBuilder = ForageSearchEngineBuilder.<D>builder()
                         .withObjectMapper(environment.getObjectMapper())
                         .withDataStore(dataStore(configuration));
+                val analyser = analyser();
+                if (analyser != null) {
+                    engineBuilder.withAnalyser(analyser);
+                }
 
-                final ForageEngineIndexer<D> forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
+                val forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
 
                 delegatedForageSearchEngine.onStart(forageEngineIndexer);
 
