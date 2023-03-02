@@ -42,6 +42,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.TopDocs;
@@ -79,7 +80,7 @@ public class ForageLuceneSearchEngine<D>
         this.luceneQueryGenerator = new LuceneQueryGenerator(analyzer, queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
         this.dataStore = dataStore;
-        this.queryParser = new QueryParser("TEMP", analyzer); //todo needs a more elegant solution for page parsing
+        this.queryParser = new QueryParser("NO_FIELD", new KeywordAnalyzer()); //todo needs a more elegant solution for page parsing
     }
 
     @Override
