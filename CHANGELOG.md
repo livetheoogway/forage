@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.11](https://github.com/livetheoogway/forage/tree/1.0.11) (2023-03-02)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.10...1.0.11)
+
+**Merged pull requests:**
+
+- Using the KeywordAnalyzer to skip analysis on the subsequent page  [\#10](https://github.com/livetheoogway/forage/pull/10) ([Tushar-Naik](https://github.com/Tushar-Naik))
+
 ## [1.0.10](https://github.com/livetheoogway/forage/tree/1.0.10) (2023-02-26)
 
 [Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.9...1.0.10)
