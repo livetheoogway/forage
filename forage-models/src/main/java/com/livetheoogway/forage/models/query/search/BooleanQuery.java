@@ -33,14 +33,21 @@ public class BooleanQuery extends Query {
     List<Query> queries;
     @NonNull
     ClauseType clauseType;
+    Float boost;
 
     @JsonCreator
     @Builder
     public BooleanQuery(@Singular @JsonProperty("queries") final List<Query> queries,
-                        @NonNull @JsonProperty("clauseType") final ClauseType clauseType) {
+                        @NonNull @JsonProperty("clauseType") final ClauseType clauseType,
+                        @JsonProperty("boost") final Float boost) {
         super(QueryType.BOOLEAN);
         this.queries = queries;
         this.clauseType = clauseType;
+        this.boost = boost;
+    }
+
+    public BooleanQuery(final List<Query> queries, final ClauseType clauseType) {
+        this(queries, clauseType, null);
     }
 
     @Override

@@ -26,12 +26,20 @@ import lombok.Value;
 public class PhraseMatchQuery extends Query {
     String field;
     String phrase;
+    Float boost;
 
     @JsonCreator
-    public PhraseMatchQuery(@JsonProperty("field") final String field, @JsonProperty("phrase") final String phrase) {
+    public PhraseMatchQuery(@JsonProperty("field") final String field, 
+                            @JsonProperty("phrase") final String phrase,
+                            @JsonProperty("boost") final Float boost) {
         super(QueryType.PHRASE);
         this.field = field;
         this.phrase = phrase;
+        this.boost = boost;
+    }
+
+    public PhraseMatchQuery(final String field, final String phrase) {
+        this(field, phrase, null);
     }
 
     @Override

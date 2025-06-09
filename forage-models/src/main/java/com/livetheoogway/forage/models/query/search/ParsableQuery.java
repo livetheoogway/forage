@@ -26,13 +26,20 @@ import lombok.Value;
 public class ParsableQuery extends Query {
     String field;
     String queryString;
+    Float boost;
 
     @JsonCreator
     public ParsableQuery(@JsonProperty("field") final String field,
-                         @JsonProperty("queryString") final String queryString) {
+                         @JsonProperty("queryString") final String queryString,
+                         @JsonProperty("boost") final Float boost) {
         super(QueryType.PARSABLE_QUERY);
         this.field = field;
         this.queryString = queryString;
+        this.boost = boost;
+    }
+
+    public ParsableQuery(final String field, final String queryString) {
+        this(field, queryString, null);
     }
 
     @Override

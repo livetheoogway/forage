@@ -26,12 +26,20 @@ import lombok.Value;
 public class FuzzyMatchQuery extends Query {
     String field;
     String value;
+    Float boost;
 
     @JsonCreator
-    public FuzzyMatchQuery(@JsonProperty("field") final String field, @JsonProperty("value") final String value) {
+    public FuzzyMatchQuery(@JsonProperty("field") final String field, 
+                           @JsonProperty("value") final String value,
+                           @JsonProperty("boost") final Float boost) {
         super(QueryType.FUZZY_MATCH);
         this.field = field;
         this.value = value;
+        this.boost = boost;
+    }
+
+    public FuzzyMatchQuery(final String field, final String value) {
+        this(field, value, null);
     }
 
     @Override

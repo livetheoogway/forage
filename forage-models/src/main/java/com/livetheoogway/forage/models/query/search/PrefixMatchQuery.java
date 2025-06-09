@@ -26,12 +26,20 @@ import lombok.Value;
 public class PrefixMatchQuery extends Query {
     String field;
     String value;
+    Float boost;
 
     @JsonCreator
-    public PrefixMatchQuery(@JsonProperty("field") final String field, @JsonProperty("value") final String value) {
+    public PrefixMatchQuery(@JsonProperty("field") final String field, 
+                            @JsonProperty("value") final String value,
+                            @JsonProperty("boost") final Float boost) {
         super(QueryType.PREFIX_MATCH);
         this.field = field;
         this.value = value;
+        this.boost = boost;
+    }
+
+    public PrefixMatchQuery(final String field, final String value) {
+        this(field, value, null);
     }
 
     @Override

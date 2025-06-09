@@ -25,11 +25,17 @@ import lombok.Value;
 public class RangeQuery extends Query {
     String field;
     Range range;
+    Float boost;
 
-    public RangeQuery(final String field, final Range range) {
+    public RangeQuery(final String field, final Range range, final Float boost) {
         super(QueryType.RANGE);
         this.field = field;
         this.range = range;
+        this.boost = boost;
+    }
+
+    public RangeQuery(final String field, final Range range) {
+        this(field, range, null);
     }
 
     @Override

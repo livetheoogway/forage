@@ -19,6 +19,7 @@ import com.livetheoogway.forage.models.result.field.FloatField;
 import com.livetheoogway.forage.models.result.field.IntField;
 import com.livetheoogway.forage.models.result.field.StringField;
 import com.livetheoogway.forage.models.result.field.TextField;
+import com.livetheoogway.forage.search.engine.lucene.FieldBoostRegistry;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.index.IndexableField;
 
@@ -27,9 +28,26 @@ import org.apache.lucene.index.IndexableField;
  * It essentially converts a Lucene fields to an {@link IndexableField}
  */
 public class LuceneFieldHandler implements FieldVisitor<IndexableField> {
+    
+    private final FieldBoostRegistry fieldBoostRegistry;
+    
+    public LuceneFieldHandler() {
+        this.fieldBoostRegistry = new FieldBoostRegistry();
+    }
+    
+    public LuceneFieldHandler(FieldBoostRegistry fieldBoostRegistry) {
+        this.fieldBoostRegistry = fieldBoostRegistry != null ? fieldBoostRegistry : new FieldBoostRegistry();
+    }
+    
+    public FieldBoostRegistry getFieldBoostRegistry() {
+        return fieldBoostRegistry;
+    }
 
     @Override
     public IndexableField visit(final TextField textField) {
+        // Register field boost for query-time application (Lucene 9.x approach)
+        fieldBoostRegistry.registerFieldBoost(textField.getName(), textField.getBoost());
+        
         return new org.apache.lucene.document.TextField(
                 textField.getName(),
                 textField.getValue(),
@@ -38,6 +56,9 @@ public class LuceneFieldHandler implements FieldVisitor<IndexableField> {
 
     @Override
     public IndexableField visit(final StringField stringField) {
+        // Register field boost for query-time application (Lucene 9.x approach)
+        fieldBoostRegistry.registerFieldBoost(stringField.getName(), stringField.getBoost());
+        
         return new org.apache.lucene.document.StringField(
                 stringField.getName(),
                 stringField.getValue(),
@@ -46,6 +67,9 @@ public class LuceneFieldHandler implements FieldVisitor<IndexableField> {
 
     @Override
     public IndexableField visit(final FloatField floatField) {
+        // Note: Lucene FloatPoint fields don't support boost during indexing.
+        // Field-level boost on numeric fields would need to be implemented at query time.
+        // The boost parameter is preserved in the model for potential future use.
         return new org.apache.lucene.document.FloatPoint(
                 floatField.getName(),
                 floatField.getPoints());
@@ -53,6 +77,9 @@ public class LuceneFieldHandler implements FieldVisitor<IndexableField> {
 
     @Override
     public IndexableField visit(final IntField intField) {
+        // Note: Lucene IntPoint fields don't support boost during indexing.
+        // Field-level boost on numeric fields would need to be implemented at query time.
+        // The boost parameter is preserved in the model for potential future use.
         return new org.apache.lucene.document.IntPoint(
                 intField.getName(),
                 intField.getPoints());

@@ -23,17 +23,23 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class MatchAllQuery extends Query {
+public class FunctionScoreQuery extends Query {
+    Query baseQuery;
+    ScoreFunction scoreFunction;
     Float boost;
 
     @JsonCreator
-    public MatchAllQuery(@JsonProperty("boost") final Float boost) {
-        super(QueryType.MATCH_ALL);
+    public FunctionScoreQuery(@JsonProperty("baseQuery") final Query baseQuery,
+                              @JsonProperty("scoreFunction") final ScoreFunction scoreFunction,
+                              @JsonProperty("boost") final Float boost) {
+        super(QueryType.FUNCTION_SCORE);
+        this.baseQuery = baseQuery;
+        this.scoreFunction = scoreFunction;
         this.boost = boost;
     }
 
-    public MatchAllQuery() {
-        this(null);
+    public FunctionScoreQuery(final Query baseQuery, final ScoreFunction scoreFunction) {
+        this(baseQuery, scoreFunction, null);
     }
 
     @Override

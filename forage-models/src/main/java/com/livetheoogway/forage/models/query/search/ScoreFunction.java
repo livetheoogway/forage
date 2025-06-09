@@ -14,14 +14,19 @@
 
 package com.livetheoogway.forage.models.query.search;
 
-public enum QueryType {
-    BOOLEAN,
-    MATCH,
-    PHRASE,
-    MATCH_ALL,
-    PARSABLE_QUERY,
-    FUZZY_MATCH,
-    PREFIX_MATCH,
-    RANGE,
-    FUNCTION_SCORE
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
+@JsonSubTypes({
+        @JsonSubTypes.Type(name = "FIELD_VALUE_FACTOR", value = FieldValueFactorFunction.class),
+        @JsonSubTypes.Type(name = "CONSTANT_SCORE", value = ConstantScoreFunction.class)
+})
+@Data
+public abstract class ScoreFunction {
+    private final ScoreFunctionType type;
 }

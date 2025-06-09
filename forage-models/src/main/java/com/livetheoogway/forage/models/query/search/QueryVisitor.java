@@ -32,4 +32,6 @@ public interface QueryVisitor<T> {
     T visit(MatchAllQuery matchAllQuery) throws Exception;
 
     T visit(PrefixMatchQuery prefixMatchQuery);
+
+    T visit(FunctionScoreQuery functionScoreQuery) throws Exception;
 }

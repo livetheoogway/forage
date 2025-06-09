@@ -52,4 +52,7 @@ public class LuceneDocumentHandler implements DocumentVisitor<Document> {
         return document.get(ID);
     }
 
+    // function that encodes 2 strings
+
+
 }

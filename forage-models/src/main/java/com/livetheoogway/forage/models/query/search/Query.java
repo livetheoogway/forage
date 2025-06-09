@@ -31,7 +31,8 @@ import lombok.Data;
         @JsonSubTypes.Type(name = "RANGE", value = RangeQuery.class),
         @JsonSubTypes.Type(name = "PHRASE", value = PhraseMatchQuery.class),
         @JsonSubTypes.Type(name = "PREFIX", value = PrefixMatchQuery.class),
-        @JsonSubTypes.Type(name = "BOOLEAN", value = BooleanQuery.class)
+        @JsonSubTypes.Type(name = "BOOLEAN", value = BooleanQuery.class),
+        @JsonSubTypes.Type(name = "FUNCTION_SCORE", value = FunctionScoreQuery.class)
 })
 @Data
 public abstract class Query {

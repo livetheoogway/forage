@@ -23,21 +23,26 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class MatchAllQuery extends Query {
-    Float boost;
+public class FieldValueFactorFunction extends ScoreFunction {
+    String field;
+    Float factor;
+    Float missing;
 
     @JsonCreator
-    public MatchAllQuery(@JsonProperty("boost") final Float boost) {
-        super(QueryType.MATCH_ALL);
-        this.boost = boost;
+    public FieldValueFactorFunction(@JsonProperty("field") final String field,
+                                    @JsonProperty("factor") final Float factor,
+                                    @JsonProperty("missing") final Float missing) {
+        super(ScoreFunctionType.FIELD_VALUE_FACTOR);
+        this.field = field;
+        this.factor = factor != null ? factor : 1.0f;
+        this.missing = missing != null ? missing : 1.0f;
     }
 
-    public MatchAllQuery() {
-        this(null);
+    public FieldValueFactorFunction(final String field) {
+        this(field, 1.0f, 1.0f);
     }
 
-    @Override
-    public <T> T accept(final QueryVisitor<T> visitor) throws Exception {
-        return visitor.visit(this);
+    public FieldValueFactorFunction(final String field, final Float factor) {
+        this(field, factor, 1.0f);
     }
 }

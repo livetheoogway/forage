@@ -14,14 +14,7 @@
 
 package com.livetheoogway.forage.models.query.search;
 
-public enum QueryType {
-    BOOLEAN,
-    MATCH,
-    PHRASE,
-    MATCH_ALL,
-    PARSABLE_QUERY,
-    FUZZY_MATCH,
-    PREFIX_MATCH,
-    RANGE,
-    FUNCTION_SCORE
+public enum ScoreFunctionType {
+    FIELD_VALUE_FACTOR,
+    CONSTANT_SCORE
 }

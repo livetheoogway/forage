@@ -12,16 +12,9 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query.search;
+package com.livetheoogway.forage.models.query;
 
-public enum QueryType {
-    BOOLEAN,
-    MATCH,
-    PHRASE,
-    MATCH_ALL,
-    PARSABLE_QUERY,
-    FUZZY_MATCH,
-    PREFIX_MATCH,
-    RANGE,
-    FUNCTION_SCORE
+public enum SortType {
+    SCORE,    // Sort by relevance score
+    FIELD     // Sort by field value
 }

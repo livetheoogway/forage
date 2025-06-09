@@ -26,11 +26,17 @@ import java.util.Arrays;
 public class FloatField extends Field {
     String name;
     float[] points;
+    Float boost;
 
-    public FloatField(final String name, final float[] points) {
+    public FloatField(final String name, final float[] points, final Float boost) {
         super(FieldType.FLOAT);
         this.name = name;
         this.points = points;
+        this.boost = boost;
+    }
+
+    public FloatField(final String name, final float[] points) {
+        this(name, points, null);
     }
 
     @Override

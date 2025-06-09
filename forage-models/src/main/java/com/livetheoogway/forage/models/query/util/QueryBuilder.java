@@ -51,4 +51,8 @@ public class QueryBuilder {
         return new Builders.InnerMatchAllQueryBuilder();
     }
 
+    public Builders.InnerFunctionScoreQueryBuilder functionScoreQuery() {
+        return new Builders.InnerFunctionScoreQueryBuilder();
+    }
+
 }

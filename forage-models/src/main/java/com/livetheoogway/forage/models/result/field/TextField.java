@@ -25,11 +25,17 @@ import lombok.Value;
 public class TextField extends Field {
     String name;
     String value;
+    Float boost;
 
-    public TextField(String name, String value) {
+    public TextField(String name, String value, Float boost) {
         super(FieldType.TEXT);
         this.name = name;
         this.value = value;
+        this.boost = boost;
+    }
+
+    public TextField(String name, String value) {
+        this(name, value, null);
     }
 
     @Override
