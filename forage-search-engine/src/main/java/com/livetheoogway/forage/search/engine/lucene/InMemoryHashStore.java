@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class InMemoryHashStore<T extends DataId> implements Store<T> {
+public class InMemoryHashStore<T extends DataId> implements Store<T> {
     private Map<String, T> hashMap;
 
     public InMemoryHashStore() {
