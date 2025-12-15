@@ -48,9 +48,9 @@
     </modules>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-        <maven.compiler.release>11</maven.compiler.release>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>17</maven.compiler.release>
         <guava.version>31.1-jre</guava.version>
         <junit.jupiter.version>5.8.2</junit.jupiter.version>
         <mockito.version>3.2.4</mockito.version>
