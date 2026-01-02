@@ -14,6 +14,9 @@
 
 package com.livetheoogway.forage.models.query.search;
 
+import com.livetheoogway.forage.models.query.search.score.ConstantScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
+import com.livetheoogway.forage.models.query.search.score.ScoreFunctionType;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;

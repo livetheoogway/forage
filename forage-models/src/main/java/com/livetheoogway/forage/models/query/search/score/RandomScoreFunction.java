@@ -12,7 +12,7 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query.search;
+package com.livetheoogway.forage.models.query.search.score;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,16 +23,19 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class ConstantScoreFunction extends ScoreFunction {
-    Float value;
+public class RandomScoreFunction extends ScoreFunction {
+    Long seed;
+    String field;
 
     @JsonCreator
-    public ConstantScoreFunction(@JsonProperty("value") final Float value) {
-        super(ScoreFunctionType.CONSTANT_SCORE);
-        this.value = value != null ? value : 1.0f;
+    public RandomScoreFunction(@JsonProperty("seed") final Long seed,
+                               @JsonProperty("field") final String field) {
+        super(ScoreFunctionType.RANDOM_SCORE);
+        this.seed = seed != null ? seed : 1L;
+        this.field = field;
     }
 
-    public ConstantScoreFunction() {
-        this(1.0f);
+    public RandomScoreFunction(final String field) {
+        this(1L, field);
     }
 }

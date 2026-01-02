@@ -16,6 +16,7 @@ package com.livetheoogway.forage.models.query.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.livetheoogway.forage.models.query.search.score.ScoreFunction;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;

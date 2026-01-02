@@ -12,7 +12,7 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query.search;
+package com.livetheoogway.forage.models.query.search.score;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -23,26 +23,16 @@ import lombok.Value;
 @Value
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class FieldValueFactorFunction extends ScoreFunction {
-    String field;
-    Float factor;
-    Float missing;
+public class WeightedScoreFunction extends ScoreFunction {
+    Float weight;
 
     @JsonCreator
-    public FieldValueFactorFunction(@JsonProperty("field") final String field,
-                                    @JsonProperty("factor") final Float factor,
-                                    @JsonProperty("missing") final Float missing) {
-        super(ScoreFunctionType.FIELD_VALUE_FACTOR);
-        this.field = field;
-        this.factor = factor != null ? factor : 1.0f;
-        this.missing = missing != null ? missing : 1.0f;
+    public WeightedScoreFunction(@JsonProperty("weight") final Float weight) {
+        super(ScoreFunctionType.WEIGHTED_SCORE);
+        this.weight = weight != null ? weight : 1.0f;
     }
 
-    public FieldValueFactorFunction(final String field) {
-        this(field, 1.0f, 1.0f);
-    }
-
-    public FieldValueFactorFunction(final String field, final Float factor) {
-        this(field, factor, 1.0f);
+    public WeightedScoreFunction() {
+        this(1.0f);
     }
 }

@@ -19,8 +19,8 @@ import com.livetheoogway.forage.models.query.ForageSearchQuery;
 import com.livetheoogway.forage.models.query.SortCriteria;
 import com.livetheoogway.forage.models.query.search.BooleanQuery;
 import com.livetheoogway.forage.models.query.search.ClauseType;
-import com.livetheoogway.forage.models.query.search.ConstantScoreFunction;
-import com.livetheoogway.forage.models.query.search.FieldValueFactorFunction;
+import com.livetheoogway.forage.models.query.search.score.ConstantScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
 import com.livetheoogway.forage.models.query.search.FunctionScoreQuery;
 import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
 import com.livetheoogway.forage.models.query.search.MatchAllQuery;
@@ -29,10 +29,9 @@ import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
 import com.livetheoogway.forage.models.query.search.PrefixMatchQuery;
 import com.livetheoogway.forage.models.query.search.Query;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
-import com.livetheoogway.forage.models.query.search.ScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.ScoreFunction;
 import com.livetheoogway.forage.models.query.search.range.FloatRange;
 import com.livetheoogway.forage.models.query.search.range.IntRange;
-import lombok.AllArgsConstructor;
 
 import java.util.List;
 

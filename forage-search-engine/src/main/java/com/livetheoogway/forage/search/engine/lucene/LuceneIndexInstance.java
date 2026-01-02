@@ -37,6 +37,7 @@ public class LuceneIndexInstance implements LuceneIndex {
 
     private final Directory memoryIndex;
     private final Analyzer analyzer;
+//    private final Similarity similarity;
     private final AtomicReference<IndexWriter> indexWriterReference;
     private final AtomicReference<DocRetriever> indexReaderReference;
     private final AtomicBoolean indexWriterReferenceChanged;

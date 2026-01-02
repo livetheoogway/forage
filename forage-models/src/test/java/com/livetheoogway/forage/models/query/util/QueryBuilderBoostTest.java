@@ -19,10 +19,11 @@ import com.livetheoogway.forage.models.query.ForageSearchQuery;
 import com.livetheoogway.forage.models.query.SortCriteria;
 import com.livetheoogway.forage.models.query.SortOrder;
 import com.livetheoogway.forage.models.query.search.*;
+import com.livetheoogway.forage.models.query.search.score.ConstantScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;

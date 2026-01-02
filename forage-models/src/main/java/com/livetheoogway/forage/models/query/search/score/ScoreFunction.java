@@ -12,7 +12,7 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query.search;
+package com.livetheoogway.forage.models.query.search.score;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -24,7 +24,11 @@ import lombok.Data;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.EXISTING_PROPERTY, property = "type")
 @JsonSubTypes({
         @JsonSubTypes.Type(name = "FIELD_VALUE_FACTOR", value = FieldValueFactorFunction.class),
-        @JsonSubTypes.Type(name = "CONSTANT_SCORE", value = ConstantScoreFunction.class)
+        @JsonSubTypes.Type(name = "CONSTANT_SCORE", value = ConstantScoreFunction.class),
+        @JsonSubTypes.Type(name = "SCRIPT_SCORE", value = ScriptScoreFunction.class),
+        @JsonSubTypes.Type(name = "RANDOM_SCORE", value = RandomScoreFunction.class),
+        @JsonSubTypes.Type(name = "WEIGHTED_SCORE", value = WeightedScoreFunction.class),
+        @JsonSubTypes.Type(name = "DECAY_FUNCTION", value = DecayFunction.class)
 })
 @Data
 public abstract class ScoreFunction {

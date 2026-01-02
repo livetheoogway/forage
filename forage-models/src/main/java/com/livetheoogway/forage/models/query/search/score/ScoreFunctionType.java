@@ -12,9 +12,13 @@
  * under the License.
  */
 
-package com.livetheoogway.forage.models.query.search;
+package com.livetheoogway.forage.models.query.search.score;
 
 public enum ScoreFunctionType {
     FIELD_VALUE_FACTOR,
-    CONSTANT_SCORE
+    CONSTANT_SCORE,
+    SCRIPT_SCORE,
+    RANDOM_SCORE,
+    WEIGHTED_SCORE,
+    DECAY_FUNCTION
 }
