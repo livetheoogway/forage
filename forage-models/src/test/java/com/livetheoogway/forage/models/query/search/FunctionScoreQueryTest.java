@@ -15,8 +15,13 @@
 package com.livetheoogway.forage.models.query.search;
 
 import com.livetheoogway.forage.models.query.search.score.ConstantScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.DecayFunction;
+import com.livetheoogway.forage.models.query.search.score.DecayType;
 import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
+import com.livetheoogway.forage.models.query.search.score.RandomScoreFunction;
 import com.livetheoogway.forage.models.query.search.score.ScoreFunctionType;
+import com.livetheoogway.forage.models.query.search.score.ScriptScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.WeightedScoreFunction;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -117,6 +122,10 @@ class FunctionScoreQueryTest {
     void testScoreFunctionTypes() {
         assertEquals(ScoreFunctionType.CONSTANT_SCORE, new ConstantScoreFunction().getType());
         assertEquals(ScoreFunctionType.FIELD_VALUE_FACTOR, new FieldValueFactorFunction("field").getType());
+        assertEquals(ScoreFunctionType.SCRIPT_SCORE, new ScriptScoreFunction("score").getType());
+        assertEquals(ScoreFunctionType.RANDOM_SCORE, new RandomScoreFunction("field").getType());
+        assertEquals(ScoreFunctionType.WEIGHTED_SCORE, new WeightedScoreFunction().getType());
+        assertEquals(ScoreFunctionType.DECAY_FUNCTION, new DecayFunction("field", 0.0, 1.0).getType());
     }
 
     @Test
@@ -137,5 +146,73 @@ class FunctionScoreQueryTest {
         assertEquals(baseQuery, queryWithoutBoost.getBaseQuery());
         assertEquals(scoreFunction, queryWithBoost.getScoreFunction());
         assertEquals(scoreFunction, queryWithoutBoost.getScoreFunction());
+    }
+
+    @Test
+    void testWeightedScoreFunctionDefaultsToUnity() {
+        WeightedScoreFunction function = new WeightedScoreFunction();
+
+        assertEquals(1.0f, function.getWeight());
+        assertEquals(ScoreFunctionType.WEIGHTED_SCORE, function.getType());
+    }
+
+    @Test
+    void testWeightedScoreFunctionRespectsCustomWeight() {
+        WeightedScoreFunction function = new WeightedScoreFunction(2.5f);
+
+        assertEquals(2.5f, function.getWeight());
+        assertEquals(ScoreFunctionType.WEIGHTED_SCORE, function.getType());
+    }
+
+    @Test
+    void testRandomScoreFunctionDefaultsSeed() {
+        RandomScoreFunction function = new RandomScoreFunction("docId");
+
+        assertEquals(1L, function.getSeed());
+        assertEquals("docId", function.getField());
+        assertEquals(ScoreFunctionType.RANDOM_SCORE, function.getType());
+    }
+
+    @Test
+    void testRandomScoreFunctionCustomSeed() {
+        RandomScoreFunction function = new RandomScoreFunction(42L, "docId");
+
+        assertEquals(42L, function.getSeed());
+        assertEquals("docId", function.getField());
+        assertEquals(ScoreFunctionType.RANDOM_SCORE, function.getType());
+    }
+
+    @Test
+    void testScriptScoreFunctionStoresExpression() {
+        String expression = "score + popularity";
+        ScriptScoreFunction function = new ScriptScoreFunction(expression);
+
+        assertEquals(expression, function.getExpression());
+        assertEquals(ScoreFunctionType.SCRIPT_SCORE, function.getType());
+    }
+
+    @Test
+    void testDecayFunctionDefaults() {
+        DecayFunction function = new DecayFunction(null, null, null, null, null, "freshness");
+
+        assertEquals(0.0, function.getOrigin());
+        assertEquals(1.0, function.getScale());
+        assertEquals(0.0, function.getOffset());
+        assertEquals(0.5, function.getDecay());
+        assertEquals(DecayType.EXP, function.getDecayType());
+        assertEquals("freshness", function.getField());
+        assertEquals(ScoreFunctionType.DECAY_FUNCTION, function.getType());
+    }
+
+    @Test
+    void testDecayFunctionCustomValues() {
+        DecayFunction function = new DecayFunction(10.0, 5.0, 1.0, 0.2, DecayType.LINEAR, "freshness");
+
+        assertEquals(10.0, function.getOrigin());
+        assertEquals(5.0, function.getScale());
+        assertEquals(1.0, function.getOffset());
+        assertEquals(0.2, function.getDecay());
+        assertEquals(DecayType.LINEAR, function.getDecayType());
+        assertEquals("freshness", function.getField());
     }
 }

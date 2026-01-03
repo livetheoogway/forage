@@ -36,7 +36,7 @@ public class LuceneDocumentHandler implements DocumentVisitor<Document> {
                 .stream()
                 .filter(field -> field.accept(fieldValidator))
                 .map(field -> field.accept(fieldGenerator))
-                .forEach(document::add);
+                .forEach(indexableFields -> indexableFields.forEach(document::add));
         document.add(new StringField(ID, forageDocument.id(), Field.Store.YES));
         return document;
     }
@@ -51,8 +51,5 @@ public class LuceneDocumentHandler implements DocumentVisitor<Document> {
     public String extractId(final Document document) {
         return document.get(ID);
     }
-
-    // function that encodes 2 strings
-
 
 }

@@ -84,16 +84,10 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     };
     private final Analyzer analyzer;
     private final QueryParserSupplier queryParserSupplier;
-    private final FieldBoostRegistry fieldBoostRegistry;
 
     public LuceneQueryGenerator(Analyzer analyzer, QueryParserSupplier queryParserSupplier) {
-        this(analyzer, queryParserSupplier, null);
-    }
-
-    public LuceneQueryGenerator(Analyzer analyzer, QueryParserSupplier queryParserSupplier, FieldBoostRegistry fieldBoostRegistry) {
         this.analyzer = analyzer;
         this.queryParserSupplier = queryParserSupplier;
-        this.fieldBoostRegistry = fieldBoostRegistry != null ? fieldBoostRegistry : new FieldBoostRegistry();
     }
 
     @Override
@@ -109,14 +103,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
 
     @Override
     public Query visit(final MatchQuery matchQuery) {
-        Query termQuery = new TermQuery(new Term(matchQuery.getField(), matchQuery.getValue()));
-
-        // Apply field-level boost from registry if available
-        final var fieldBoost = fieldBoostRegistry.getFieldBoost(matchQuery.getField());
-        if (fieldBoost != 1.0f) {
-            termQuery = new BoostQuery(termQuery, fieldBoost);
-        }
-
+        final var termQuery = new TermQuery(new Term(matchQuery.getField(), matchQuery.getValue()));
         return applyBoost(termQuery, matchQuery.getBoost());
     }
 
