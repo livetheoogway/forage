@@ -403,6 +403,7 @@ List<SortCriteria> sortBy = Arrays.asList(
 QueryBuilder.matchQuery("author", "martin")
     .buildForageQuery(10, sortBy);
 ```
+`SortCriteria` accepts a field name, `SortOrder` (ASC/DESC), and a `SortType`. Use `SortCriteria.byScore()` helpers for score-driven ordering or supply `SortType.FIELD` to sort on doc-value backed fields (numeric or keyword).
 
 **Minimum Score Filtering** - Filter out low-relevance results
 ```java
@@ -425,6 +426,31 @@ QueryBuilder.functionScoreQuery()
     .constantScore(2.0f)
     .buildForageQuery();
 ```
+
+#### Function Score Options
+
+Forage’s ranking pipeline now supports multiple Lucene-backed score functions that can be composed with any query:
+
+| Score Function | Description | Example Usage |
+| --- | --- | --- |
+| `ConstantScoreFunction` | Multiplies every matching document’s score by a fixed value | `.constantScore(2.0f)` |
+| `WeightedScoreFunction` | Applies a simple multiplicative weight to the base query score | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
+| `FieldValueFactorFunction` | Uses a numeric field (doc value) as the score booster | `.fieldValueFactor("popularity", 1.3f)` |
+| `ScriptScoreFunction` | Evaluates a JavaScript expression referencing fields & the existing score | `.scoreFunction(new ScriptScoreFunction("score * rating - numPage / 100"))` |
+| `RandomScoreFunction` | Produces deterministic but shuffled ordering using a seed and optional field | `.scoreFunction(new RandomScoreFunction(42L, "id"))` |
+| `DecayFunction` | Applies a linear/exp/log decay over a numeric field (e.g., age, distance) | `.scoreFunction(new DecayFunction(0, 365, 0, 0.5, DecayType.EXPONENTIAL, "daysSinceRelease"))` |
+
+Each function can be combined with:
+
+```java
+ForageQuery rankedQuery = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("genre", "fantasy").build())
+        .scoreFunction(new FieldValueFactorFunction("rating", 1.2f))
+        .boost(1.1f) // optional top-level boost
+        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore()), 0.25f);
+```
+
+> 💡 `buildForageQuery(size, sortBy, minimumScore)` lets you specify an ordered list of `SortCriteria` (score or field-based, ascending/descending) and a minimum score gate in one call, ensuring your ranking logic stays close to the query definition.
 
 ### Pagination
 
@@ -507,4 +533,3 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - Monitor heap usage with large document sets
 - Consider the trade-off between search speed and memory consumption
 - Use appropriate field types (StringField vs TextField) based on search requirements
-
