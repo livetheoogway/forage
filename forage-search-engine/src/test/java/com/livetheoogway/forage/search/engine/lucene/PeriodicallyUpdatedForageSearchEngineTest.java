@@ -18,6 +18,8 @@ import com.livetheoogway.forage.core.AsyncQueuedConsumer;
 import com.livetheoogway.forage.core.PeriodicUpdateEngine;
 import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.ForageSearchQuery;
+import com.livetheoogway.forage.models.query.SortCriteria;
+import com.livetheoogway.forage.models.query.SortOrder;
 import com.livetheoogway.forage.models.query.search.Query;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.IntRange;
@@ -43,6 +45,7 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -174,6 +177,96 @@ class PeriodicallyUpdatedForageSearchEngineTest {
         performParallelSearchExecutions(dataStore, luceneQueryEngineContainer);
     }
 
+    @Test
+    void testFunctionScoreRankingAcrossFullCatalog() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(1)) {
+            context.dataStore.addAllBooks();
+            waitForAuthorResults(context.engine, "rowling", 20);
+
+            assertConstantScoreFunction(context.engine);
+            assertWeightedScoreScaling(context.engine);
+            assertFieldValueFactorOrdering(context.engine);
+            assertScriptScoreExpression(context.engine);
+            assertRandomScoreDeterminism(context.engine);
+            assertDecayFunctionBias(context.engine);
+        }
+    }
+
+    @Test
+    void testBuildForageQueryWithSortCriteria() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(500)) {
+            List<SortCriteria> sortBy = Collections.singletonList(SortCriteria.byScore(SortOrder.ASC));
+            ForageQuery sortedQuery = buildScriptScoreMatchAllQuery(25, sortBy, null);
+
+            ForageQueryResult<Book> result = context.engine.search(sortedQuery);
+            Assertions.assertTrue(result.getMatchingResults().size() > 1,
+                                  "expected at least two books to validate ordering");
+            assertSortedDescending(result.getMatchingResults(), Book::getNumPage);
+        }
+    }
+
+    @Test
+    void testMinimumScoreFiltersResults() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(600)) {
+            List<SortCriteria> sortBy = Collections.emptyList();
+            ForageQuery baselineQuery = buildScriptScoreMatchAllQuery(30, sortBy, null);
+
+            ForageQueryResult<Book> baseline = context.engine.search(baselineQuery);
+            Assertions.assertTrue(baseline.getMatchingResults().size() >= 2,
+                                  "baseline query should return multiple books");
+
+            float highestScore = baseline.getMatchingResults().get(0).getDocScore().getScore();
+            float lowestScore = baseline.getMatchingResults()
+                    .get(baseline.getMatchingResults().size() - 1)
+                    .getDocScore()
+                    .getScore();
+            Assertions.assertTrue(highestScore > lowestScore,
+                                  "script score should yield varied doc scores");
+
+            float relaxedThreshold = Math.max(0f, lowestScore - 5f);
+            ForageQuery relaxedQuery = buildScriptScoreMatchAllQuery(30, sortBy, relaxedThreshold);
+
+            ForageQueryResult<Book> relaxedResult = context.engine.search(relaxedQuery);
+            Assertions.assertEquals(baseline.getMatchingResults().size(),
+                                    relaxedResult.getMatchingResults().size(),
+                                    "relaxed threshold should not filter documents");
+
+            float strictThreshold = (highestScore + lowestScore) / 2f;
+            ForageQuery filteredQuery = buildScriptScoreMatchAllQuery(30, sortBy, strictThreshold);
+
+            ForageQueryResult<Book> filteredResult = context.engine.search(filteredQuery);
+            Assertions.assertFalse(filteredResult.getMatchingResults().isEmpty(),
+                                   "strict threshold should keep at least one result");
+            Assertions.assertTrue(filteredResult.getMatchingResults().size()
+                                          < baseline.getMatchingResults().size(),
+                                  "strict threshold should drop lower scoring docs");
+            filteredResult.getMatchingResults()
+                    .forEach(result -> Assertions.assertTrue(result.getDocScore().getScore() >= strictThreshold,
+                                                             "filtered results must respect the threshold"));
+
+            float impossibleThreshold = highestScore + 1000f;
+            ForageQuery emptyQuery = buildScriptScoreMatchAllQuery(30, sortBy, impossibleThreshold);
+
+            ForageQueryResult<Book> emptyResult = context.engine.search(emptyQuery);
+            Assertions.assertTrue(emptyResult.getMatchingResults().isEmpty(),
+                                  "threshold above any score should return no results");
+        }
+    }
+
+    private void waitForTotalDocuments(final ForageEngineIndexer<Book> searchEngine, final int expectedTotal) {
+        Awaitility.await().atMost(Duration.of(60, ChronoUnit.SECONDS))
+                .with()
+                .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
+                .ignoreExceptionsMatching(throwable -> throwable instanceof ForageSearchError
+                        && ((ForageSearchError) throwable).getForageErrorCode()
+                        == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
+                .until(() -> {
+                    final ForageQueryResult<Book> query = searchEngine.search(
+                            QueryBuilder.matchAllQuery().buildForageQuery());
+                    return query.getTotal().getTotal() >= expectedTotal;
+                });
+    }
+
     private void performParallelSearchExecutions(final BookDataStore dataStore,
                                                  final ForageEngineIndexer<Book> luceneQueryEngineContainer)
             throws Exception {
@@ -233,52 +326,6 @@ class PeriodicallyUpdatedForageSearchEngineTest {
                 .getStackTrace()[2].getMethodName());
     }
 
-    @Test
-    void testFunctionScoreRankingAcrossFullCatalog() throws Exception {
-        final BookDataStore dataStore = new BookDataStore();
-        final ForageEngineIndexer<Book> luceneQueryEngineContainer = new ForageEngineIndexer<>(
-                ForageSearchEngineBuilder.<Book>builder()
-                        .withDataStore(dataStore)
-                        .withObjectMapper(TestUtils.mapper()));
-
-        dataStore.addBooks(1);
-
-        final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =
-                new PeriodicUpdateEngine<>(
-                        dataStore, new AsyncQueuedConsumer<>(luceneQueryEngineContainer),
-                        1, TimeUnit.SECONDS
-                );
-        periodicUpdateEngine.bootstrap();
-        waitForTotalDocuments(luceneQueryEngineContainer, 1);
-
-        periodicUpdateEngine.start();
-        dataStore.addAllBooks();
-        waitForAuthorResults(luceneQueryEngineContainer, "rowling", 20);
-
-        assertConstantScoreFunction(luceneQueryEngineContainer);
-        assertWeightedScoreScaling(luceneQueryEngineContainer);
-        assertFieldValueFactorOrdering(luceneQueryEngineContainer);
-        assertScriptScoreExpression(luceneQueryEngineContainer);
-        assertRandomScoreDeterminism(luceneQueryEngineContainer);
-        assertDecayFunctionBias(luceneQueryEngineContainer);
-
-        periodicUpdateEngine.stop();
-    }
-
-    private void waitForTotalDocuments(final ForageEngineIndexer<Book> searchEngine, final int expectedTotal) {
-        Awaitility.await().atMost(Duration.of(60, ChronoUnit.SECONDS))
-                .with()
-                .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
-                .ignoreExceptionsMatching(throwable -> throwable instanceof ForageSearchError
-                        && ((ForageSearchError) throwable).getForageErrorCode()
-                        == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
-                .until(() -> {
-                    final ForageQueryResult<Book> query = searchEngine.search(
-                            QueryBuilder.matchAllQuery().buildForageQuery());
-                    return query.getTotal().getTotal() >= expectedTotal;
-                });
-    }
-
     private void waitForAuthorResults(final ForageEngineIndexer<Book> searchEngine,
                                       final String author,
                                       final int expectedTotal) {
@@ -293,6 +340,27 @@ class PeriodicallyUpdatedForageSearchEngineTest {
                             QueryBuilder.matchQuery("author", author).buildForageQuery());
                     return query.getTotal().getTotal() >= expectedTotal;
                 });
+    }
+
+    private EngineTestContext bootstrapEngineWithBooks(final int numberOfBooks) throws Exception {
+        final BookDataStore dataStore = new BookDataStore();
+        final ForageEngineIndexer<Book> engine = new ForageEngineIndexer<>(
+                ForageSearchEngineBuilder.<Book>builder()
+                        .withDataStore(dataStore)
+                        .withObjectMapper(TestUtils.mapper()));
+
+        final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =
+                new PeriodicUpdateEngine<>(
+                        dataStore, new AsyncQueuedConsumer<>(engine),
+                        1, TimeUnit.SECONDS
+                );
+
+        dataStore.addBooks(numberOfBooks);
+        periodicUpdateEngine.bootstrap();
+        waitForTotalDocuments(engine, numberOfBooks);
+        periodicUpdateEngine.start();
+
+        return new EngineTestContext(dataStore, engine, periodicUpdateEngine);
     }
 
     private void assertConstantScoreFunction(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
@@ -403,6 +471,21 @@ class PeriodicallyUpdatedForageSearchEngineTest {
                 .buildForageQuery(size);
     }
 
+    private ForageQuery buildScriptScoreMatchAllQuery(final int size,
+                                                      final List<SortCriteria> sortBy,
+                                                      final Float minimumScore) {
+        if (minimumScore == null) {
+            return QueryBuilder.functionScoreQuery()
+                    .baseQuery(QueryBuilder.matchAllQuery().build())
+                    .scoreFunction(new ScriptScoreFunction("numPage"))
+                    .buildForageQuery(size, sortBy);
+        }
+        return QueryBuilder.functionScoreQuery()
+                .baseQuery(QueryBuilder.matchAllQuery().build())
+                .scoreFunction(new ScriptScoreFunction("numPage"))
+                .buildForageQuery(size, sortBy, minimumScore);
+    }
+
     private List<String> extractIds(final ForageQueryResult<Book> result) {
         return result.getMatchingResults()
                 .stream()
@@ -429,6 +512,26 @@ class PeriodicallyUpdatedForageSearchEngineTest {
             Assertions.assertTrue(prev <= current + 1e-6,
                                   () -> String.format("Expected non-decreasing ordering but found %f > %f", prev,
                                                       current));
+        }
+    }
+
+
+    private static final class EngineTestContext implements AutoCloseable {
+        private final BookDataStore dataStore;
+        private final ForageEngineIndexer<Book> engine;
+        private final PeriodicUpdateEngine<IndexableDocument> periodicEngine;
+
+        private EngineTestContext(final BookDataStore dataStore,
+                                  final ForageEngineIndexer<Book> engine,
+                                  final PeriodicUpdateEngine<IndexableDocument> periodicEngine) {
+            this.dataStore = dataStore;
+            this.engine = engine;
+            this.periodicEngine = periodicEngine;
+        }
+
+        @Override
+        public void close() {
+            periodicEngine.stop();
         }
     }
 }
