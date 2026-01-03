@@ -118,10 +118,10 @@ There are several static helpers in `QueryBuilder` which should make things easy
 // 2. Create your data store
 class BookStore implements Bootstrapper<IndexableDocument>, Store<Book> {
     public void bootstrap(Consumer<IndexableDocument> itemConsumer) {
-        // Index your data with optional field boosting
+        // Index your data 
         itemConsumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
-            new TextField("title", book.getTitle(), 2.0f),      // High importance
-            new TextField("author", book.getAuthor(), 1.5f),    // Medium importance
+            new TextField("title", book.getTitle()),
+            new TextField("author", book.getAuthor()),
             new FloatField("rating", new float[]{book.getRating()})
         )));
     }
@@ -140,7 +140,7 @@ SearchEngine<ForageQuery, ForageQueryResult<Book>> searchEngine =
 // 4. Search with advanced ranking
 ForageQueryResult<Book> results = searchEngine.search(
     QueryBuilder.booleanQuery()
-        .query(QueryBuilder.matchQuery("title", "java").boost(2.0f).build())
+        .query(QueryBuilder.matchQuery("title", "java").build())
         .query(QueryBuilder.matchQuery("author", "gosling").boost(1.5f).build())
         .clauseType(ClauseType.SHOULD)
         .buildForageQuery(10, 
@@ -197,9 +197,9 @@ class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
           // All rules on which fields need to be indexed how, should be happening here
           // You can optionally boost important fields during indexing
           itemConsumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
-                        new TextField("title", book.getTitle(), 2.0f),      // Boost title field
-                        new TextField("author", book.getAuthor(), 1.5f),    // Boost author field  
-                        new TextField("description", book.getDescription()), // Default boost
+                        new TextField("title", book.getTitle()),
+                        new TextField("author", book.getAuthor()),  
+                        new TextField("description", book.getDescription()),
                         new FloatField("rating", new float[]{book.getRating()}),
                         new IntField("numPage", new int[]{book.getNumPage()}))));
         }
@@ -365,132 +365,83 @@ QueryBuilder.prefixMatchQuery("author", "row").buildForageQuery();
 QueryBuilder.matchAllQuery().buildForageQuery();
 ```
 
-### Advanced Ranking & Scoring
+### Ranking & Scoring Overview
 
-**Query-level Boosting** - Boost specific queries for relevance
+Forage layers several ranking primitives so you can blend lexical relevance with business signal weighting:
+
+1. **Base Lucene score** – TF/IDF style scoring driven by the query.
+2. **Query-time boosts** – emphasis on specific clauses or phrases.
+3. **Function score multipliers** – numeric adjustments from doc-values or scripts.
+4. **Sorting & minimum-score gating** – deterministic ordering and quality cutoffs.
+
+#### Query-time Boosts
 ```java
-// Boost title matches higher than content matches
 QueryBuilder.booleanQuery()
         .query(QueryBuilder.matchQuery("title", "java").boost(2.0f).build())
         .query(QueryBuilder.matchQuery("content", "java").boost(1.0f).build())
         .clauseType(ClauseType.SHOULD)
         .buildForageQuery();
 ```
+Mix and match boosts to express intent (e.g., exact title hit should outrank body mention).
 
-**Field-level Boosting** - Configure field importance (applied at query time)
+#### Sorting & Secondary Keys
 ```java
-// Configure field importance - boosts are applied automatically during search
-itemConsumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
-    new TextField("title", book.getTitle(), 2.0f),      // High importance
-    new TextField("author", book.getAuthor(), 1.5f),    // Medium importance  
-    new TextField("description", book.getDescription())  // Default importance (1.0f)
-)));
-
-// When you search any field, the configured boost is automatically applied:
-// - Queries on "title" field get 2.0x boost
-// - Queries on "author" field get 1.5x boost  
-// - Queries on "description" field get default boost
-```
-
-**Custom Sorting** - Sort by relevance, field values, or combinations
-```java
-// Sort by score (relevance) first, then by rating
 List<SortCriteria> sortBy = Arrays.asList(
-    SortCriteria.byScore(SortOrder.DESC),
-    new SortCriteria("rating", SortOrder.DESC)
-);
+        SortCriteria.byScore(SortOrder.DESC),
+        new SortCriteria("rating", SortOrder.DESC));
 
-QueryBuilder.matchQuery("author", "martin")
-    .buildForageQuery(10, sortBy);
+QueryBuilder.matchQuery("author", "martin").buildForageQuery(10, sortBy);
 ```
-`SortCriteria` accepts a field name, `SortOrder` (ASC/DESC), and a `SortType`. Use `SortCriteria.byScore()` helpers for score-driven ordering or supply `SortType.FIELD` to sort on doc-value backed fields (numeric or keyword).
+`SortCriteria` accepts a field, `SortOrder`, and `SortType`. Use `SortCriteria.byScore()` for pure relevance or specify doc-value backed fields for deterministic business ordering.
 
-**Minimum Score Filtering** - Filter out low-relevance results
+#### Minimum Score Filtering
 ```java
 QueryBuilder.matchQuery("title", "programming")
-    .buildForageQuery(10, null, 0.5f); // Only results with score >= 0.5
+        .buildForageQuery(10, null, 0.5f);
 ```
+The third argument to `buildForageQuery` acts as a relevance gate—ideal for trimming fuzzy queries.
 
-**Function Scoring** - Advanced scoring with custom functions
+#### Function Scoring (Business Signals)
 ```java
-// Boost based on popularity field value
-QueryBuilder.functionScoreQuery()
-    .baseQuery(QueryBuilder.matchQuery("category", "programming").build())
-    .fieldValueFactor("popularity", 1.5f)
-    .boost(1.2f)
-    .buildForageQuery();
-
-// Constant score boost
-QueryBuilder.functionScoreQuery()
-    .baseQuery(QueryBuilder.matchQuery("featured", "true").build())
-    .constantScore(2.0f)
-    .buildForageQuery();
-```
-
-#### Function Score Options
-
-Forage’s ranking pipeline now supports multiple Lucene-backed score functions that can be composed with any query:
-
-| Score Function | Description | Example Usage |
-| --- | --- | --- |
-| `ConstantScoreFunction` | Multiplies every matching document’s score by a fixed value | `.constantScore(2.0f)` |
-| `WeightedScoreFunction` | Applies a simple multiplicative weight to the base query score | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
-| `FieldValueFactorFunction` | Uses a numeric field (doc value) as the score booster | `.fieldValueFactor("popularity", 1.3f)` |
-| `ScriptScoreFunction` | Evaluates a JavaScript expression referencing fields & the existing score | `.scoreFunction(new ScriptScoreFunction("score * rating - numPage / 100"))` |
-| `RandomScoreFunction` | Produces deterministic but shuffled ordering using a seed and optional field | `.scoreFunction(new RandomScoreFunction(42L, "id"))` |
-| `DecayFunction` | Applies a linear/exp/log decay over a numeric field (e.g., age, distance) | `.scoreFunction(new DecayFunction(0, 365, 0, 0.5, DecayType.EXPONENTIAL, "daysSinceRelease"))` |
-
-Each function can be combined with:
-
-```java
-ForageQuery rankedQuery = QueryBuilder.functionScoreQuery()
+ForageQuery fanFavorites = QueryBuilder.functionScoreQuery()
         .baseQuery(QueryBuilder.matchQuery("genre", "fantasy").build())
-        .scoreFunction(new FieldValueFactorFunction("rating", 1.2f))
-        .boost(1.1f) // optional top-level boost
+        .fieldValueFactor("rating", 1.2f)
+        .boost(1.1f)
         .buildForageQuery(20, Arrays.asList(SortCriteria.byScore()), 0.25f);
 ```
 
-> 💡 `buildForageQuery(size, sortBy, minimumScore)` lets you specify an ordered list of `SortCriteria` (score or field-based, ascending/descending) and a minimum score gate in one call, ensuring your ranking logic stays close to the query definition.
+| Score Function | Description | Example Usage |
+| --- | --- | --- |
+| `ConstantScoreFunction` | Multiplies every match with a fixed constant | `.constantScore(2.0f)` |
+| `WeightedScoreFunction` | Simple weight for the overall query | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
+| `FieldValueFactorFunction` | Reads a numeric doc-value field | `.fieldValueFactor("popularity", 1.3f)` |
+| `ScriptScoreFunction` | Executes a JavaScript expression with access to fields & `score` | `.scoreFunction(new ScriptScoreFunction("score * rating - numPage / 100"))` |
+| `RandomScoreFunction` | Deterministic shuffle with seed/field | `.scoreFunction(new RandomScoreFunction(42L, "id"))` |
+| `DecayFunction` | Linear/exp/log decay across numeric fields | `.scoreFunction(new DecayFunction(0, 365, 0, 0.5, DecayType.EXPONENTIAL, "daysSinceRelease"))` |
 
-#### Function Score Anatomy
+Doc-values are emitted automatically for `FloatField`, `IntField`, and `StringField`, so you can safely reference them in scripts, sorts, or field-value factors.
 
-Every function-score query follows the same three-step flow:
-
-1. **Base query** – any query produced via `QueryBuilder` (match, boolean, range, etc.).
-2. **Score function** – one of the score helpers above; it receives doc-values at search time and produces a multiplier.
-3. **Optional boost/minimum score** – fine-tune the resulting score or filter noisy matches.
-
+#### Full Ranking Recipe
 ```java
-ForageQuery discountedPopularBooks = QueryBuilder.functionScoreQuery()
-        .baseQuery(QueryBuilder.booleanQuery()
-                .query(QueryBuilder.matchQuery("genre", "fantasy").build())
-                .query(QueryBuilder.intRangeQuery("price", 0, 500).build())
-                .clauseType(ClauseType.MUST)
-                .build())
-        .fieldValueFactor("popularity", 1.25f)            // field based multiplier
-        .boost(1.10f)                                     // global multiplier
-        .buildForageQuery(15, Arrays.asList(SortCriteria.byScore()), 0.2f);
-```
-
-Because score functions reuse Lucene doc-values, they remain fast even for large in-memory catalogs.
-
-#### Field Scores & DocValues
-
-Field-driven ranking and sorting rely on doc-values. Forage now emits doc-values automatically for numeric fields (`FloatField`, `IntField`) and string keyword fields (`StringField`). Keep these tips in mind:
-
-- Use `FloatField`/`IntField` for any numeric attribute you plan to sort or score on (price, rating, popularity, page count, etc.).
-- For keyword sorting (non-analyzed), prefer `StringField` over `TextField`.
-- Script scores can reference any doc-value name directly (`rating`, `numPage`, `popularity`). The special `score` variable exposes the base Lucene score.
-
-```java
-// Example script making use of emitted doc-values
-QueryBuilder.functionScoreQuery()
-        .baseQuery(QueryBuilder.matchAllQuery().build())
+ForageQuery personalized = QueryBuilder.functionScoreQuery()
+        .baseQuery(
+                QueryBuilder.booleanQuery()
+                        .query(QueryBuilder.matchQuery("title", "java").boost(3.0f).build())
+                        .query(QueryBuilder.matchQuery("tags", "backend").build())
+                        .clauseType(ClauseType.SHOULD)
+                        .build())
         .scoreFunction(new ScriptScoreFunction("score * rating + (5 - daysSinceRelease)"))
-        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore(SortOrder.DESC)));
+        .boost(1.05f)
+        .buildForageQuery(
+                15,
+                Arrays.asList(SortCriteria.byScore(), new SortCriteria("popularity", SortOrder.DESC)),
+                0.2f);
 ```
-
-Field-level boosts at indexing time stack with doc-value driven ranking, letting you mix textual relevance and numeric business signals seamlessly.
+This example:
+- prioritizes exact “java” title hits,
+- mixes in a recency/rating script,
+- sorts by relevance then popularity,
+- and drops low-score matches via `minimumScore`.
 
 ### Pagination
 
@@ -538,7 +489,6 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [x] Phrase Query Support
 - [x] Prefix Match Query Support
 - [x] **Query-level Scoring and Boosting**
-- [x] **Field-level Boosting**
 - [x] **Custom Sorting (by score, field values)**
 - [x] **Minimum Score Filtering**
 - [x] **Function Scoring (field value factors, constant scores)**
@@ -558,7 +508,6 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 ## Performance & Best Practices
 
 ### Indexing Performance
-- Use field-level boosting for frequently searched fields
 - Minimize the number of analyzed text fields for better indexing speed
 - Consider batch indexing for large datasets
 

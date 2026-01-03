@@ -24,17 +24,11 @@ import java.util.Arrays;
 public class IntField extends Field {
     String name;
     int[] points;
-    Float boost;
 
-    public IntField(final String name, final int[] points, final Float boost) {
+    public IntField(final String name, final int[] points) {
         super(FieldType.INT);
         this.name = name;
         this.points = points;
-        this.boost = boost;
-    }
-
-    public IntField(final String name, final int[] points) {
-        this(name, points, null);
     }
 
     @Override
