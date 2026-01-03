@@ -14,11 +14,13 @@
 
 package com.livetheoogway.forage.search.engine.lucene;
 
+import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.PageQuery;
 import com.livetheoogway.forage.models.query.search.ClauseType;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
+import com.livetheoogway.forage.models.result.MatchingResult;
 import com.livetheoogway.forage.search.engine.ResourceReader;
 import com.livetheoogway.forage.search.engine.ResultUtil;
 import com.livetheoogway.forage.search.engine.TestUtils;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -203,5 +206,170 @@ class ForageQueryTest {
                 searchEngine.search(QueryBuilder.matchAllQuery().buildForageQuery());
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertEquals(1001, result.getTotal().getTotal());
+    }
+
+    @Test
+    void testMatchQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.matchQuery("author", "rowling").buildForageQuery(1),
+                QueryBuilder.matchQuery("author", "rowling").boost(2.5f).buildForageQuery(1),
+                book("hp-1", "Stone", "rowling", 350));
+    }
+
+    @Test
+    void testPhraseMatchQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.phraseMatchQuery("title", "Harry Potter").buildForageQuery(1),
+                QueryBuilder.phraseMatchQuery("title", "Harry Potter").boost(3.0f).buildForageQuery(1),
+                book("hp-phrase", "Harry Potter and Magic", "rowling", 300));
+    }
+
+    @Test
+    void testFuzzyMatchQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.fuzzyMatchQuery("title", "sayyer").buildForageQuery(1),
+                QueryBuilder.fuzzyMatchQuery("title", "sayyer").boost(2.0f).buildForageQuery(1),
+                book("sawyer", "Tom Sawyer", "twain", 280));
+    }
+
+    @Test
+    void testPrefixMatchQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.prefixMatchQuery("author", "row").buildForageQuery(1),
+                QueryBuilder.prefixMatchQuery("author", "row").boost(2.0f).buildForageQuery(1),
+                book("hp-prefix", "Any Book", "rowling", 320));
+    }
+
+    @Test
+    void testRangeQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.intRangeQuery("numPage", 600, 800).buildForageQuery(1),
+                QueryBuilder.intRangeQuery("numPage", 600, 800).boost(2.0f).buildForageQuery(1),
+                book("large-book", "Big Tome", "author", 700));
+    }
+
+    @Test
+    void testMatchAllQueryBoostIncreasesScore() throws ForageSearchError {
+        assertBoostIncreasesScore(
+                QueryBuilder.matchAllQuery().buildForageQuery(1),
+                QueryBuilder.matchAllQuery().boost(2.0f).buildForageQuery(1),
+                book("a", "Doc A", "author", 200),
+                book("b", "Doc B", "author", 210));
+    }
+
+    @Test
+    void testShouldClauseBoostReordersResults() throws Exception {
+        try (ForageLuceneSearchEngine<Book> miniEngine = buildAdHocEngine(
+                book("book-alpha", "Alpha Chronicles"),
+                book("book-gamma", "Gamma Chronicles"))) {
+
+            ForageQuery unboosted = QueryBuilder.booleanQuery()
+                    .query(QueryBuilder.matchQuery("title", "alpha").build())
+                    .query(QueryBuilder.matchQuery("title", "gamma").build())
+                    .clauseType(ClauseType.SHOULD)
+                    .buildForageQuery(2);
+
+            List<String> unboostedOrder = searchIds(miniEngine, unboosted);
+            Assertions.assertEquals(Arrays.asList("book-alpha", "book-gamma"), unboostedOrder);
+
+            ForageQuery boostedGamma = QueryBuilder.booleanQuery()
+                    .query(QueryBuilder.matchQuery("title", "alpha").build())
+                    .query(QueryBuilder.matchQuery("title", "gamma").boost(5.0f).build())
+                    .clauseType(ClauseType.SHOULD)
+                    .buildForageQuery(2);
+
+            List<String> boostedOrder = searchIds(miniEngine, boostedGamma);
+            Assertions.assertEquals(Arrays.asList("book-gamma", "book-alpha"), boostedOrder);
+        }
+    }
+
+    @Test
+    void testPhraseBoostElevatesExactPhraseMatches() throws Exception {
+        try (ForageLuceneSearchEngine<Book> miniEngine = buildAdHocEngine(
+                book("generic", "Tom Adventures Collection"),
+                book("classic", "The Adventures of Tom Sawyer"))) {
+
+            ForageQuery matchOnly = QueryBuilder.matchQuery("title", "tom").buildForageQuery(2);
+            Assertions.assertEquals("generic", searchIds(miniEngine, matchOnly).get(0),
+                                    "Without boosts the first indexed doc should lead");
+
+            ForageQuery boostedPhrase = QueryBuilder.booleanQuery()
+                    .query(QueryBuilder.matchQuery("title", "tom").build())
+                    .query(QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").boost(4.0f).build())
+                    .clauseType(ClauseType.SHOULD)
+                    .buildForageQuery(2);
+
+            Assertions.assertEquals("classic", searchIds(miniEngine, boostedPhrase).get(0),
+                                    "Phrase boost should lift the exact phrase match to the top");
+        }
+    }
+
+    private void assertBoostIncreasesScore(final ForageQuery baseQuery,
+                                           final ForageQuery boostedQuery,
+                                           final Book... books) throws ForageSearchError {
+        final ForageLuceneSearchEngine<Book> engine = buildAdHocEngine(books);
+        try {
+            final MatchingResult<Book> baseTop = firstMatch(engine, baseQuery);
+            final MatchingResult<Book> boostedTop = firstMatch(engine, boostedQuery);
+            Assertions.assertEquals(baseTop.getId(), boostedTop.getId(),
+                                    "Boosting should not change the top document for identical queries");
+            Assertions.assertTrue(boostedTop.getDocScore().getScore() > baseTop.getDocScore().getScore(),
+                                  () -> String.format("Expected boosted score > base score but found %f <= %f",
+                                                      boostedTop.getDocScore().getScore(),
+                                                      baseTop.getDocScore().getScore()));
+        } finally {
+            try {
+                engine.close();
+            } catch (IOException ioe) {
+                throw new RuntimeException("Unable to close ad-hoc search engine", ioe);
+            }
+        }
+    }
+
+    private MatchingResult<Book> firstMatch(final ForageQuery query) throws ForageSearchError {
+        return firstMatch(searchEngine, query);
+    }
+
+    private MatchingResult<Book> firstMatch(final ForageLuceneSearchEngine<Book> engine,
+                                            final ForageQuery query) throws ForageSearchError {
+        final ForageQueryResult<Book> result = engine.search(query);
+        Assertions.assertFalse(result.getMatchingResults().isEmpty(), "Expected at least one match");
+        return result.getMatchingResults().get(0);
+    }
+
+    private List<String> searchIds(final ForageLuceneSearchEngine<Book> engine,
+                                   final ForageQuery query) throws ForageSearchError {
+        return engine.search(query)
+                .getMatchingResults()
+                .stream()
+                .map(MatchingResult::getId)
+                .collect(Collectors.toList());
+    }
+
+    private ForageLuceneSearchEngine<Book> buildAdHocEngine(final Book... books) throws ForageSearchError {
+        final InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        final ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .build();
+        final List<Book> bookList = Arrays.asList(books);
+        final List<IndexableDocument> documents = bookList.stream()
+                .map(book -> ForageDocument.builder()
+                        .id(book.id())
+                        .fields(book.fields())
+                        .build())
+                .collect(Collectors.toList());
+        store.store(bookList);
+        engine.index(documents);
+        engine.flush();
+        return engine;
+    }
+
+    private Book book(final String id, final String title) {
+        return book(id, title, "boost-author", 300);
+    }
+
+    private Book book(final String id, final String title, final String author, final int numPages) {
+        return new Book(id, title, author, 4.5f, "en", numPages);
     }
 }

@@ -452,6 +452,46 @@ ForageQuery rankedQuery = QueryBuilder.functionScoreQuery()
 
 > 💡 `buildForageQuery(size, sortBy, minimumScore)` lets you specify an ordered list of `SortCriteria` (score or field-based, ascending/descending) and a minimum score gate in one call, ensuring your ranking logic stays close to the query definition.
 
+#### Function Score Anatomy
+
+Every function-score query follows the same three-step flow:
+
+1. **Base query** – any query produced via `QueryBuilder` (match, boolean, range, etc.).
+2. **Score function** – one of the score helpers above; it receives doc-values at search time and produces a multiplier.
+3. **Optional boost/minimum score** – fine-tune the resulting score or filter noisy matches.
+
+```java
+ForageQuery discountedPopularBooks = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.booleanQuery()
+                .query(QueryBuilder.matchQuery("genre", "fantasy").build())
+                .query(QueryBuilder.intRangeQuery("price", 0, 500).build())
+                .clauseType(ClauseType.MUST)
+                .build())
+        .fieldValueFactor("popularity", 1.25f)            // field based multiplier
+        .boost(1.10f)                                     // global multiplier
+        .buildForageQuery(15, Arrays.asList(SortCriteria.byScore()), 0.2f);
+```
+
+Because score functions reuse Lucene doc-values, they remain fast even for large in-memory catalogs.
+
+#### Field Scores & DocValues
+
+Field-driven ranking and sorting rely on doc-values. Forage now emits doc-values automatically for numeric fields (`FloatField`, `IntField`) and string keyword fields (`StringField`). Keep these tips in mind:
+
+- Use `FloatField`/`IntField` for any numeric attribute you plan to sort or score on (price, rating, popularity, page count, etc.).
+- For keyword sorting (non-analyzed), prefer `StringField` over `TextField`.
+- Script scores can reference any doc-value name directly (`rating`, `numPage`, `popularity`). The special `score` variable exposes the base Lucene score.
+
+```java
+// Example script making use of emitted doc-values
+QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchAllQuery().build())
+        .scoreFunction(new ScriptScoreFunction("score * rating + (5 - daysSinceRelease)"))
+        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore(SortOrder.DESC)));
+```
+
+Field-level boosts at indexing time stack with doc-value driven ranking, letting you mix textual relevance and numeric business signals seamlessly.
+
 ### Pagination
 
 **Page Queries and Paginated Results**
@@ -469,8 +509,8 @@ ForageQueryResult<Book> result2 = searchEngine.search(
 
 ## Tech Dependencies
 
-- Java 11
-- Lucene 9.1.0
+- Java 17
+- Lucene 9.12.3
 - Dropwizard 2.1.0 (Optional)
 
 ## Contributions
@@ -512,9 +552,8 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [ ] Auto complete query Support
 - [ ] Expose explain query (IndexSearcher.explain)
 - [ ] Query performance analytics
-- [ ] Search result highlighting
+- [ ] Embeddings and vector search
 - [ ] Geo-spatial queries
-- [ ] Machine learning relevance tuning
 
 ## Performance & Best Practices
 
