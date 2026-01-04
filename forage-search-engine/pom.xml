@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>forage-search-engine</artifactId>
+    <name>Forage Search Engine</name>
 
     <properties>
         <lucene.version>9.12.3</lucene.version>

@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>forage-dropwizard-bundle</artifactId>
+    <name>Forage Dropwizard Bundle</name>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
