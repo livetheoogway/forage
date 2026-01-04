@@ -366,8 +366,6 @@ class PeriodicallyUpdatedForageSearchEngineTest {
 
     private void assertConstantScoreFunction(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
         final float constantScore = 7.5f;
-        final ForageQuery baselineQuery = QueryBuilder.matchQuery("author", "rowling").buildForageQuery(5);
-        final ForageQueryResult<Book> baselineResult = searchEngine.search(baselineQuery);
         final ForageQuery query = QueryBuilder.functionScoreQuery()
                 .baseQuery(QueryBuilder.matchQuery("author", "rowling").build())
                 .constantScore(constantScore)
@@ -375,14 +373,12 @@ class PeriodicallyUpdatedForageSearchEngineTest {
 
         final ForageQueryResult<Book> result = searchEngine.search(query);
         Assertions.assertFalse(result.getMatchingResults().isEmpty());
-        for (int i = 0; i < result.getMatchingResults().size(); i++) {
-            final MatchingResult<Book> boosted = result.getMatchingResults().get(i);
-            final MatchingResult<Book> baseline = baselineResult.getMatchingResults().get(i);
-            Assertions.assertEquals(baseline.getId(), boosted.getId());
-            final float expectedScore = baseline.getDocScore().getScore() * constantScore;
-            Assertions.assertEquals(expectedScore,
-                                    boosted.getDocScore().getScore(),
-                                    1.0e-3f * Math.max(1f, expectedScore));
+        // ConstantScoreFunction produces the exact constant value as the score for all matching documents
+        for (final MatchingResult<Book> matchingResult : result.getMatchingResults()) {
+            Assertions.assertEquals(constantScore,
+                                    matchingResult.getDocScore().getScore(),
+                                    0.001f,
+                                    "Constant score should produce the exact constant value");
         }
     }
 

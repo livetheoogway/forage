@@ -200,11 +200,11 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
         // Determine if score should be multiplicative (base_score * value) or direct (value only)
         if (isMultiplicativeScoreFunction(scoreFunction)) {
             // Multiplicative: score = base_score * valueSource
-            // Used for CONSTANT_SCORE, WEIGHTED_SCORE, SCRIPT_SCORE (when using base score)
+            // Used for WEIGHTED_SCORE, SCRIPT_SCORE (when using base score)
             finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery.boostByValue(baseLuceneQuery, valueSource);
         } else {
             // Direct value: score = valueSource
-            // Used for FIELD_VALUE_FACTOR, RANDOM_SCORE, DECAY_FUNCTION. These functions use field values directly as the score
+            // Used for FIELD_VALUE_FACTOR, CONSTANT_SCORE, RANDOM_SCORE, DECAY_FUNCTION. These functions use field values directly as the score
             finalQuery = new org.apache.lucene.queries.function.FunctionScoreQuery(baseLuceneQuery, valueSource);
         }
 
@@ -215,11 +215,21 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     /**
      * Determines if a score function should multiply with the base query score
      * or replace it entirely with its value.
+     *
+     * Multiplicative functions: final_score = base_score × function_value
+     * - WEIGHTED_SCORE: Scales relevance by a weight factor
+     * - SCRIPT_SCORE: Custom expression that can reference 'score' variable
+     *
+     * Direct value functions: final_score = function_value (ignores base score)
+     * - CONSTANT_SCORE: All matches get the same constant score
+     * - FIELD_VALUE_FACTOR: Score equals the field value
+     * - RANDOM_SCORE: Deterministic pseudo-random score
+     * - DECAY_FUNCTION: Distance-based decay score
      */
     private boolean isMultiplicativeScoreFunction(ScoreFunction scoreFunction) {
         return switch (scoreFunction.getType()) {
-            case CONSTANT_SCORE, WEIGHTED_SCORE, SCRIPT_SCORE -> true;
-            case FIELD_VALUE_FACTOR, RANDOM_SCORE, DECAY_FUNCTION -> false;
+            case WEIGHTED_SCORE, SCRIPT_SCORE -> true;
+            case CONSTANT_SCORE, FIELD_VALUE_FACTOR, RANDOM_SCORE, DECAY_FUNCTION -> false;
         };
     }
 

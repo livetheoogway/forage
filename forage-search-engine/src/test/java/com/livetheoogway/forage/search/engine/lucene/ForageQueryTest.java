@@ -357,30 +357,25 @@ class ForageQueryTest {
     // ==================== CONSTANT SCORE FUNCTION TESTS ====================
 
     @Test
-    void testConstantScoreFunctionMultipliesBaseScore() throws Exception {
+    void testConstantScoreProducesExactConstantValue() throws Exception {
         try (ForageLuceneSearchEngine<Book> engine = buildAdHocEngine(
                 book("book-1", "Magic Adventure"),
                 book("book-2", "Magic Journey"))) {
 
-            // Base query without constant score
-            ForageQuery baseQuery = QueryBuilder.matchQuery("title", "magic").buildForageQuery(2);
-            ForageQueryResult<Book> baseResult = engine.search(baseQuery);
-            float baseScore = baseResult.getMatchingResults().get(0).getDocScore().getScore();
-
-            // Query with constant score multiplier
-            float constantMultiplier = 3.5f;
+            // Constant score should produce the exact constant value as the score
+            // (ignoring base relevance score)
+            float constantValue = 3.5f;
             ForageQuery constantScoreQuery = QueryBuilder.functionScoreQuery()
                     .baseQuery(QueryBuilder.matchQuery("title", "magic").build())
-                    .scoreFunction(new ConstantScoreFunction(constantMultiplier))
+                    .scoreFunction(new ConstantScoreFunction(constantValue))
                     .buildForageQuery(2);
 
             ForageQueryResult<Book> result = engine.search(constantScoreQuery);
-            float boostedScore = result.getMatchingResults().get(0).getDocScore().getScore();
+            float score = result.getMatchingResults().get(0).getDocScore().getScore();
 
-            // Score should be base_score * constant
-            float expectedScore = baseScore * constantMultiplier;
-            Assertions.assertEquals(expectedScore, boostedScore, 0.001f,
-                    "Constant score should multiply base score");
+            // Score should be exactly the constant value
+            Assertions.assertEquals(constantValue, score, 0.001f,
+                    "Constant score should produce the exact constant value");
         }
     }
 
@@ -400,11 +395,10 @@ class ForageQueryTest {
             ForageQueryResult<Book> result = engine.search(query);
             Assertions.assertEquals(3, result.getMatchingResults().size());
 
-            // All scores should be the same (base_score * constant, where base scores are equal for same term)
-            float firstScore = result.getMatchingResults().get(0).getDocScore().getScore();
+            // All scores should be exactly the constant value (ignores base relevance)
             for (MatchingResult<Book> match : result.getMatchingResults()) {
-                Assertions.assertEquals(firstScore, match.getDocScore().getScore(), 0.001f,
-                        "All matches should have equal scores with constant score function");
+                Assertions.assertEquals(constantValue, match.getDocScore().getScore(), 0.001f,
+                        "All matches should have the exact constant score value");
             }
         }
     }
