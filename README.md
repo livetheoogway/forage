@@ -499,6 +499,7 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [ ] Score normalization options
 
 ### 📋 Planned
+- [ ] Off-Heap index storage support
 - [ ] Auto complete query Support
 - [ ] Expose explain query (IndexSearcher.explain)
 - [ ] Query performance analytics
