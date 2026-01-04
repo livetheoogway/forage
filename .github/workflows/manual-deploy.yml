@@ -43,6 +43,7 @@ jobs:
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
+          gpg-key-id: 5F74D2AB5E934F6C81C815C1E52415495EC603B0
 
       - name: "🗽 Publish package"
         run: mvn clean deploy -DskipTests -Prelease
