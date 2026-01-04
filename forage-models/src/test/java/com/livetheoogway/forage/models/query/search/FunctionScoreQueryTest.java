@@ -44,7 +44,7 @@ class FunctionScoreQueryTest {
     @Test
     void testFunctionScoreQueryWithFieldValueFactor() {
         MatchQuery baseQuery = new MatchQuery("category", "programming");
-        FieldValueFactorFunction scoreFunction = new FieldValueFactorFunction("popularity", 1.5f, 1.0f);
+        FieldValueFactorFunction scoreFunction = new FieldValueFactorFunction("popularity", 1.5f);
         
         FunctionScoreQuery query = new FunctionScoreQuery(baseQuery, scoreFunction);
         
@@ -80,11 +80,10 @@ class FunctionScoreQueryTest {
 
     @Test
     void testFieldValueFactorFunction() {
-        FieldValueFactorFunction function = new FieldValueFactorFunction("rating", 2.0f, 0.5f);
+        FieldValueFactorFunction function = new FieldValueFactorFunction("rating", 2.0f);
         
         assertEquals("rating", function.getField());
         assertEquals(2.0f, function.getFactor());
-        assertEquals(0.5f, function.getMissing());
         assertEquals(ScoreFunctionType.FIELD_VALUE_FACTOR, function.getType());
     }
 
@@ -94,7 +93,6 @@ class FunctionScoreQueryTest {
         
         assertEquals("rating", function.getField());
         assertEquals(1.0f, function.getFactor());
-        assertEquals(1.0f, function.getMissing());
         assertEquals(ScoreFunctionType.FIELD_VALUE_FACTOR, function.getType());
     }
 
@@ -104,17 +102,15 @@ class FunctionScoreQueryTest {
         
         assertEquals("popularity", function.getField());
         assertEquals(1.5f, function.getFactor());
-        assertEquals(1.0f, function.getMissing());
         assertEquals(ScoreFunctionType.FIELD_VALUE_FACTOR, function.getType());
     }
 
     @Test
     void testFieldValueFactorFunctionWithNullValues() {
-        FieldValueFactorFunction function = new FieldValueFactorFunction("rating", null, null);
+        FieldValueFactorFunction function = new FieldValueFactorFunction("rating", null);
         
         assertEquals("rating", function.getField());
         assertEquals(1.0f, function.getFactor()); // Should default to 1.0f
-        assertEquals(1.0f, function.getMissing()); // Should default to 1.0f
         assertEquals(ScoreFunctionType.FIELD_VALUE_FACTOR, function.getType());
     }
 

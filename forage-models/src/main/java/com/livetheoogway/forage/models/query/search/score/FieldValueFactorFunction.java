@@ -26,23 +26,16 @@ import lombok.Value;
 public class FieldValueFactorFunction extends ScoreFunction {
     String field;
     Float factor;
-    Float missing;
 
     @JsonCreator
     public FieldValueFactorFunction(@JsonProperty("field") final String field,
-                                    @JsonProperty("factor") final Float factor,
-                                    @JsonProperty("missing") final Float missing) {
+                                    @JsonProperty("factor") final Float factor) {
         super(ScoreFunctionType.FIELD_VALUE_FACTOR);
         this.field = field;
         this.factor = factor != null ? factor : 1.0f;
-        this.missing = missing != null ? missing : 1.0f;
     }
 
     public FieldValueFactorFunction(final String field) {
-        this(field, 1.0f, 1.0f);
-    }
-
-    public FieldValueFactorFunction(final String field, final Float factor) {
-        this(field, factor, 1.0f);
+        this(field, 1.0f);
     }
 }

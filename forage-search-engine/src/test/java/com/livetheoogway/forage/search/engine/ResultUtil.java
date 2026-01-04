@@ -38,7 +38,8 @@ public class ResultUtil {
         return getRepresentation(result,
                                  matchingResult -> {
                                      final Book data = matchingResult.getData();
-                                     return matchingResult.getId() + ":" + data.getTitle();
+                                     return "[" + matchingResult.getDocScore().getScore() + "]:"
+                                             + matchingResult.getId() + ":" + data.getTitle() + ":" + data.getRating() + ":" + data.getNumPage();
                                  },
                                  (a, b) -> a + "\n" + b);
     }

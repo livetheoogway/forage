@@ -44,6 +44,7 @@ import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.expressions.Expression;
 import org.apache.lucene.expressions.SimpleBindings;
 import org.apache.lucene.expressions.js.JavascriptCompiler;
 import org.apache.lucene.index.Term;
@@ -61,6 +62,8 @@ import java.io.IOException;
 import java.text.ParseException;
 
 public class LuceneQueryGenerator implements QueryVisitor<Query> {
+
+    private static final Expression PRECOMPILED_EXPRESSION_FIELD_VALUE_FACTOR;
     private static final ClauseVisitor<BooleanClause.Occur> CLAUSE_VISITOR = new ClauseVisitor<>() {
         @Override
         public BooleanClause.Occur must() {
@@ -82,6 +85,15 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
             return BooleanClause.Occur.FILTER;
         }
     };
+
+    static {
+        try {
+            PRECOMPILED_EXPRESSION_FIELD_VALUE_FACTOR = JavascriptCompiler.compile("fieldValue * factor");
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private final Analyzer analyzer;
     private final QueryParserSupplier queryParserSupplier;
 
@@ -180,9 +192,13 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     @Override
     public Query visit(final FunctionScoreQuery functionScoreQuery) throws Exception {
         final var baseLuceneQuery = functionScoreQuery.getBaseQuery().accept(this);
-        final var valueSource = getDoubleValuesSource(functionScoreQuery.getScoreFunction());
+        final var scoreFunction = functionScoreQuery.getScoreFunction();
 
-        // boostByValue multiplies the base query score by the value provided by the source
+        // For FIELD_VALUE_FACTOR, we want the score to be dominated by the field value
+        // rather than the base query score, so we use score * fieldValue * factor
+        // This is achieved through boostByValue which multiplies scores
+        final var valueSource = getDoubleValuesSource(scoreFunction);
+
         final var finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery
                 .boostByValue(baseLuceneQuery, valueSource);
 
@@ -197,8 +213,18 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
                 yield DoubleValuesSource.constant(constantFn.getValue());
             }
             case FIELD_VALUE_FACTOR -> {
-                final var fieldFn = (FieldValueFactorFunction) scoreFunction;
-                yield DoubleValuesSource.fromDoubleField(fieldFn.getField());
+                final var fieldValueFactorFn = (FieldValueFactorFunction) scoreFunction;
+                final var factor = fieldValueFactorFn.getFactor();
+                final var fieldSource = DoubleValuesSource.fromDoubleField(fieldValueFactorFn.getField());
+                if (factor == 1.0f) {
+                    yield fieldSource;
+                }
+
+                final var bindings = new SimpleBindings();
+                bindings.add("fieldValue", fieldSource);
+                bindings.add("factor", DoubleValuesSource.constant(factor));
+
+                yield PRECOMPILED_EXPRESSION_FIELD_VALUE_FACTOR.getDoubleValuesSource(bindings);
             }
             case SCRIPT_SCORE -> {
                 final var scriptFn = (ScriptScoreFunction) scoreFunction;

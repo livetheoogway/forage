@@ -16,8 +16,11 @@ package com.livetheoogway.forage.search.engine.lucene;
 
 import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.PageQuery;
+import com.livetheoogway.forage.models.query.SortCriteria;
+import com.livetheoogway.forage.models.query.SortOrder;
 import com.livetheoogway.forage.models.query.search.ClauseType;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
+import com.livetheoogway.forage.models.query.search.score.RandomScoreFunction;
 import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.models.result.MatchingResult;
@@ -65,7 +68,8 @@ class ForageQueryTest {
 
     @Test
     void testSearchResultWithTermMatch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertTrue(result.getTotal().getTotal() > 10);
@@ -74,7 +78,8 @@ class ForageQueryTest {
 
     @Test
     void testPaginatedSearch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertEquals(25, result.getTotal().getTotal());
@@ -88,7 +93,8 @@ class ForageQueryTest {
 
     @Test
     void testMultipleSearch() throws ForageSearchError {
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.matchQuery("author", "rowling").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(10, result.getMatchingResults().size());
         result = searchEngine.search(new PageQuery(result.getNextPage(), 10));
@@ -161,7 +167,8 @@ class ForageQueryTest {
     void testFuzzyMatchSearch() throws ForageSearchError {
 
         /* Match query for sayyer, should give 0 results */
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("title", "sayyer").buildForageQuery());
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.matchQuery("title", "sayyer").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(0, result.getMatchingResults().size());
         Assertions.assertEquals(0, result.getTotal().getTotal());
@@ -169,14 +176,15 @@ class ForageQueryTest {
         /* Fuzzy Match query for sayyer should give "tom sawyer" type results */
         result = searchEngine.search(QueryBuilder.fuzzyMatchQuery("title", "sayyer").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
-        Assertions.assertTrue(0 < result.getMatchingResults().size());
+        Assertions.assertFalse(result.getMatchingResults().isEmpty());
     }
 
     @Test
     void testPrefixMatchSearch() throws ForageSearchError {
 
         /* Match query for treas, should give 0 results */
-        ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("title", "treas").buildForageQuery());
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.matchQuery("title", "treas").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(0, result.getMatchingResults().size());
         Assertions.assertEquals(0, result.getTotal().getTotal());
@@ -184,7 +192,7 @@ class ForageQueryTest {
         /* Prefix Match query for treas should give "treasure island" type results */
         result = searchEngine.search(QueryBuilder.prefixMatchQuery("title", "treas").buildForageQuery());
         System.out.println(ResultUtil.getBookRepresentation(result));
-        Assertions.assertTrue(0 < result.getMatchingResults().size());
+        Assertions.assertFalse(result.getMatchingResults().isEmpty());
     }
 
     @Test
@@ -207,6 +215,43 @@ class ForageQueryTest {
         Assertions.assertEquals(10, result.getMatchingResults().size());
         Assertions.assertEquals(1001, result.getTotal().getTotal());
     }
+
+    @Test
+    void testMatchQueryWithRanking() throws ForageSearchError {
+        ForageQueryResult<Book> result = searchEngine.search(
+                QueryBuilder.phraseMatchQuery("title", "The lord of the rings").buildForageQuery(34));
+        System.out.println(ResultUtil.getBookRepresentation(result));
+        Assertions.assertEquals(34, result.getMatchingResults().size());
+        Assertions.assertEquals(34, result.getTotal().getTotal());
+
+        /* query which ranks results with higher ratings  */
+        final var rankingQuery = QueryBuilder.functionScoreQuery()
+                .baseQuery(QueryBuilder.phraseMatchQuery("title", "The lord of the rings").build())
+//                .scoreFunction(new FieldValueFactorFunction("rating", 1.2f))
+                .scoreFunction(new RandomScoreFunction(213L, "rating"))
+                .buildForageQuery(34, List.of(SortCriteria.byScore(SortOrder.DESC)));
+
+        System.out.println("----- Ranking Query Results -----");
+        result = searchEngine.search(rankingQuery);
+        System.out.println(ResultUtil.getBookRepresentation(result));
+        Assertions.assertEquals(34, result.getMatchingResults().size());
+        Assertions.assertEquals(34, result.getTotal().getTotal());
+        checkIfResultHasFirstBookWithHigherRating(result);
+
+    }
+
+    private void checkIfResultHasFirstBookWithHigherRating(ForageQueryResult<Book> result) {
+        var highestRatingBookId = result.getMatchingResults()
+                .stream()
+                .sorted((o1, o2) -> o1.getData().getRating() > o2.getData().getRating() ? -1 : 1)
+                .map(k -> k.getData().getId())
+                .findFirst()
+                .orElse("");
+        System.out.println("highestRatingBookId = " + highestRatingBookId);
+        Assertions.assertEquals(result.getMatchingResults().get(0).getId(), highestRatingBookId,
+                                "Expected highest rated book to be first in results");
+    }
+
 
     @Test
     void testMatchQueryBoostIncreasesScore() throws ForageSearchError {
@@ -307,8 +352,7 @@ class ForageQueryTest {
     private void assertBoostIncreasesScore(final ForageQuery baseQuery,
                                            final ForageQuery boostedQuery,
                                            final Book... books) throws ForageSearchError {
-        final ForageLuceneSearchEngine<Book> engine = buildAdHocEngine(books);
-        try {
+        try (ForageLuceneSearchEngine<Book> engine = buildAdHocEngine(books)) {
             final MatchingResult<Book> baseTop = firstMatch(engine, baseQuery);
             final MatchingResult<Book> boostedTop = firstMatch(engine, boostedQuery);
             Assertions.assertEquals(baseTop.getId(), boostedTop.getId(),
@@ -317,12 +361,8 @@ class ForageQueryTest {
                                   () -> String.format("Expected boosted score > base score but found %f <= %f",
                                                       boostedTop.getDocScore().getScore(),
                                                       baseTop.getDocScore().getScore()));
-        } finally {
-            try {
-                engine.close();
-            } catch (IOException ioe) {
-                throw new RuntimeException("Unable to close ad-hoc search engine", ioe);
-            }
+        } catch (IOException ioe) {
+            throw new RuntimeException("Unable to close ad-hoc search engine", ioe);
         }
     }
 
