@@ -193,17 +193,34 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     public Query visit(final FunctionScoreQuery functionScoreQuery) throws Exception {
         final var baseLuceneQuery = functionScoreQuery.getBaseQuery().accept(this);
         final var scoreFunction = functionScoreQuery.getScoreFunction();
-
-        // For FIELD_VALUE_FACTOR, we want the score to be dominated by the field value
-        // rather than the base query score, so we use score * fieldValue * factor
-        // This is achieved through boostByValue which multiplies scores
         final var valueSource = getDoubleValuesSource(scoreFunction);
 
-        final var finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery
-                .boostByValue(baseLuceneQuery, valueSource);
+        final org.apache.lucene.queries.function.FunctionScoreQuery finalQuery;
+
+        // Determine if score should be multiplicative (base_score * value) or direct (value only)
+        if (isMultiplicativeScoreFunction(scoreFunction)) {
+            // Multiplicative: score = base_score * valueSource
+            // Used for CONSTANT_SCORE, WEIGHTED_SCORE, SCRIPT_SCORE (when using base score)
+            finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery.boostByValue(baseLuceneQuery, valueSource);
+        } else {
+            // Direct value: score = valueSource
+            // Used for FIELD_VALUE_FACTOR, RANDOM_SCORE, DECAY_FUNCTION. These functions use field values directly as the score
+            finalQuery = new org.apache.lucene.queries.function.FunctionScoreQuery(baseLuceneQuery, valueSource);
+        }
 
         // Apply top-level boost if present
         return applyBoost(finalQuery, functionScoreQuery.getBoost());
+    }
+
+    /**
+     * Determines if a score function should multiply with the base query score
+     * or replace it entirely with its value.
+     */
+    private boolean isMultiplicativeScoreFunction(ScoreFunction scoreFunction) {
+        return switch (scoreFunction.getType()) {
+            case CONSTANT_SCORE, WEIGHTED_SCORE, SCRIPT_SCORE -> true;
+            case FIELD_VALUE_FACTOR, RANDOM_SCORE, DECAY_FUNCTION -> false;
+        };
     }
 
     private DoubleValuesSource getDoubleValuesSource(ScoreFunction scoreFunction) throws ParseException {

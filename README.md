@@ -410,19 +410,48 @@ ForageQuery fanFavorites = QueryBuilder.functionScoreQuery()
         .buildForageQuery(20, Arrays.asList(SortCriteria.byScore()), 0.25f);
 ```
 
-| Score Function | Description | Example Usage |
-| --- | --- | --- |
-| `ConstantScoreFunction` | Multiplies every match with a fixed constant | `.constantScore(2.0f)` |
-| `WeightedScoreFunction` | Simple weight for the overall query | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
-| `FieldValueFactorFunction` | Reads a numeric doc-value field | `.fieldValueFactor("popularity", 1.3f)` |
-| `ScriptScoreFunction` | Executes a JavaScript expression with access to fields & `score` | `.scoreFunction(new ScriptScoreFunction("score * rating - numPage / 100"))` |
-| `RandomScoreFunction` | Deterministic shuffle with seed/field | `.scoreFunction(new RandomScoreFunction(42L, "id"))` |
-| `DecayFunction` | Linear/exp/log decay across numeric fields | `.scoreFunction(new DecayFunction(0, 365, 0, 0.5, DecayType.EXPONENTIAL, "daysSinceRelease"))` |
+| Score Function | Description | Scoring Mode | Example Usage |
+| --- | --- | --- | --- |
+| `ConstantScoreFunction` | Multiplies base score by a fixed constant | Multiplicative | `.constantScore(2.0f)` |
+| `WeightedScoreFunction` | Multiplies base score by weight | Multiplicative | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
+| `FieldValueFactorFunction` | Uses numeric field value directly as score | Direct Value | `.fieldValueFactor("rating", 1.3f)` |
+| `ScriptScoreFunction` | Executes JavaScript expression (access to `score` and fields) | Multiplicative | `.scoreFunction(new ScriptScoreFunction("score * rating"))` |
+| `RandomScoreFunction` | Deterministic pseudo-random score based on field and seed | Direct Value | `.scoreFunction(new RandomScoreFunction(42L, "rating"))` |
+| `DecayFunction` | Distance-based decay (GAUSS, EXP, LINEAR) | Direct Value | See example below |
+
+**Scoring Modes:**
+- **Multiplicative**: Final score = base_score × function_value (combines relevance with business signal)
+- **Direct Value**: Final score = function_value only (ranks purely by the function output)
+
+**Decay Function Example:**
+```java
+// Favor books closer to 500 pages, with Gaussian decay
+new DecayFunction(
+    500.0,          // origin - optimal value
+    100.0,          // scale - distance at which score decays to 'decay' value
+    50.0,           // offset - no decay within this distance from origin
+    0.5,            // decay - score at scale distance (0.5 = 50%)
+    DecayType.GAUSS, // decay type: GAUSS, EXP, or LINEAR
+    "numPage"       // field name
+)
+```
 
 Doc-values are emitted automatically for `FloatField`, `IntField`, and `StringField`, so you can safely reference them in scripts, sorts, or field-value factors.
 
 #### Full Ranking Recipe
+
+**Example 1: Rank purely by a field value (e.g., highest rated first)**
 ```java
+// Use FieldValueFactorFunction - results are ranked by rating directly
+ForageQuery topRated = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("genre", "fantasy").build())
+        .scoreFunction(new FieldValueFactorFunction("rating"))  // Score = rating value
+        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore(SortOrder.DESC)));
+```
+
+**Example 2: Combine relevance with business signals**
+```java
+// Use ScriptScoreFunction - blends base relevance with field values
 ForageQuery personalized = QueryBuilder.functionScoreQuery()
         .baseQuery(
                 QueryBuilder.booleanQuery()
@@ -430,18 +459,27 @@ ForageQuery personalized = QueryBuilder.functionScoreQuery()
                         .query(QueryBuilder.matchQuery("tags", "backend").build())
                         .clauseType(ClauseType.SHOULD)
                         .build())
-        .scoreFunction(new ScriptScoreFunction("score * rating + (5 - daysSinceRelease)"))
+        .scoreFunction(new ScriptScoreFunction("score * rating"))  // Score = relevance × rating
         .boost(1.05f)
         .buildForageQuery(
                 15,
-                Arrays.asList(SortCriteria.byScore(), new SortCriteria("popularity", SortOrder.DESC)),
+                Arrays.asList(SortCriteria.byScore(SortOrder.DESC)),
                 0.2f);
 ```
-This example:
-- prioritizes exact “java” title hits,
-- mixes in a recency/rating script,
-- sorts by relevance then popularity,
-- and drops low-score matches via `minimumScore`.
+
+**Example 3: Favor items near an optimal value**
+```java
+// Use DecayFunction - items closer to 300 pages get higher scores
+ForageQuery mediumBooks = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("category", "programming").build())
+        .scoreFunction(new DecayFunction(300.0, 100.0, 0.0, 0.5, DecayType.GAUSS, "numPage"))
+        .buildForageQuery(10);
+```
+
+These examples demonstrate:
+- **FieldValueFactorFunction**: Ranks purely by field value (highest ratings first)
+- **ScriptScoreFunction**: Combines base relevance score with field values
+- **DecayFunction**: Favors documents closer to an optimal value
 
 ### Pagination
 
@@ -484,7 +522,7 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 
 ### ✅ Completed
 - [x] Helpers for query creation
-- [x] Fuzzy Query Support  
+- [x] Fuzzy Query Support
 - [x] Dropwizard bundle for simpler integrations
 - [x] Phrase Query Support
 - [x] Prefix Match Query Support
@@ -492,11 +530,10 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [x] **Custom Sorting (by score, field values)**
 - [x] **Minimum Score Filtering**
 - [x] **Function Scoring (field value factors, constant scores)**
-
-### 🚧 In Progress
-- [ ] Enhanced Function Scoring (advanced mathematical functions)
-- [ ] Multi-field boosting strategies
-- [ ] Score normalization options
+- [x] **Script Score Function** (JavaScript expressions with field access)
+- [x] **Random Score Function** (deterministic shuffle with seed)
+- [x] **Decay Functions** (Gaussian, Exponential, Linear distance-based scoring)
+- [x] **Weighted Score Function**
 
 ### 📋 Planned
 - [ ] Off-Heap index storage support
@@ -505,6 +542,7 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 - [ ] Query performance analytics
 - [ ] Embeddings and vector search
 - [ ] Geo-spatial queries
+- [ ] Score normalization options
 
 ## Performance & Best Practices
 

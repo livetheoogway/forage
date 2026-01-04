@@ -16,7 +16,6 @@ package com.livetheoogway.forage.search.engine.lucene;
 
 import com.livetheoogway.forage.models.query.SortCriteria;
 import com.livetheoogway.forage.models.query.SortOrder;
-import com.livetheoogway.forage.models.query.SortType;
 import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 
@@ -39,15 +38,20 @@ public class LuceneSortBuilder {
     private static SortField buildSortField(final SortCriteria criteria) {
         final boolean reverse = criteria.getOrder() == SortOrder.DESC;
 
-        switch (criteria.getType()) {
-            case SCORE:
-                return new SortField(null, SortField.Type.SCORE, reverse);
-            case FIELD:
+        return switch (criteria.getType()) {
+            case SCORE -> {
+                // For SCORE type, Lucene's reverse flag has opposite semantics:
+                // reverse=false → highest scores first (descending - natural order)
+                // reverse=true → lowest scores first (ascending)
+                // So for DESC (highest first), we need reverse=false
+                // For ASC (lowest first), we need reverse=true
+                boolean scoreReverse = criteria.getOrder() == SortOrder.ASC;
+                yield new SortField(null, SortField.Type.SCORE, scoreReverse);
+            }
+            case FIELD ->
                 // For field sorting, we need to determine the field type
                 // Default to STRING sorting, but this could be enhanced to detect field types
-                return new SortField(criteria.getField(), SortField.Type.STRING, reverse);
-            default:
-                throw new IllegalArgumentException("Unsupported sort type: " + criteria.getType());
-        }
+                    new SortField(criteria.getField(), SortField.Type.STRING, reverse);
+        };
     }
 }

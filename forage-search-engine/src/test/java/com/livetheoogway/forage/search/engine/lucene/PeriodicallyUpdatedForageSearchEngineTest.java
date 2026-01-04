@@ -195,7 +195,8 @@ class PeriodicallyUpdatedForageSearchEngineTest {
     @Test
     void testBuildForageQueryWithSortCriteria() throws Exception {
         try (EngineTestContext context = bootstrapEngineWithBooks(500)) {
-            List<SortCriteria> sortBy = Collections.singletonList(SortCriteria.byScore(SortOrder.ASC));
+            // Use DESC to sort by highest score (numPage) first
+            List<SortCriteria> sortBy = Collections.singletonList(SortCriteria.byScore(SortOrder.DESC));
             ForageQuery sortedQuery = buildScriptScoreMatchAllQuery(25, sortBy, null);
 
             ForageQueryResult<Book> result = context.engine.search(sortedQuery);

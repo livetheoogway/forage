@@ -46,6 +46,7 @@ import org.apache.lucene.analysis.core.KeywordAnalyzer;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.Sort;
+import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
 
@@ -139,21 +140,51 @@ public class ForageLuceneSearchEngine<D>
                                   final Sort sort,
                                   final Float minimumScore) throws IOException {
         TopDocs topDocs;
-        
-        if (sort.equals(Sort.RELEVANCE)) {
-            // Use score-based search
+
+        if (isScoreOnlySort(sort)) {
+            // Use score-based search for relevance/score sorting
+            // This ensures FunctionScoreQuery and other score-modifying queries work correctly
             topDocs = searcher.search(query, size);
         } else {
             // Use field-based sorting
             topDocs = searcher.search(query, size, sort);
         }
-        
+
         // Apply minimum score filter if specified
         if (minimumScore != null && minimumScore > 0) {
             topDocs = filterByMinimumScore(topDocs, minimumScore);
         }
-        
+
         return topDocs;
+    }
+
+    /**
+     * Checks if the sort is the default relevance sort (score descending).
+     * Only the natural score order (descending) should use searcher.search(query, size)
+     * to ensure proper score computation for FunctionScoreQuery.
+     * Ascending score sorts or reversed sorts must use searcher.search(query, size, sort).
+     */
+    private boolean isScoreOnlySort(final Sort sort) {
+        if (sort == null || sort.equals(Sort.RELEVANCE)) {
+            return true;
+        }
+        SortField[] fields = sort.getSort();
+        if (fields == null) {
+            return true;
+        }
+        // Check if all sort fields are SCORE type AND not reversed
+        // For SCORE type, natural order is descending (highest first)
+        // If reversed, we need sorted search to get ascending order
+        for (SortField field : fields) {
+            if (field.getType() != SortField.Type.SCORE) {
+                return false;
+            }
+            // If the score sort is reversed (ascending order), use sorted search
+            if (field.getReverse()) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private TopDocs filterByMinimumScore(final TopDocs topDocs, final float minimumScore) {
