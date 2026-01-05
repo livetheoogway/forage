@@ -3,14 +3,18 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
-        <artifactId>forage</artifactId>
+        <artifactId>forage-dependencies</artifactId>
         <groupId>com.livetheoogway.forage</groupId>
         <version>1.0.12</version>
+        <relativePath>../forage-dependencies</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>forage-models</artifactId>
     <name>Forage Models</name>
+    <description>
+        All model classes for querying forage and getting results.
+    </description>
 
     <dependencies>
         <dependency>
