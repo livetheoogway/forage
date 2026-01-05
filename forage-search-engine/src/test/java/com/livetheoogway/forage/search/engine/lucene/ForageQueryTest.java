@@ -241,22 +241,9 @@ class ForageQueryTest {
         System.out.println(ResultUtil.getBookRepresentation(result));
         Assertions.assertEquals(34, result.getMatchingResults().size());
         Assertions.assertEquals(34, result.getTotal().getTotal());
-        checkIfResultHasFirstBookWithHigherRating(result);
+        assertResultOrderOnRating(result, SortOrder.DESC);
 
     }
-
-    private void checkIfResultHasFirstBookWithHigherRating(ForageQueryResult<Book> result) {
-        var highestRatingBookId = result.getMatchingResults()
-                .stream()
-                .sorted((o1, o2) -> o1.getData().getRating() > o2.getData().getRating() ? -1 : 1)
-                .map(k -> k.getData().getId())
-                .findFirst()
-                .orElse("");
-        System.out.println("highestRatingBookId = " + highestRatingBookId);
-        Assertions.assertEquals(result.getMatchingResults().get(0).getId(), highestRatingBookId,
-                                "Expected highest rated book to be first in results");
-    }
-
 
     @Test
     void testMatchQueryBoostIncreasesScore() throws ForageSearchError {
@@ -516,10 +503,17 @@ class ForageQueryTest {
 
             ForageQueryResult<Book> result = engine.search(query);
 
+            // let us obtain the base score for validation
+            ForageQuery baseQuery = QueryBuilder.matchQuery("title", "drama").buildForageQuery(2);
+            ForageQueryResult<Book> baseResult = engine.search(baseQuery);
+            float baseScore = baseResult.getMatchingResults().get(0).getDocScore().getScore();
+
             // book-2: 4.0 + 200 = 204 (multiplied by base score)
-            // book-1: 2.0 + 100 = 102 (multiplied by base score)
+            // book-1: 2.0 + 100 = 102 (multiplied by base score of 0.082873434)
             Assertions.assertEquals("book-2", result.getMatchingResults().get(0).getId());
             Assertions.assertEquals("book-1", result.getMatchingResults().get(1).getId());
+            Assertions.assertEquals(204.0f * baseScore, result.getMatchingResults().get(0).getDocScore().getScore(), 0.001f);
+            Assertions.assertEquals(102.0f * baseScore, result.getMatchingResults().get(1).getDocScore().getScore(), 0.001f);
         }
     }
 
@@ -807,16 +801,7 @@ class ForageQueryTest {
         System.out.println("=== Large Catalog Ranking Test ===");
         System.out.println(ResultUtil.getBookRepresentation(result));
 
-        Assertions.assertFalse(result.getMatchingResults().isEmpty());
-
-        // Verify results are sorted by rating (descending)
-        float previousRating = Float.MAX_VALUE;
-        for (MatchingResult<Book> match : result.getMatchingResults()) {
-            float currentRating = match.getData().getRating();
-            Assertions.assertTrue(currentRating <= previousRating,
-                    "Results should be sorted by rating descending");
-            previousRating = currentRating;
-        }
+        assertResultOrderOnRating(result, SortOrder.DESC);
     }
 
     @Test
@@ -857,6 +842,27 @@ class ForageQueryTest {
                                                       baseTop.getDocScore().getScore()));
         } catch (IOException ioe) {
             throw new RuntimeException("Unable to close ad-hoc search engine", ioe);
+        }
+    }
+
+
+    private void assertResultOrderOnRating(final ForageQueryResult<Book> result, final SortOrder sortOrder) {
+        Assertions.assertFalse(result.getMatchingResults().isEmpty());
+
+        // Verify results are sorted by rating
+        float previousRating = sortOrder == SortOrder.DESC
+                ?  Float.MAX_VALUE
+                : 0;
+        for (MatchingResult<Book> match : result.getMatchingResults()) {
+            float currentRating = match.getData().getRating();
+            if (sortOrder == SortOrder.DESC) {
+                Assertions.assertTrue(currentRating <= previousRating,
+                                      "Results should be sorted by rating descending");
+            } else {
+                Assertions.assertTrue(currentRating <= previousRating,
+                                      "Results should be sorted by rating ascending");
+            }
+            previousRating = currentRating;
         }
     }
 
