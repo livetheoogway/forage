@@ -30,6 +30,7 @@ import io.dropwizard.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -70,6 +71,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
         return null;
     }
 
+    public Similarity similarity() {
+        return null;
+    }
+
     /**
      * Use this to do adhoc {@link UpdateEngine#bootstrap()}, other than the periodic bootstrap that happens as part
      * of this bundle.
@@ -92,6 +97,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
                 val analyser = analyser();
                 if (analyser != null) {
                     engineBuilder.withAnalyser(analyser);
+                }
+                val similarity = similarity();
+                if (similarity != null) {
+                    engineBuilder.withSimilarity(similarity);
                 }
 
                 val forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);

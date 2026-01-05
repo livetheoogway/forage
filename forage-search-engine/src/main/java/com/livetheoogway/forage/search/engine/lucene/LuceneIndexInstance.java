@@ -17,6 +17,7 @@ package com.livetheoogway.forage.search.engine.lucene;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.util.ExceptionWrappedExecutor;
+import com.livetheoogway.forage.search.engine.util.Objects;
 import com.livetheoogway.forage.search.engine.util.Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.lucene.analysis.Analyzer;
@@ -25,6 +26,7 @@ import org.apache.lucene.index.IndexReader;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.ByteBuffersDirectory;
 import org.apache.lucene.store.Directory;
 
@@ -37,13 +39,14 @@ public class LuceneIndexInstance implements LuceneIndex {
 
     private final Directory memoryIndex;
     private final Analyzer analyzer;
-//    private final Similarity similarity;
+    private final Similarity similarity;
     private final AtomicReference<IndexWriter> indexWriterReference;
     private final AtomicReference<DocRetriever> indexReaderReference;
     private final AtomicBoolean indexWriterReferenceChanged;
 
-    public LuceneIndexInstance(Analyzer analyzer) {
+    public LuceneIndexInstance(Analyzer analyzer, Similarity similarity) {
         this.analyzer = analyzer;
+        this.similarity = similarity;
         memoryIndex = newInMemoryIndex();
         indexWriterReference = new AtomicReference<>();
         indexWriterReferenceChanged = new AtomicBoolean(false);
@@ -99,6 +102,7 @@ public class LuceneIndexInstance implements LuceneIndex {
                 current writer */
                 if (indexWriterReference.get() == null) {
                     IndexWriterConfig indexWriterConfig = new IndexWriterConfig(analyzer);
+                    Objects.whenNotNull(similarity, indexWriterConfig::setSimilarity);
                     final IndexWriter indexWriter = ExceptionWrappedExecutor.get(
                             () -> new IndexWriter(memoryIndex, indexWriterConfig),
                             ForageErrorCode.INDEX_WRITER_IO_ERROR);

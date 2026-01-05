@@ -14,7 +14,6 @@
 
 package com.livetheoogway.forage.search.engine.store;
 
-
 import java.util.List;
 import java.util.Map;
 

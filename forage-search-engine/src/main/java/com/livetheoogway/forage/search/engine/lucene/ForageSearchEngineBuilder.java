@@ -22,12 +22,14 @@ import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserFactory;
 import com.livetheoogway.forage.search.engine.store.Store;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.search.similarities.Similarity;
 
 public class ForageSearchEngineBuilder<T> {
     private static final int DEFAULT_FIELD_SIZE_SUGGESTION = 10;
 
     private ObjectMapper mapper;
     private Analyzer analyzer;
+    private Similarity similarity;
     private int maxFieldSizeHint;
     private QueryParserFactory queryParserFactory;
     private Store<T> store;
@@ -43,6 +45,11 @@ public class ForageSearchEngineBuilder<T> {
 
     public ForageSearchEngineBuilder<T> withAnalyser(final Analyzer analyzer) {
         this.analyzer = analyzer;
+        return this;
+    }
+
+    public ForageSearchEngineBuilder<T> withSimilarity(final Similarity similarity) {
+        this.similarity = similarity;
         return this;
     }
 
@@ -82,6 +89,6 @@ public class ForageSearchEngineBuilder<T> {
         }
 
         /* create a new engine */
-        return new StampedLockCloseForageLuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer);
+        return new StampedLockCloseForageLuceneSearchEngine<>(mapper, queryParserFactory, store, analyzer, similarity);
     }
 }

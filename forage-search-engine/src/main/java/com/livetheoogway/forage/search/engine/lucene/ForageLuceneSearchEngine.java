@@ -49,6 +49,7 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.SortField;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.TopFieldDocs;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -77,9 +78,10 @@ public class ForageLuceneSearchEngine<D>
     public ForageLuceneSearchEngine(final ObjectMapper mapper,
                                     final QueryParserFactory queryParserFactory,
                                     final Store<D> dataStore,
-                                    final Analyzer analyzer) {
+                                    final Analyzer analyzer,
+                                    final Similarity similarity) {
         this.documentHandler = new LuceneDocumentHandler();
-        this.luceneIndex = new LuceneIndexInstance(analyzer);
+        this.luceneIndex = new LuceneIndexInstance(analyzer, similarity);
         this.luceneQueryGenerator = new LuceneQueryGenerator(analyzer, queryParserFactory);
         this.lucenePagination = new LucenePagination(mapper);
         this.dataStore = dataStore;

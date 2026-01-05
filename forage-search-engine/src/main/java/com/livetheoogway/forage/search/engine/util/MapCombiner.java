@@ -47,8 +47,7 @@ public class MapCombiner<K, V> {
             if (!baseMap.containsKey(key)) {
                 baseMap.put(key, value);
             } else {
-                V v = baseMap.get(key);
-                baseMap.put(key, combinerFunction.apply(v, value));
+                baseMap.compute(key, (k, v) -> combinerFunction.apply(v, value));
             }
         });
     }
