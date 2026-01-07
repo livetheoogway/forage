@@ -221,8 +221,6 @@ Your next steps, would involve creating and initializing the SearchEngine and us
 
 ```java
 
-import java.awt.print.Book;
-
 @Singleton
 public class Container {
 
@@ -412,7 +410,7 @@ ForageQuery fanFavorites = QueryBuilder.functionScoreQuery()
 
 | Score Function | Description | Scoring Mode | Example Usage |
 | --- | --- | --- | --- |
-| `ConstantScoreFunction` | Multiplies base score by a fixed constant | Multiplicative | `.constantScore(2.0f)` |
+| `ConstantScoreFunction` | Multiplies base score by a fixed constant | Direct Value | `.constantScore(2.0f)` |
 | `WeightedScoreFunction` | Multiplies base score by weight | Multiplicative | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
 | `FieldValueFactorFunction` | Uses numeric field value directly as score | Direct Value | `.fieldValueFactor("rating", 1.3f)` |
 | `ScriptScoreFunction` | Executes JavaScript expression (access to `score` and fields) | Multiplicative | `.scoreFunction(new ScriptScoreFunction("score * rating"))` |
