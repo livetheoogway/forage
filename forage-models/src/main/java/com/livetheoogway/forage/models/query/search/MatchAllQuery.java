@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -15,6 +15,7 @@
 package com.livetheoogway.forage.models.query.search;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
@@ -23,10 +24,16 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class MatchAllQuery extends Query {
+    Float boost;
 
     @JsonCreator
-    public MatchAllQuery() {
+    public MatchAllQuery(@JsonProperty("boost") final Float boost) {
         super(QueryType.MATCH_ALL);
+        this.boost = boost;
+    }
+
+    public MatchAllQuery() {
+        this(null);
     }
 
     @Override

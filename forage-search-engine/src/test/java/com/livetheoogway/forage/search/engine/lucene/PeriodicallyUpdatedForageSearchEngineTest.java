@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -16,10 +16,23 @@ package com.livetheoogway.forage.search.engine.lucene;
 
 import com.livetheoogway.forage.core.AsyncQueuedConsumer;
 import com.livetheoogway.forage.core.PeriodicUpdateEngine;
+import com.livetheoogway.forage.models.query.ForageQuery;
 import com.livetheoogway.forage.models.query.ForageSearchQuery;
+import com.livetheoogway.forage.models.query.SortCriteria;
+import com.livetheoogway.forage.models.query.SortOrder;
+import com.livetheoogway.forage.models.query.search.Query;
 import com.livetheoogway.forage.models.query.search.RangeQuery;
 import com.livetheoogway.forage.models.query.search.range.IntRange;
+import com.livetheoogway.forage.models.query.search.score.DecayFunction;
+import com.livetheoogway.forage.models.query.search.score.DecayType;
+import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
+import com.livetheoogway.forage.models.query.search.score.RandomScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.ScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.ScriptScoreFunction;
+import com.livetheoogway.forage.models.query.search.score.WeightedScoreFunction;
+import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
+import com.livetheoogway.forage.models.result.MatchingResult;
 import com.livetheoogway.forage.search.engine.TestUtils;
 import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
 import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
@@ -32,10 +45,14 @@ import org.junit.jupiter.api.Test;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.ToDoubleFunction;
+import java.util.stream.Collectors;
 
 class PeriodicallyUpdatedForageSearchEngineTest {
 
@@ -160,6 +177,97 @@ class PeriodicallyUpdatedForageSearchEngineTest {
         performParallelSearchExecutions(dataStore, luceneQueryEngineContainer);
     }
 
+    @Test
+    void testFunctionScoreRankingAcrossFullCatalog() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(1)) {
+            context.dataStore.addAllBooks();
+            waitForAuthorResults(context.engine, "rowling", 20);
+
+            assertConstantScoreFunction(context.engine);
+            assertWeightedScoreScaling(context.engine);
+            assertFieldValueFactorOrdering(context.engine);
+            assertScriptScoreExpression(context.engine);
+            assertRandomScoreDeterminism(context.engine);
+            assertDecayFunctionBias(context.engine);
+        }
+    }
+
+    @Test
+    void testBuildForageQueryWithSortCriteria() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(500)) {
+            // Use DESC to sort by highest score (numPage) first
+            List<SortCriteria> sortBy = Collections.singletonList(SortCriteria.byScore(SortOrder.DESC));
+            ForageQuery sortedQuery = buildScriptScoreMatchAllQuery(25, sortBy, null);
+
+            ForageQueryResult<Book> result = context.engine.search(sortedQuery);
+            Assertions.assertTrue(result.getMatchingResults().size() > 1,
+                                  "expected at least two books to validate ordering");
+            assertSortedDescending(result.getMatchingResults(), Book::getNumPage);
+        }
+    }
+
+    @Test
+    void testMinimumScoreFiltersResults() throws Exception {
+        try (EngineTestContext context = bootstrapEngineWithBooks(600)) {
+            List<SortCriteria> sortBy = Collections.emptyList();
+            ForageQuery baselineQuery = buildScriptScoreMatchAllQuery(30, sortBy, null);
+
+            ForageQueryResult<Book> baseline = context.engine.search(baselineQuery);
+            Assertions.assertTrue(baseline.getMatchingResults().size() >= 2,
+                                  "baseline query should return multiple books");
+
+            float highestScore = baseline.getMatchingResults().get(0).getDocScore().getScore();
+            float lowestScore = baseline.getMatchingResults()
+                    .get(baseline.getMatchingResults().size() - 1)
+                    .getDocScore()
+                    .getScore();
+            Assertions.assertTrue(highestScore > lowestScore,
+                                  "script score should yield varied doc scores");
+
+            float relaxedThreshold = Math.max(0f, lowestScore - 5f);
+            ForageQuery relaxedQuery = buildScriptScoreMatchAllQuery(30, sortBy, relaxedThreshold);
+
+            ForageQueryResult<Book> relaxedResult = context.engine.search(relaxedQuery);
+            Assertions.assertEquals(baseline.getMatchingResults().size(),
+                                    relaxedResult.getMatchingResults().size(),
+                                    "relaxed threshold should not filter documents");
+
+            float strictThreshold = (highestScore + lowestScore) / 2f;
+            ForageQuery filteredQuery = buildScriptScoreMatchAllQuery(30, sortBy, strictThreshold);
+
+            ForageQueryResult<Book> filteredResult = context.engine.search(filteredQuery);
+            Assertions.assertFalse(filteredResult.getMatchingResults().isEmpty(),
+                                   "strict threshold should keep at least one result");
+            Assertions.assertTrue(filteredResult.getMatchingResults().size()
+                                          < baseline.getMatchingResults().size(),
+                                  "strict threshold should drop lower scoring docs");
+            filteredResult.getMatchingResults()
+                    .forEach(result -> Assertions.assertTrue(result.getDocScore().getScore() >= strictThreshold,
+                                                             "filtered results must respect the threshold"));
+
+            float impossibleThreshold = highestScore + 1000f;
+            ForageQuery emptyQuery = buildScriptScoreMatchAllQuery(30, sortBy, impossibleThreshold);
+
+            ForageQueryResult<Book> emptyResult = context.engine.search(emptyQuery);
+            Assertions.assertTrue(emptyResult.getMatchingResults().isEmpty(),
+                                  "threshold above any score should return no results");
+        }
+    }
+
+    private void waitForTotalDocuments(final ForageEngineIndexer<Book> searchEngine, final int expectedTotal) {
+        Awaitility.await().atMost(Duration.of(60, ChronoUnit.SECONDS))
+                .with()
+                .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
+                .ignoreExceptionsMatching(throwable -> throwable instanceof ForageSearchError
+                        && ((ForageSearchError) throwable).getForageErrorCode()
+                        == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
+                .until(() -> {
+                    final ForageQueryResult<Book> query = searchEngine.search(
+                            QueryBuilder.matchAllQuery().buildForageQuery());
+                    return query.getTotal().getTotal() >= expectedTotal;
+                });
+    }
+
     private void performParallelSearchExecutions(final BookDataStore dataStore,
                                                  final ForageEngineIndexer<Book> luceneQueryEngineContainer)
             throws Exception {
@@ -217,5 +325,210 @@ class PeriodicallyUpdatedForageSearchEngineTest {
 
         System.out.println("time = " + (System.currentTimeMillis() - time) + " " + Thread.currentThread()
                 .getStackTrace()[2].getMethodName());
+    }
+
+    private void waitForAuthorResults(final ForageEngineIndexer<Book> searchEngine,
+                                      final String author,
+                                      final int expectedTotal) {
+        Awaitility.await().atMost(Duration.of(60, ChronoUnit.SECONDS))
+                .with()
+                .pollInterval(Duration.of(100, ChronoUnit.MILLIS))
+                .ignoreExceptionsMatching(throwable -> throwable instanceof ForageSearchError
+                        && ((ForageSearchError) throwable).getForageErrorCode()
+                        == ForageErrorCode.QUERY_ENGINE_NOT_INITIALIZED_YET)
+                .until(() -> {
+                    final ForageQueryResult<Book> query = searchEngine.search(
+                            QueryBuilder.matchQuery("author", author).buildForageQuery());
+                    return query.getTotal().getTotal() >= expectedTotal;
+                });
+    }
+
+    private EngineTestContext bootstrapEngineWithBooks(final int numberOfBooks) throws Exception {
+        final BookDataStore dataStore = new BookDataStore();
+        final ForageEngineIndexer<Book> engine = new ForageEngineIndexer<>(
+                ForageSearchEngineBuilder.<Book>builder()
+                        .withDataStore(dataStore)
+                        .withObjectMapper(TestUtils.mapper()));
+
+        final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =
+                new PeriodicUpdateEngine<>(
+                        dataStore, new AsyncQueuedConsumer<>(engine),
+                        1, TimeUnit.SECONDS
+                );
+
+        dataStore.addBooks(numberOfBooks);
+        periodicUpdateEngine.bootstrap();
+        waitForTotalDocuments(engine, numberOfBooks);
+        periodicUpdateEngine.start();
+
+        return new EngineTestContext(dataStore, engine, periodicUpdateEngine);
+    }
+
+    private void assertConstantScoreFunction(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
+        final float constantScore = 7.5f;
+        final ForageQuery query = QueryBuilder.functionScoreQuery()
+                .baseQuery(QueryBuilder.matchQuery("author", "rowling").build())
+                .constantScore(constantScore)
+                .buildForageQuery(5);
+
+        final ForageQueryResult<Book> result = searchEngine.search(query);
+        Assertions.assertFalse(result.getMatchingResults().isEmpty());
+        // ConstantScoreFunction produces the exact constant value as the score for all matching documents
+        for (final MatchingResult<Book> matchingResult : result.getMatchingResults()) {
+            Assertions.assertEquals(constantScore,
+                                    matchingResult.getDocScore().getScore(),
+                                    0.001f,
+                                    "Constant score should produce the exact constant value");
+        }
+    }
+
+    private void assertWeightedScoreScaling(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
+        final ForageQuery baselineQuery = QueryBuilder.matchQuery("author", "rowling").buildForageQuery(5);
+        final ForageQueryResult<Book> baselineResult = searchEngine.search(baselineQuery);
+
+        final float weight = 3.0f;
+        final ForageQuery weightedQuery = buildFunctionScoreQuery(
+                QueryBuilder.matchQuery("author", "rowling").build(),
+                new WeightedScoreFunction(weight),
+                5);
+        final ForageQueryResult<Book> weightedResult = searchEngine.search(weightedQuery);
+
+        Assertions.assertEquals(baselineResult.getMatchingResults().size(),
+                                weightedResult.getMatchingResults().size());
+
+        for (int i = 0; i < baselineResult.getMatchingResults().size(); i++) {
+            final MatchingResult<Book> base = baselineResult.getMatchingResults().get(i);
+            final MatchingResult<Book> weighted = weightedResult.getMatchingResults().get(i);
+            Assertions.assertEquals(base.getId(), weighted.getId());
+            final float expectedScore = base.getDocScore().getScore() * weight;
+            Assertions.assertEquals(expectedScore,
+                                    weighted.getDocScore().getScore(),
+                                    1.0e-3f * Math.max(1f, expectedScore));
+        }
+    }
+
+    private void assertFieldValueFactorOrdering(final ForageEngineIndexer<Book> searchEngine)
+            throws ForageSearchError {
+        final ForageQueryResult<Book> result = searchEngine.search(
+                buildFunctionScoreQuery(QueryBuilder.matchAllQuery().build(),
+                                        new FieldValueFactorFunction("rating"),
+                                        10));
+
+        assertSortedDescending(result.getMatchingResults(), Book::getRating);
+    }
+
+    private void assertScriptScoreExpression(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
+        final String script = "score + rating * 2 - numPage / 1000";
+        final ForageQuery query = buildFunctionScoreQuery(QueryBuilder.matchAllQuery().build(),
+                                                          new ScriptScoreFunction(script),
+                                                          1);
+        final ForageQueryResult<Book> result = searchEngine.search(query);
+        Assertions.assertFalse(result.getMatchingResults().isEmpty());
+
+        final MatchingResult<Book> topResult = result.getMatchingResults().get(0);
+        final double expectedScore =
+                1.0 + topResult.getData().getRating() * 2.0 - (double) topResult.getData().getNumPage() / 1000.0;
+        Assertions.assertEquals(expectedScore, topResult.getDocScore().getScore(), 1e-3);
+    }
+
+    private void assertRandomScoreDeterminism(final ForageEngineIndexer<Book> searchEngine)
+            throws ForageSearchError {
+        final long seed = 99L;
+        final ForageQuery deterministicQuery = buildFunctionScoreQuery(
+                QueryBuilder.matchAllQuery().build(),
+                new RandomScoreFunction(seed, "numPage"),
+                10);
+
+        final List<String> firstRun = extractIds(searchEngine.search(deterministicQuery));
+        final List<String> secondRun = extractIds(searchEngine.search(deterministicQuery));
+        Assertions.assertEquals(firstRun, secondRun);
+
+        final List<String> differentSeed = extractIds(searchEngine.search(
+                buildFunctionScoreQuery(QueryBuilder.matchAllQuery().build(),
+                                        new RandomScoreFunction(seed + 1, "numPage"),
+                                        10)));
+        Assertions.assertNotEquals(firstRun, differentSeed);
+    }
+
+    private void assertDecayFunctionBias(final ForageEngineIndexer<Book> searchEngine) throws ForageSearchError {
+        final DecayFunction decayFunction =
+                new DecayFunction(0.0, 200.0, 0.0, 0.5, DecayType.LINEAR, "numPage");
+        final ForageQueryResult<Book> result = searchEngine.search(
+                buildFunctionScoreQuery(QueryBuilder.matchAllQuery().build(), decayFunction, 5));
+
+        assertSortedAscending(result.getMatchingResults(), book -> book.getNumPage());
+    }
+
+    private ForageQuery buildFunctionScoreQuery(final Query baseQuery,
+                                                final ScoreFunction scoreFunction,
+                                                final int size) {
+        return QueryBuilder.functionScoreQuery()
+                .baseQuery(baseQuery)
+                .scoreFunction(scoreFunction)
+                .buildForageQuery(size);
+    }
+
+    private ForageQuery buildScriptScoreMatchAllQuery(final int size,
+                                                      final List<SortCriteria> sortBy,
+                                                      final Float minimumScore) {
+        if (minimumScore == null) {
+            return QueryBuilder.functionScoreQuery()
+                    .baseQuery(QueryBuilder.matchAllQuery().build())
+                    .scoreFunction(new ScriptScoreFunction("numPage"))
+                    .buildForageQuery(size, sortBy);
+        }
+        return QueryBuilder.functionScoreQuery()
+                .baseQuery(QueryBuilder.matchAllQuery().build())
+                .scoreFunction(new ScriptScoreFunction("numPage"))
+                .buildForageQuery(size, sortBy, minimumScore);
+    }
+
+    private List<String> extractIds(final ForageQueryResult<Book> result) {
+        return result.getMatchingResults()
+                .stream()
+                .map(MatchingResult::getId)
+                .collect(Collectors.toList());
+    }
+
+    private void assertSortedDescending(final List<MatchingResult<Book>> results,
+                                        final ToDoubleFunction<Book> extractor) {
+        for (int i = 1; i < results.size(); i++) {
+            final double prev = extractor.applyAsDouble(results.get(i - 1).getData());
+            final double current = extractor.applyAsDouble(results.get(i).getData());
+            Assertions.assertTrue(prev + 1e-6 >= current,
+                                  () -> String.format("Expected non-increasing ordering but found %f < %f", prev,
+                                                      current));
+        }
+    }
+
+    private void assertSortedAscending(final List<MatchingResult<Book>> results,
+                                       final ToDoubleFunction<Book> extractor) {
+        for (int i = 1; i < results.size(); i++) {
+            final double prev = extractor.applyAsDouble(results.get(i - 1).getData());
+            final double current = extractor.applyAsDouble(results.get(i).getData());
+            Assertions.assertTrue(prev <= current + 1e-6,
+                                  () -> String.format("Expected non-decreasing ordering but found %f > %f", prev,
+                                                      current));
+        }
+    }
+
+
+    private static final class EngineTestContext implements AutoCloseable {
+        private final BookDataStore dataStore;
+        private final ForageEngineIndexer<Book> engine;
+        private final PeriodicUpdateEngine<IndexableDocument> periodicEngine;
+
+        private EngineTestContext(final BookDataStore dataStore,
+                                  final ForageEngineIndexer<Book> engine,
+                                  final PeriodicUpdateEngine<IndexableDocument> periodicEngine) {
+            this.dataStore = dataStore;
+            this.engine = engine;
+            this.periodicEngine = periodicEngine;
+        }
+
+        @Override
+        public void close() {
+            periodicEngine.stop();
+        }
     }
 }

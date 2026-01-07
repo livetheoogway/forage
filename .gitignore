@@ -6,3 +6,5 @@ target/
 *.ipr
 .DS_Store
 .shelf
+.vscode
+.claude

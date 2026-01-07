@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -38,7 +38,8 @@ public class ResultUtil {
         return getRepresentation(result,
                                  matchingResult -> {
                                      final Book data = matchingResult.getData();
-                                     return matchingResult.getId() + ":" + data.getTitle();
+                                     return "[" + matchingResult.getDocScore().getScore() + "]:"
+                                             + matchingResult.getId() + ":" + data.getTitle() + ":" + data.getRating() + ":" + data.getNumPage();
                                  },
                                  (a, b) -> a + "\n" + b);
     }

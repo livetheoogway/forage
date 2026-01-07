@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -26,12 +26,20 @@ import lombok.Value;
 public class MatchQuery extends Query {
     String field;
     String value;
+    Float boost;
 
     @JsonCreator
-    public MatchQuery(@JsonProperty("field") final String field, @JsonProperty("value") final String value) {
+    public MatchQuery(@JsonProperty("field") final String field, 
+                      @JsonProperty("value") final String value,
+                      @JsonProperty("boost") final Float boost) {
         super(QueryType.MATCH);
         this.field = field;
         this.value = value;
+        this.boost = boost;
+    }
+
+    public MatchQuery(final String field, final String value) {
+        this(field, value, null);
     }
 
     @Override

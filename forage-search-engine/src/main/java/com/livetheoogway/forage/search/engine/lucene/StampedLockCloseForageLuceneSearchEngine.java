@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -22,6 +22,7 @@ import com.livetheoogway.forage.search.engine.lucene.parser.QueryParserFactory;
 import com.livetheoogway.forage.search.engine.store.Store;
 import lombok.SneakyThrows;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.io.IOException;
 import java.util.concurrent.locks.StampedLock;
@@ -38,8 +39,9 @@ public class StampedLockCloseForageLuceneSearchEngine<D>
     public StampedLockCloseForageLuceneSearchEngine(final ObjectMapper mapper,
                                                     final QueryParserFactory queryParserFactory,
                                                     final Store<D> dataStore,
-                                                    final Analyzer analyzer) {
-        super(mapper, queryParserFactory, dataStore, analyzer);
+                                                    final Analyzer analyzer,
+                                                    final Similarity similarity) {
+        super(mapper, queryParserFactory, dataStore, analyzer, similarity);
     }
 
     @SneakyThrows

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -33,14 +33,21 @@ public class BooleanQuery extends Query {
     List<Query> queries;
     @NonNull
     ClauseType clauseType;
+    Float boost;
 
     @JsonCreator
     @Builder
     public BooleanQuery(@Singular @JsonProperty("queries") final List<Query> queries,
-                        @NonNull @JsonProperty("clauseType") final ClauseType clauseType) {
+                        @NonNull @JsonProperty("clauseType") final ClauseType clauseType,
+                        @JsonProperty("boost") final Float boost) {
         super(QueryType.BOOLEAN);
         this.queries = queries;
         this.clauseType = clauseType;
+        this.boost = boost;
+    }
+
+    public BooleanQuery(final List<Query> queries, final ClauseType clauseType) {
+        this(queries, clauseType, null);
     }
 
     @Override

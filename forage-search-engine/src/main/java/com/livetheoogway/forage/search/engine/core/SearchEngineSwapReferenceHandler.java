@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -31,9 +31,9 @@ import java.util.function.Supplier;
  * This class implements the core libraries {@link ItemConsumer}.
  * It is responsible for swapping the search engine during every bootstrap.
  * Here, we keep a reference of the current search engine using an {@link AtomicReference}.
- * During every bootstrap, we initialize a new search engine, and once all items are consumed, we flush (lucene flush
- * makes the documents searchable), and then swap the newly created engine, with the current one, so that it can
- * serve all new search requests
+ * During every bootstrap, we initialize a new search engine.
+ * Once all items are consumed, we flush (lucene flush makes the documents searchable), and then swap the newly created
+ * engine with the current one. This engine can serve all new search requests.
  *
  * @param <T> Type of data being stored in the main database
  */

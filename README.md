@@ -100,13 +100,56 @@ There are several static helpers in `QueryBuilder` which should make things easy
 - One important prerequisite is that, you should be able to pull all data from your database, ie, you should be able to
   stream it out as a batched select query (on your relational DB), or a scan (Aerospike, Redis, HBase or any other
   non-relational DB), depending on what database you are using.
-- Size of data should be limited. While it totally depends on how much heap you supply to your java application,
-  it presume it shouldn't be in the range of 10s of millions. This library has been tested for 100k rows in memory.
-  (todo) mention details
-- Ensure your application is supplied with sufficient memory. A ballpark for calculating the memory for your base java
-  application is to (todo)
+- **Data Size Limitations**: Optimal for datasets with up to 1 million documents. While it depends on available heap memory, the library has been extensively tested with 100k-500k documents in memory.
+- **Memory Requirements**: Ensure adequate heap space. As a rough estimate, allocate 2-4x the size of your raw data for optimal performance, accounting for Lucene indexes and document storage.
 
-# Getting started
+# Getting Started
+
+## Quick Start
+
+```java
+// 1. Add Maven dependency
+<dependency>
+    <groupId>com.livetheoogway.forage</groupId>
+    <artifactId>forage-search-engine</artifactId>
+    <version>${forage.version}</version>
+</dependency>
+
+// 2. Create your data store
+class BookStore implements Bootstrapper<IndexableDocument>, Store<Book> {
+    public void bootstrap(Consumer<IndexableDocument> itemConsumer) {
+        // Index your data 
+        itemConsumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
+            new TextField("title", book.getTitle()),
+            new TextField("author", book.getAuthor()),
+            new FloatField("rating", new float[]{book.getRating()})
+        )));
+    }
+    
+    public Map<String, Book> get(List<String> ids) {
+        return fetchBooksFromDatabase(ids); // Your implementation
+    }
+}
+
+// 3. Initialize search engine
+SearchEngine<ForageQuery, ForageQueryResult<Book>> searchEngine = 
+    new ForageEngine<>(ForageSearchEngineBuilder.<Book>builder()
+        .withDataStore(bookStore)
+        .withObjectMapper(new ObjectMapper()));
+
+// 4. Search with advanced ranking
+ForageQueryResult<Book> results = searchEngine.search(
+    QueryBuilder.booleanQuery()
+        .query(QueryBuilder.matchQuery("title", "java").build())
+        .query(QueryBuilder.matchQuery("author", "gosling").boost(1.5f).build())
+        .clauseType(ClauseType.SHOULD)
+        .buildForageQuery(10, 
+            Arrays.asList(SortCriteria.byScore(SortOrder.DESC)), 
+            0.1f) // minimum score
+);
+```
+
+## Detailed Setup
 
 ### Maven Dependency
 
@@ -152,9 +195,11 @@ class DataStore implements Bootstrapper<IndexableDocument>, Store<Book> {
         for (final Book book : books) {
           // You would scan all rows of your database here, and create individual ForageDocument and supply to the consumer
           // All rules on which fields need to be indexed how, should be happening here
-          itemConsumer.accept(new ForageDocument(book.getId(), book, ImmutableList
-                    .of(new TextField("title", book.getTitle()),
-                        new TextField("author", book.getAuthor()),
+          // You can optionally boost important fields during indexing
+          itemConsumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
+                        new TextField("title", book.getTitle()),
+                        new TextField("author", book.getAuthor()),  
+                        new TextField("description", book.getDescription()),
                         new FloatField("rating", new float[]{book.getRating()}),
                         new IntField("numPage", new int[]{book.getNumPage()}))));
         }
@@ -203,17 +248,30 @@ public class Container {
     // And while searching, you can do this:
     public void sampleSearch() {
 
-        // retrieve top 10 books that have numPages between 600 and 1000
+        // Basic search: retrieve top 10 books that have numPages between 600 and 1000
         final ForageQueryResult<Book> results =
                 searchEngine.search(QueryBuilder.intRangeQuery("numPage", 600, 800).buildForageQuery(10));   
 
-        // retrieve all books that have "rowling" in Author, and "prince" in Title
+        // Boolean search: retrieve all books that have "rowling" in Author, and "prince" in Title
         ForageQueryResult<Book> result = searchEngine.search(
                 QueryBuilder.booleanQuery()
                         .query(new MatchQuery("author", "rowling"))
                         .query(new MatchQuery("title", "prince"))
                         .clauseType(ClauseType.MUST)
                         .buildForageQuery());
+
+        // Advanced search with boosting and sorting
+        List<SortCriteria> sortBy = Arrays.asList(
+            SortCriteria.byScore(SortOrder.DESC),           // Sort by relevance first
+            new SortCriteria("rating", SortOrder.DESC)      // Then by rating
+        );
+        
+        ForageQueryResult<Book> boostedResult = searchEngine.search(
+                QueryBuilder.booleanQuery()
+                        .query(QueryBuilder.matchQuery("title", "java").boost(2.0f).build())  // Boost title matches
+                        .query(QueryBuilder.matchQuery("author", "martin").boost(1.5f).build()) // Boost author matches  
+                        .clauseType(ClauseType.SHOULD)
+                        .buildForageQuery(10, sortBy, 0.1f));  // Minimum score threshold
     }
 }
 ```
@@ -265,59 +323,183 @@ public class MyApplication extends Application<MyConfiguration> {
 
 ## Features
 
-1. Simple Term Match
+### Core Query Types
 
+**1. Simple Term Match**
 ```java
-QueryBuilder.matchQuery("title","sawyer").buildForageQuery()
+QueryBuilder.matchQuery("title", "sawyer").buildForageQuery()
 ```
 
-2. Fuzzy Query: You can try a fuzzy query match for retrieving results
-
+**2. Fuzzy Query** - Match similar terms with typos/variations
 ```java
-QueryBuilder.fuzzyMatchQuery("title","sayyer").buildForageQuery()
+QueryBuilder.fuzzyMatchQuery("title", "sayyer").buildForageQuery()
 ```
 
-3. Range Queries
-
+**3. Range Queries** - Numeric and date range filtering
 ```java
-QueryBuilder.intRangeQuery("numPage",600,800).buildForageQuery()
+QueryBuilder.intRangeQuery("numPage", 600, 800).buildForageQuery()
+QueryBuilder.floatRangeQuery("rating", 4.0f, 5.0f).buildForageQuery()
 ```
 
-5. Boolean Queries
-
+**4. Boolean Queries** - Complex query combinations
 ```java
 QueryBuilder.booleanQuery()
-        .query(new MatchQuery("author","rowling"))
-        .query(new MatchQuery("title","prince"))
+        .query(new MatchQuery("author", "rowling"))
+        .query(new MatchQuery("title", "prince"))
         .clauseType(ClauseType.MUST)  // or SHOULD, MUST_NOT, FILTER
         .buildForageQuery();
-
 ```
 
-6. Page Queries and Paginated Results
-
-```java
-ForageQueryResult<Book> result = searchEngine.search(QueryBuilder.matchQuery("author", "rowling").buildForageQuery(15)); // first 15 items
-ForageQueryResult<Book> result2 = searchEngine.search(new PageQuery(result.getNextPage(), 20)); // next 20 items
-```
-
-7. Phrase match query
-
+**5. Phrase Match Query** - Match exact phrases
 ```java
 QueryBuilder.phraseMatchQuery("title", "Tom Sawyer").buildForageQuery();
 ```
 
+**6. Prefix Match Query** - Match terms starting with prefix
+```java
+QueryBuilder.prefixMatchQuery("author", "row").buildForageQuery();
+```
 
-8. All match query
-
+**7. Match All Query** - Return all documents
 ```java
 QueryBuilder.matchAllQuery().buildForageQuery();
 ```
 
+### Ranking & Scoring Overview
+
+Forage layers several ranking primitives so you can blend lexical relevance with business signal weighting:
+
+1. **Base Lucene score** – TF/IDF style scoring driven by the query.
+2. **Query-time boosts** – emphasis on specific clauses or phrases.
+3. **Function score multipliers** – numeric adjustments from doc-values or scripts.
+4. **Sorting & minimum-score gating** – deterministic ordering and quality cutoffs.
+
+#### Query-time Boosts
+```java
+QueryBuilder.booleanQuery()
+        .query(QueryBuilder.matchQuery("title", "java").boost(2.0f).build())
+        .query(QueryBuilder.matchQuery("content", "java").boost(1.0f).build())
+        .clauseType(ClauseType.SHOULD)
+        .buildForageQuery();
+```
+Mix and match boosts to express intent (e.g., exact title hit should outrank body mention).
+
+#### Sorting & Secondary Keys
+```java
+List<SortCriteria> sortBy = Arrays.asList(
+        SortCriteria.byScore(SortOrder.DESC),
+        new SortCriteria("rating", SortOrder.DESC));
+
+QueryBuilder.matchQuery("author", "martin").buildForageQuery(10, sortBy);
+```
+`SortCriteria` accepts a field, `SortOrder`, and `SortType`. Use `SortCriteria.byScore()` for pure relevance or specify doc-value backed fields for deterministic business ordering.
+
+#### Minimum Score Filtering
+```java
+QueryBuilder.matchQuery("title", "programming")
+        .buildForageQuery(10, null, 0.5f);
+```
+The third argument to `buildForageQuery` acts as a relevance gate—ideal for trimming fuzzy queries.
+
+#### Function Scoring (Business Signals)
+```java
+ForageQuery fanFavorites = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("genre", "fantasy").build())
+        .fieldValueFactor("rating", 1.2f)
+        .boost(1.1f)
+        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore()), 0.25f);
+```
+
+| Score Function | Description | Scoring Mode | Example Usage |
+| --- | --- | --- | --- |
+| `ConstantScoreFunction` | Multiplies base score by a fixed constant | Multiplicative | `.constantScore(2.0f)` |
+| `WeightedScoreFunction` | Multiplies base score by weight | Multiplicative | `.scoreFunction(new WeightedScoreFunction(1.5f))` |
+| `FieldValueFactorFunction` | Uses numeric field value directly as score | Direct Value | `.fieldValueFactor("rating", 1.3f)` |
+| `ScriptScoreFunction` | Executes JavaScript expression (access to `score` and fields) | Multiplicative | `.scoreFunction(new ScriptScoreFunction("score * rating"))` |
+| `RandomScoreFunction` | Deterministic pseudo-random score based on field and seed | Direct Value | `.scoreFunction(new RandomScoreFunction(42L, "rating"))` |
+| `DecayFunction` | Distance-based decay (GAUSS, EXP, LINEAR) | Direct Value | See example below |
+
+**Scoring Modes:**
+- **Multiplicative**: Final score = base_score × function_value (combines relevance with business signal)
+- **Direct Value**: Final score = function_value only (ranks purely by the function output)
+
+**Decay Function Example:**
+```java
+// Favor books closer to 500 pages, with Gaussian decay
+new DecayFunction(
+    500.0,          // origin - optimal value
+    100.0,          // scale - distance at which score decays to 'decay' value
+    50.0,           // offset - no decay within this distance from origin
+    0.5,            // decay - score at scale distance (0.5 = 50%)
+    DecayType.GAUSS, // decay type: GAUSS, EXP, or LINEAR
+    "numPage"       // field name
+)
+```
+
+Doc-values are emitted automatically for `FloatField`, `IntField`, and `StringField`, so you can safely reference them in scripts, sorts, or field-value factors.
+
+#### Full Ranking Recipe
+
+**Example 1: Rank purely by a field value (e.g., highest rated first)**
+```java
+// Use FieldValueFactorFunction - results are ranked by rating directly
+ForageQuery topRated = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("genre", "fantasy").build())
+        .scoreFunction(new FieldValueFactorFunction("rating"))  // Score = rating value
+        .buildForageQuery(20, Arrays.asList(SortCriteria.byScore(SortOrder.DESC)));
+```
+
+**Example 2: Combine relevance with business signals**
+```java
+// Use ScriptScoreFunction - blends base relevance with field values
+ForageQuery personalized = QueryBuilder.functionScoreQuery()
+        .baseQuery(
+                QueryBuilder.booleanQuery()
+                        .query(QueryBuilder.matchQuery("title", "java").boost(3.0f).build())
+                        .query(QueryBuilder.matchQuery("tags", "backend").build())
+                        .clauseType(ClauseType.SHOULD)
+                        .build())
+        .scoreFunction(new ScriptScoreFunction("score * rating"))  // Score = relevance × rating
+        .boost(1.05f)
+        .buildForageQuery(
+                15,
+                Arrays.asList(SortCriteria.byScore(SortOrder.DESC)),
+                0.2f);
+```
+
+**Example 3: Favor items near an optimal value**
+```java
+// Use DecayFunction - items closer to 300 pages get higher scores
+ForageQuery mediumBooks = QueryBuilder.functionScoreQuery()
+        .baseQuery(QueryBuilder.matchQuery("category", "programming").build())
+        .scoreFunction(new DecayFunction(300.0, 100.0, 0.0, 0.5, DecayType.GAUSS, "numPage"))
+        .buildForageQuery(10);
+```
+
+These examples demonstrate:
+- **FieldValueFactorFunction**: Ranks purely by field value (highest ratings first)
+- **ScriptScoreFunction**: Combines base relevance score with field values
+- **DecayFunction**: Favors documents closer to an optimal value
+
+### Pagination
+
+**Page Queries and Paginated Results**
+```java
+// First page
+ForageQueryResult<Book> result = searchEngine.search(
+    QueryBuilder.matchQuery("author", "rowling").buildForageQuery(15)
+);
+
+// Next page
+ForageQueryResult<Book> result2 = searchEngine.search(
+    new PageQuery(result.getNextPage(), 20)
+);
+```
+
 ## Tech Dependencies
 
-- Java 11
-- Lucene 9.1.0
+- Java 17
+- Lucene 9.12.3
 - Dropwizard 2.1.0 (Optional)
 
 ## Contributions
@@ -336,13 +518,45 @@ If you plan on contributing to the code, fork the repository and raise a Pull Re
 2. Searchers
 3. Attributes being stored for field conversion
 
-## Todos
+## Feature Roadmap
 
+### ✅ Completed
 - [x] Helpers for query creation
 - [x] Fuzzy Query Support
 - [x] Dropwizard bundle for simpler integrations
-- [ ] Expose Scoring and boosting
 - [x] Phrase Query Support
-- [ ] Auto complete query Support
-- [ ] Expose explain query IndexSearcher.explain(Query, doc)
+- [x] Prefix Match Query Support
+- [x] **Query-level Scoring and Boosting**
+- [x] **Custom Sorting (by score, field values)**
+- [x] **Minimum Score Filtering**
+- [x] **Function Scoring (field value factors, constant scores)**
+- [x] **Script Score Function** (JavaScript expressions with field access)
+- [x] **Random Score Function** (deterministic shuffle with seed)
+- [x] **Decay Functions** (Gaussian, Exponential, Linear distance-based scoring)
+- [x] **Weighted Score Function**
 
+### 📋 Planned
+- [ ] Off-Heap index storage support
+- [ ] Auto complete query Support
+- [ ] Expose explain query (IndexSearcher.explain)
+- [ ] Query performance analytics
+- [ ] Embeddings and vector search
+- [ ] Geo-spatial queries
+- [ ] Score normalization options
+
+## Performance & Best Practices
+
+### Indexing Performance
+- Minimize the number of analyzed text fields for better indexing speed
+- Consider batch indexing for large datasets
+
+### Query Performance  
+- Use specific queries (MatchQuery, PrefixQuery) over broad queries (MatchAllQuery) when possible
+- Apply minimum score filtering to reduce result processing overhead
+- Use pagination for large result sets
+- Cache frequently used queries
+
+### Memory Management
+- Monitor heap usage with large document sets
+- Consider the trade-off between search speed and memory consumption
+- Use appropriate field types (StringField vs TextField) based on search requirements

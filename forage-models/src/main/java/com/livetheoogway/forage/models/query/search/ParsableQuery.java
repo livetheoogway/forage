@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -26,13 +26,20 @@ import lombok.Value;
 public class ParsableQuery extends Query {
     String field;
     String queryString;
+    Float boost;
 
     @JsonCreator
     public ParsableQuery(@JsonProperty("field") final String field,
-                         @JsonProperty("queryString") final String queryString) {
+                         @JsonProperty("queryString") final String queryString,
+                         @JsonProperty("boost") final Float boost) {
         super(QueryType.PARSABLE_QUERY);
         this.field = field;
         this.queryString = queryString;
+        this.boost = boost;
+    }
+
+    public ParsableQuery(final String field, final String queryString) {
+        this(field, queryString, null);
     }
 
     @Override

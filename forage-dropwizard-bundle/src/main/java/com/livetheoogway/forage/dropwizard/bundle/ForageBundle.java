@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -30,6 +30,7 @@ import io.dropwizard.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.search.similarities.Similarity;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -70,6 +71,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
         return null;
     }
 
+    public Similarity similarity() {
+        return null;
+    }
+
     /**
      * Use this to do adhoc {@link UpdateEngine#bootstrap()}, other than the periodic bootstrap that happens as part
      * of this bundle.
@@ -92,6 +97,10 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
                 val analyser = analyser();
                 if (analyser != null) {
                     engineBuilder.withAnalyser(analyser);
+                }
+                val similarity = similarity();
+                if (similarity != null) {
+                    engineBuilder.withSimilarity(similarity);
                 }
 
                 val forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);

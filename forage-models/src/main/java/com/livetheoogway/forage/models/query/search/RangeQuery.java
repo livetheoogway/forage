@@ -1,5 +1,5 @@
 /*
- * Copyright 2022. Live the Oogway, Tushar Naik
+ * Copyright 2026. Live the Oogway, Tushar Naik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in
  * compliance with the License. You may obtain a copy of the License at
@@ -25,11 +25,17 @@ import lombok.Value;
 public class RangeQuery extends Query {
     String field;
     Range range;
+    Float boost;
 
-    public RangeQuery(final String field, final Range range) {
+    public RangeQuery(final String field, final Range range, final Float boost) {
         super(QueryType.RANGE);
         this.field = field;
         this.range = range;
+        this.boost = boost;
+    }
+
+    public RangeQuery(final String field, final Range range) {
+        this(field, range, null);
     }
 
     @Override
