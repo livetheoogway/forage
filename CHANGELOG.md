@@ -1,12 +1,32 @@
 # Changelog
 
+## [Unreleased](https://github.com/livetheoogway/forage/tree/HEAD)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.12...HEAD)
+
+**Closed issues:**
+
+- Ranking Support \(Scoring and Boosting\) [\#12](https://github.com/livetheoogway/forage/issues/12)
+
+## [1.0.12](https://github.com/livetheoogway/forage/tree/1.0.12) (2026-01-07)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.11...1.0.12)
+
+**Merged pull requests:**
+
+- Ranking Support and JDK upgrades [\#13](https://github.com/livetheoogway/forage/pull/13) ([Tushar-Naik](https://github.com/Tushar-Naik))
+
 ## [1.0.11](https://github.com/livetheoogway/forage/tree/1.0.11) (2023-03-02)
 
-[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.10...1.0.11)
+[Full Changelog](https://github.com/livetheoogway/forage/compare/test-v1...1.0.11)
 
 **Merged pull requests:**
 
 - Using the KeywordAnalyzer to skip analysis on the subsequent page  [\#10](https://github.com/livetheoogway/forage/pull/10) ([Tushar-Naik](https://github.com/Tushar-Naik))
+
+## [test-v1](https://github.com/livetheoogway/forage/tree/test-v1) (2023-03-02)
+
+[Full Changelog](https://github.com/livetheoogway/forage/compare/1.0.10...test-v1)
 
 ## [1.0.10](https://github.com/livetheoogway/forage/tree/1.0.10) (2023-02-26)
 
