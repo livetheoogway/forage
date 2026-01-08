@@ -63,6 +63,8 @@ import java.text.ParseException;
 
 public class LuceneQueryGenerator implements QueryVisitor<Query> {
 
+    private static final String FIELD_VALUE = "fieldValue";
+    private static final String FACTOR = "factor";
     private static final Expression PRECOMPILED_EXPRESSION_FIELD_VALUE_FACTOR;
     private static final ClauseVisitor<BooleanClause.Occur> CLAUSE_VISITOR = new ClauseVisitor<>() {
         @Override
@@ -201,7 +203,8 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
         if (isMultiplicativeScoreFunction(scoreFunction)) {
             // Multiplicative: score = base_score * valueSource
             // Used for WEIGHTED_SCORE, SCRIPT_SCORE (when using base score)
-            finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery.boostByValue(baseLuceneQuery, valueSource);
+            finalQuery = org.apache.lucene.queries.function.FunctionScoreQuery.boostByValue(baseLuceneQuery,
+                                                                                            valueSource);
         } else {
             // Direct value: score = valueSource
             // Used for FIELD_VALUE_FACTOR, CONSTANT_SCORE, RANDOM_SCORE, DECAY_FUNCTION. These functions use field values directly as the score
@@ -215,11 +218,9 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
     /**
      * Determines if a score function should multiply with the base query score
      * or replace it entirely with its value.
-     *
      * Multiplicative functions: final_score = base_score × function_value
      * - WEIGHTED_SCORE: Scales relevance by a weight factor
      * - SCRIPT_SCORE: Custom expression that can reference 'score' variable
-     *
      * Direct value functions: final_score = function_value (ignores base score)
      * - CONSTANT_SCORE: All matches get the same constant score
      * - FIELD_VALUE_FACTOR: Score equals the field value
@@ -248,8 +249,8 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
                 }
 
                 final var bindings = new SimpleBindings();
-                bindings.add("fieldValue", fieldSource);
-                bindings.add("factor", DoubleValuesSource.constant(factor));
+                bindings.add(FIELD_VALUE, fieldSource);
+                bindings.add(FACTOR, DoubleValuesSource.constant(factor));
 
                 yield PRECOMPILED_EXPRESSION_FIELD_VALUE_FACTOR.getDoubleValuesSource(bindings);
             }
@@ -290,7 +291,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
 
                 // Bind the unique field from the index
                 // IMPORTANT: This field MUST be a NumericDocValuesField (int, long, or double)
-                bindings.add("fieldValue", DoubleValuesSource.fromDoubleField(randomFn.getField()));
+                bindings.add(FIELD_VALUE, DoubleValuesSource.fromDoubleField(randomFn.getField()));
 
                 yield expr.getDoubleValuesSource(bindings);
             }
@@ -328,7 +329,7 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
 
                 // 'fieldValue' maps to the actual DocValues in the Lucene index
                 // Note: You'll need to pass the field name to the ScoreFunction or context
-                bindings.add("fieldValue", DoubleValuesSource.fromDoubleField(decayFn.getField()));
+                bindings.add(FIELD_VALUE, DoubleValuesSource.fromDoubleField(decayFn.getField()));
 
                 yield expr.getDoubleValuesSource(bindings);
             }

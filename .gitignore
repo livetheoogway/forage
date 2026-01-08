@@ -8,3 +8,4 @@ target/
 .shelf
 .vscode
 .claude
+.cache
