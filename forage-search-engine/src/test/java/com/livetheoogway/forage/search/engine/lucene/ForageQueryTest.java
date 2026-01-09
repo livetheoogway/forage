@@ -61,11 +61,11 @@ class ForageQueryTest {
         final List<Book> books = ResourceReader.extractBooks();
         final List<IndexableDocument> documents = books
                 .stream()
-                .map(book -> ForageDocument.builder()
+                .map(book -> (IndexableDocument) ForageDocument.builder()
                         .fields(book.fields())
                         .id(book.id())
                         .build())
-                .collect(Collectors.toList());
+                .toList();
         dataStore.store(books);
         System.out.println("documents.size() = " + documents.size());
         searchEngine.index(documents);
@@ -362,7 +362,7 @@ class ForageQueryTest {
 
             // Score should be exactly the constant value
             Assertions.assertEquals(constantValue, score, 0.001f,
-                    "Constant score should produce the exact constant value");
+                                    "Constant score should produce the exact constant value");
         }
     }
 
@@ -385,7 +385,7 @@ class ForageQueryTest {
             // All scores should be exactly the constant value (ignores base relevance)
             for (MatchingResult<Book> match : result.getMatchingResults()) {
                 Assertions.assertEquals(constantValue, match.getDocScore().getScore(), 0.001f,
-                        "All matches should have the exact constant score value");
+                                        "All matches should have the exact constant score value");
             }
         }
     }
@@ -412,7 +412,7 @@ class ForageQueryTest {
             float weightedScore = result.getMatchingResults().get(0).getDocScore().getScore();
 
             Assertions.assertEquals(baseScore * weight, weightedScore, 0.001f,
-                    "Weighted score should multiply base score by weight");
+                                    "Weighted score should multiply base score by weight");
         }
     }
 
@@ -512,8 +512,10 @@ class ForageQueryTest {
             // book-1: 2.0 + 100 = 102 (multiplied by base score of 0.082873434)
             Assertions.assertEquals("book-2", result.getMatchingResults().get(0).getId());
             Assertions.assertEquals("book-1", result.getMatchingResults().get(1).getId());
-            Assertions.assertEquals(204.0f * baseScore, result.getMatchingResults().get(0).getDocScore().getScore(), 0.001f);
-            Assertions.assertEquals(102.0f * baseScore, result.getMatchingResults().get(1).getDocScore().getScore(), 0.001f);
+            Assertions.assertEquals(204.0f * baseScore, result.getMatchingResults().get(0).getDocScore().getScore(),
+                                    0.001f);
+            Assertions.assertEquals(102.0f * baseScore, result.getMatchingResults().get(1).getDocScore().getScore(),
+                                    0.001f);
         }
     }
 
@@ -659,7 +661,7 @@ class ForageQueryTest {
             float nearScore = result.getMatchingResults().get(0).getDocScore().getScore();
             float farScore = result.getMatchingResults().get(1).getDocScore().getScore();
             Assertions.assertTrue(nearScore > farScore,
-                    "Gaussian decay should score nearer documents higher");
+                                  "Gaussian decay should score nearer documents higher");
         }
     }
 
@@ -722,18 +724,18 @@ class ForageQueryTest {
             // Books within offset (90, 100) should have same/similar high scores
             float originScore = result.getMatchingResults().stream()
                     .filter(m -> m.getId().equals("at-origin"))
-                    .findFirst().get().getDocScore().getScore();
+                    .findFirst().map(res -> res.getDocScore().getScore()).orElseThrow();
             float withinOffsetScore = result.getMatchingResults().stream()
                     .filter(m -> m.getId().equals("within-offset"))
-                    .findFirst().get().getDocScore().getScore();
+                    .findFirst().map(res -> res.getDocScore().getScore()).orElseThrow();
             float beyondOffsetScore = result.getMatchingResults().stream()
                     .filter(m -> m.getId().equals("beyond-offset"))
-                    .findFirst().get().getDocScore().getScore();
+                    .findFirst().map(res -> res.getDocScore().getScore()).orElseThrow();
 
             Assertions.assertEquals(originScore, withinOffsetScore, 0.001f,
-                    "Within offset should have same score as origin");
+                                    "Within offset should have same score as origin");
             Assertions.assertTrue(originScore > beyondOffsetScore,
-                    "Beyond offset should have lower score");
+                                  "Beyond offset should have lower score");
         }
     }
 
@@ -785,7 +787,7 @@ class ForageQueryTest {
             float scoreWithBoost = resultWithBoost.getMatchingResults().get(0).getDocScore().getScore();
 
             Assertions.assertEquals(scoreNoBoost * 2.0f, scoreWithBoost, 0.001f,
-                    "Top-level boost should multiply the function score");
+                                    "Top-level boost should multiply the function score");
         }
     }
 
@@ -817,13 +819,13 @@ class ForageQueryTest {
 
                 ForageQueryResult<Book> result = engine.search(query);
                 Assertions.assertFalse(result.getMatchingResults().isEmpty(),
-                        "Should have results for decay type: " + decayType);
+                                       "Should have results for decay type: " + decayType);
 
                 float score = result.getMatchingResults().get(0).getDocScore().getScore();
                 Assertions.assertFalse(Float.isNaN(score),
-                        "Score should not be NaN for decay type: " + decayType);
+                                       "Score should not be NaN for decay type: " + decayType);
                 Assertions.assertTrue(score > 0,
-                        "Score should be positive for decay type: " + decayType);
+                                      "Score should be positive for decay type: " + decayType);
             }
         }
     }
@@ -845,13 +847,12 @@ class ForageQueryTest {
         }
     }
 
-
     private void assertResultOrderOnRating(final ForageQueryResult<Book> result, final SortOrder sortOrder) {
         Assertions.assertFalse(result.getMatchingResults().isEmpty());
 
         // Verify results are sorted by rating
         float previousRating = sortOrder == SortOrder.DESC
-                ?  Float.MAX_VALUE
+                ? Float.MAX_VALUE
                 : 0;
         for (MatchingResult<Book> match : result.getMatchingResults()) {
             float currentRating = match.getData().getRating();
@@ -879,7 +880,7 @@ class ForageQueryTest {
                 .getMatchingResults()
                 .stream()
                 .map(MatchingResult::getId)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ForageLuceneSearchEngine<Book> buildAdHocEngine(final Book... books) throws ForageSearchError {

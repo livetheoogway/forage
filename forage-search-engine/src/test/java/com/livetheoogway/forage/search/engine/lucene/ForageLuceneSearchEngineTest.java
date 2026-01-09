@@ -3,6 +3,8 @@ package com.livetheoogway.forage.search.engine.lucene;
 import com.livetheoogway.forage.models.query.util.QueryBuilder;
 import com.livetheoogway.forage.models.result.ForageQueryResult;
 import com.livetheoogway.forage.search.engine.TestUtils;
+import com.livetheoogway.forage.search.engine.exception.ForageErrorCode;
+import com.livetheoogway.forage.search.engine.exception.ForageSearchError;
 import com.livetheoogway.forage.search.engine.model.Book;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -19,5 +21,16 @@ class ForageLuceneSearchEngineTest {
             final ForageQueryResult<Book> search = searchEngine.search(QueryBuilder.matchAllQuery().buildForageQuery());
             Assertions.assertEquals(0, search.getTotal().getTotal());
         }
+    }
+
+    @Test
+    void testEngineThrowsErrorWhenNoStorageAdded() {
+        var err = Assertions.assertThrows(
+                ForageSearchError.class,
+                () -> ForageSearchEngineBuilder.<Book>builder()
+                        .withObjectMapper(TestUtils.mapper())
+                        .build()
+        );
+        Assertions.assertEquals(ForageErrorCode.DATASTORE_INVALID, err.getForageErrorCode());
     }
 }
