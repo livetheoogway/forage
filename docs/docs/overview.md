@@ -30,6 +30,11 @@ Forage solves this by:
 
 ![Forage Architecture](assets/architecture.jpg)
 
+We've finished the What and the Why, now let's look at the How.
+At its heart is Lucene. Why lucene you ask? Well, lucene is the most evolved open-source java search engine libraries
+out there. It powers Nutch, Solr, Elasticsearch etc. It is well maintained, supported by the Apache Software Foundation,
+and has continuous contributions. Need I say more?!
+
 The library operates in four phases:
 
 ### 1. Bootstrapping
