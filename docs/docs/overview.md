@@ -59,9 +59,7 @@ PeriodicUpdateEngine<IndexableDocument> updateEngine =
                 new AsyncQueuedConsumer<>(searchEngine),
                 60, TimeUnit.SECONDS  // Refresh every 60 seconds
         );
-updateEngine.
-
-start();
+updateEngine.start();
 ```
 
 ### 3. Indexing Rules
@@ -69,23 +67,13 @@ start();
 You define which fields are searchable and how they should be analyzed:
 
 ```java
-new ForageDocument(book.getId(),Arrays.
-
-asList(
-    new TextField("title", book.getTitle()),        // Full-text searchable
-        new
-
-TextField("author",book.getAuthor()),      // Full-text searchable
-        new
-
-StringField("genre",book.getGenre()),      // Exact match only
-        new
-
-FloatField("rating",book.getRating()),     // Numeric, sortable
-        new
-
-IntField("pages",book.getPages())          // Numeric, range queries
-        ));
+new ForageDocument(book.getId(), Arrays.asList(
+        new TextField("title", book.getTitle()),        // Full-text searchable
+        new TextField("author", book.getAuthor()),      // Full-text searchable
+        new StringField("genre", book.getGenre()),      // Exact match only
+        new FloatField("rating", book.getRating()),     // Numeric, sortable
+        new IntField("pages", book.getPages())          // Numeric, range queries
+));
 ```
 
 ### 4. Search Queries
