@@ -186,7 +186,7 @@ public void bootstrap(Consumer<IndexableDocument> consumer) {
 }
 
 private ForageDocument createBookDocument(Book book) {
-    return new ForageDocument("book-" + book.getId(), book, Arrays.asList(
+    return new ForageDocument("book-" + book.getId(), Arrays.asList(
         new TextField("title", book.getTitle()),
         new StringField("type", "BOOK")
     ));
@@ -221,12 +221,12 @@ public void bootstrap(Consumer<IndexableDocument> consumer) {
 
 ```java
 // Expensive: compute during bootstrap
-consumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
+consumer.accept(new ForageDocument(book.getId(), Arrays.asList(
     new TextField("summary", generateSummary(book))  // Slow!
 )));
 
 // Better: pre-compute and store
-consumer.accept(new ForageDocument(book.getId(), book, Arrays.asList(
+consumer.accept(new ForageDocument(book.getId(), Arrays.asList(
     new TextField("summary", book.getCachedSummary())  // Fast
 )));
 ```

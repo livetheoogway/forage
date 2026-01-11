@@ -42,13 +42,13 @@ Only index fields you'll search:
 
 ```java
 // Good: Minimal fields
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new TextField("title", book.getTitle()),
     new TextField("author", book.getAuthor())
 ));
 
 // Avoid: Unnecessary fields
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new TextField("title", book.getTitle()),
     new TextField("author", book.getAuthor()),
     new TextField("internalNotes", book.getInternalNotes()),    // Never searched

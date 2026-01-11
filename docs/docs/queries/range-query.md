@@ -108,7 +108,7 @@ Range queries require numeric fields:
 
 ```java
 // In your document creation
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new IntField("pages", new int[]{book.getPages()}),     // ✓ Range queryable
     new IntField("year", new int[]{book.getYear()}),       // ✓ Range queryable
     new FloatField("rating", new float[]{book.getRating()}), // ✓ Range queryable

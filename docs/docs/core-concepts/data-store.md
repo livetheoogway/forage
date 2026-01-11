@@ -206,7 +206,7 @@ public class BookDataStore implements Bootstrapper<IndexableDocument>, Store<Boo
     }
 
     private ForageDocument createDocument(Book book) {
-        return new ForageDocument(book.getId(), book, Arrays.asList(
+        return new ForageDocument(book.getId(), Arrays.asList(
             new TextField("title", book.getTitle()),
             new TextField("author", book.getAuthor()),
             new FloatField("rating", new float[]{book.getRating()})

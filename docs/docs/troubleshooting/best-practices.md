@@ -8,14 +8,14 @@ Follow these best practices to build robust, performant search functionality wit
 
 ```java
 // Good: Minimal, purposeful fields
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new TextField("title", book.getTitle()),
     new TextField("author", book.getAuthor()),
     new FloatField("rating", new float[]{book.getRating()})
 ));
 
 // Avoid: Indexing everything
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new TextField("title", book.getTitle()),
     new TextField("author", book.getAuthor()),
     new TextField("description", book.getDescription()),
@@ -64,7 +64,7 @@ private ForageDocument createDocument(Book book) {
         book.getRating() != null ? book.getRating() : 0.0f
     }));
 
-    return new ForageDocument(book.getId(), book, fields);
+    return new ForageDocument(book.getId(), fields);
 }
 ```
 

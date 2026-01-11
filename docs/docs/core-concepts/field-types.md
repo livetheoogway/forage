@@ -212,7 +212,7 @@ graph TD
 A typical document uses multiple field types:
 
 ```java
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     // Full-text searchable
     new TextField("title", book.getTitle()),
     new TextField("description", book.getDescription()),

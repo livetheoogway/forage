@@ -103,7 +103,7 @@ new ForageDocument(book.getId(), Arrays.asList(
 ));
 
 // Avoid: Indexing fields you never search
-new ForageDocument(book.getId(), book, Arrays.asList(
+new ForageDocument(book.getId(), Arrays.asList(
     new TextField("title", book.getTitle()),
     new TextField("internalNotes", book.getInternalNotes()),  // Never searched
     new TextField("auditLog", book.getAuditLog())             // Never searched
@@ -125,7 +125,7 @@ private ForageDocument createDocument(Book book) {
         fields.add(new TextField("description", book.getDescription()));
     }
 
-    return new ForageDocument(book.getId(), book, fields);
+    return new ForageDocument(book.getId(), fields);
 }
 ```
 
@@ -175,7 +175,7 @@ private ForageDocument createDocument(Book book) {
     fields.add(new FloatField("rating", new float[]{book.getRating()})); // ~8 bytes
     fields.add(new IntField("pages", new int[]{book.getPages()}));       // ~8 bytes
 
-    return new ForageDocument(book.getId(), book, fields);
+    return new ForageDocument(book.getId(), fields);
 }
 ```
 
