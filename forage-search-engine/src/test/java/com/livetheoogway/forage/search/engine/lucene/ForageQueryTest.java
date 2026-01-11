@@ -38,6 +38,10 @@ import com.livetheoogway.forage.search.engine.model.Book;
 import com.livetheoogway.forage.search.engine.model.index.ForageDocument;
 import com.livetheoogway.forage.search.engine.model.index.IndexableDocument;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.lucene.analysis.core.KeywordAnalyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -827,6 +831,247 @@ class ForageQueryTest {
                 Assertions.assertTrue(score > 0,
                                       "Score should be positive for decay type: " + decayType);
             }
+        }
+    }
+
+    // ==================== CUSTOM ANALYZER TESTS ====================
+
+    @Test
+    void testBuilderWithWhitespaceAnalyzer() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withAnalyser(new WhitespaceAnalyzer())
+                .build()) {
+
+            Book book = book("ws-1", "Hello World Test", "John Doe", 200);
+            store.store(List.of(book));
+            engine.index(List.of(ForageDocument.builder()
+                                         .id(book.id())
+                                         .fields(book.fields())
+                                         .build()));
+            engine.flush();
+
+            // WhitespaceAnalyzer preserves case, so "Hello" should match but "hello" should not
+            ForageQueryResult<Book> resultExactCase = engine.search(
+                    QueryBuilder.matchQuery("title", "Hello").buildForageQuery());
+            Assertions.assertEquals(1, resultExactCase.getMatchingResults().size(),
+                                    "WhitespaceAnalyzer should match exact case");
+
+            ForageQueryResult<Book> resultLowerCase = engine.search(
+                    QueryBuilder.matchQuery("title", "hello").buildForageQuery());
+            Assertions.assertEquals(0, resultLowerCase.getMatchingResults().size(),
+                                    "WhitespaceAnalyzer should not match different case");
+        }
+    }
+
+    @Test
+    void testBuilderWithKeywordAnalyzer() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withAnalyser(new KeywordAnalyzer())
+                .build()) {
+
+            Book book = book("kw-1", "The Great Adventure", "Jane Smith", 300);
+            store.store(List.of(book));
+            engine.index(List.of(ForageDocument.builder()
+                                         .id(book.id())
+                                         .fields(book.fields())
+                                         .build()));
+            engine.flush();
+
+            // KeywordAnalyzer treats the entire field as a single token
+            // Partial matches should not work
+            ForageQueryResult<Book> resultPartial = engine.search(
+                    QueryBuilder.matchQuery("title", "Great").buildForageQuery());
+            Assertions.assertEquals(0, resultPartial.getMatchingResults().size(),
+                                    "KeywordAnalyzer should not match partial tokens");
+
+            // Full exact match should work
+            ForageQueryResult<Book> resultFull = engine.search(
+                    QueryBuilder.matchQuery("title", "The Great Adventure").buildForageQuery());
+            Assertions.assertEquals(1, resultFull.getMatchingResults().size(),
+                                    "KeywordAnalyzer should match full exact value");
+        }
+    }
+
+    // ==================== CUSTOM SIMILARITY TESTS ====================
+
+    @Test
+    void testBuilderWithBM25Similarity() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withSimilarity(new BM25Similarity())
+                .build()) {
+
+            Book book1 = book("bm25-1", "Search Engine Optimization", "Author A", 200);
+            Book book2 = book("bm25-2", "Search Search Search", "Author B", 150);
+            store.store(List.of(book1, book2));
+            engine.index(List.of(
+                    ForageDocument.builder().id(book1.id()).fields(book1.fields()).build(),
+                    ForageDocument.builder().id(book2.id()).fields(book2.fields()).build()));
+            engine.flush();
+
+            ForageQueryResult<Book> result = engine.search(
+                    QueryBuilder.matchQuery("title", "search").buildForageQuery(2));
+
+            Assertions.assertEquals(2, result.getMatchingResults().size(),
+                                    "BM25Similarity should return matching results");
+
+            // Both documents should have positive scores
+            for (MatchingResult<Book> match : result.getMatchingResults()) {
+                Assertions.assertTrue(match.getDocScore().getScore() > 0,
+                                      "BM25Similarity should produce positive scores");
+            }
+        }
+    }
+
+    @Test
+    void testBuilderWithClassicSimilarity() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withSimilarity(new ClassicSimilarity())
+                .build()) {
+
+            Book book1 = book("classic-1", "Classic Literature Study", "Author A", 200);
+            Book book2 = book("classic-2", "Modern Literature Analysis", "Author B", 150);
+            store.store(List.of(book1, book2));
+            engine.index(List.of(
+                    ForageDocument.builder().id(book1.id()).fields(book1.fields()).build(),
+                    ForageDocument.builder().id(book2.id()).fields(book2.fields()).build()));
+            engine.flush();
+
+            ForageQueryResult<Book> result = engine.search(
+                    QueryBuilder.matchQuery("title", "literature").buildForageQuery(2));
+
+            Assertions.assertEquals(2, result.getMatchingResults().size(),
+                                    "ClassicSimilarity should return matching results");
+
+            // Both documents should have positive scores
+            for (MatchingResult<Book> match : result.getMatchingResults()) {
+                Assertions.assertTrue(match.getDocScore().getScore() > 0,
+                                      "ClassicSimilarity should produce positive scores");
+            }
+        }
+    }
+
+    @Test
+    void testDifferentSimilaritiesCanBeConfigured() throws Exception {
+        // This test verifies that both BM25Similarity and ClassicSimilarity can be configured
+        // and produce valid search results
+        Book book1 = book("sim-1", "Magic Spell Book", "Wizard A", 200);
+        Book book2 = book("sim-2", "Magic Magic Magic", "Wizard B", 150);
+
+        // Build engine with BM25Similarity
+        InMemoryHashStore<Book> store1 = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> bm25Engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store1)
+                .withSimilarity(new BM25Similarity())
+                .build()) {
+
+            store1.store(List.of(book1, book2));
+            bm25Engine.index(List.of(
+                    ForageDocument.builder().id(book1.id()).fields(book1.fields()).build(),
+                    ForageDocument.builder().id(book2.id()).fields(book2.fields()).build()));
+            bm25Engine.flush();
+
+            ForageQueryResult<Book> bm25Result = bm25Engine.search(
+                    QueryBuilder.matchQuery("title", "magic").buildForageQuery(2));
+            Assertions.assertEquals(2, bm25Result.getMatchingResults().size(),
+                                    "BM25Similarity should find both matching documents");
+            Assertions.assertTrue(bm25Result.getMatchingResults().get(0).getDocScore().getScore() > 0,
+                                  "BM25Similarity should produce positive scores");
+        }
+
+        // Build engine with ClassicSimilarity
+        InMemoryHashStore<Book> store2 = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> classicEngine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store2)
+                .withSimilarity(new ClassicSimilarity())
+                .build()) {
+
+            store2.store(List.of(book1, book2));
+            classicEngine.index(List.of(
+                    ForageDocument.builder().id(book1.id()).fields(book1.fields()).build(),
+                    ForageDocument.builder().id(book2.id()).fields(book2.fields()).build()));
+            classicEngine.flush();
+
+            ForageQueryResult<Book> classicResult = classicEngine.search(
+                    QueryBuilder.matchQuery("title", "magic").buildForageQuery(2));
+            Assertions.assertEquals(2, classicResult.getMatchingResults().size(),
+                                    "ClassicSimilarity should find both matching documents");
+            Assertions.assertTrue(classicResult.getMatchingResults().get(0).getDocScore().getScore() > 0,
+                                  "ClassicSimilarity should produce positive scores");
+        }
+    }
+
+    @Test
+    void testBuilderWithCustomBM25Parameters() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        // BM25 with custom k1 and b parameters
+        BM25Similarity customBM25 = new BM25Similarity(1.5f, 0.5f);
+
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withSimilarity(customBM25)
+                .build()) {
+
+            Book book = book("custom-bm25", "Custom Parameters Test", "Author", 200);
+            store.store(List.of(book));
+            engine.index(List.of(ForageDocument.builder()
+                                         .id(book.id())
+                                         .fields(book.fields())
+                                         .build()));
+            engine.flush();
+
+            ForageQueryResult<Book> result = engine.search(
+                    QueryBuilder.matchQuery("title", "custom").buildForageQuery());
+
+            Assertions.assertEquals(1, result.getMatchingResults().size(),
+                                    "Custom BM25 parameters should work correctly");
+            Assertions.assertTrue(result.getMatchingResults().get(0).getDocScore().getScore() > 0,
+                                  "Custom BM25 should produce positive scores");
+        }
+    }
+
+    @Test
+    void testBuilderWithBothCustomAnalyzerAndSimilarity() throws Exception {
+        InMemoryHashStore<Book> store = new InMemoryHashStore<>();
+        try (ForageLuceneSearchEngine<Book> engine = ForageSearchEngineBuilder.<Book>builder()
+                .withObjectMapper(TestUtils.mapper())
+                .withDataStore(store)
+                .withAnalyser(new WhitespaceAnalyzer())
+                .withSimilarity(new BM25Similarity(2.0f, 0.75f))
+                .build()) {
+
+            Book book = book("combo-1", "Combined Test Case", "Test Author", 200);
+            store.store(List.of(book));
+            engine.index(List.of(ForageDocument.builder()
+                                         .id(book.id())
+                                         .fields(book.fields())
+                                         .build()));
+            engine.flush();
+
+            // WhitespaceAnalyzer is case-sensitive
+            ForageQueryResult<Book> resultExactCase = engine.search(
+                    QueryBuilder.matchQuery("title", "Combined").buildForageQuery());
+            Assertions.assertEquals(1, resultExactCase.getMatchingResults().size(),
+                                    "Combined custom analyzer and similarity should work");
+
+            ForageQueryResult<Book> resultWrongCase = engine.search(
+                    QueryBuilder.matchQuery("title", "combined").buildForageQuery());
+            Assertions.assertEquals(0, resultWrongCase.getMatchingResults().size(),
+                                    "WhitespaceAnalyzer should preserve case sensitivity with custom similarity");
         }
     }
 
