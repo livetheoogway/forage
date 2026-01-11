@@ -1,0 +1,750 @@
+/* ==========================================================================
+   Forage Documentation Theme
+   A clean, professional design with excellent readability
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Light Theme (Default)
+   -------------------------------------------------------------------------- */
+[data-md-color-scheme="forage"] {
+  /* Primary - Deep Teal */
+  --md-primary-fg-color: #0d7377;
+  --md-primary-fg-color--light: #14919b;
+  --md-primary-fg-color--dark: #0a5c5f;
+  --md-primary-bg-color: #ffffff;
+  --md-primary-bg-color--light: #f8fafa;
+
+  /* Accent - Warm Amber */
+  --md-accent-fg-color: #e07a2f;
+  --md-accent-fg-color--transparent: rgba(224, 122, 47, 0.1);
+  --md-accent-bg-color: #ffffff;
+  --md-accent-bg-color--light: #fff8f3;
+
+  /* Default colors */
+  --md-default-fg-color: #1a1a2e;
+  --md-default-fg-color--light: #4a4a5a;
+  --md-default-fg-color--lighter: #6e6e7a;
+  --md-default-fg-color--lightest: rgba(26, 26, 46, 0.1);
+  --md-default-bg-color: #ffffff;
+  --md-default-bg-color--light: #f8f9fa;
+  --md-default-bg-color--lighter: #f1f3f4;
+  --md-default-bg-color--lightest: #e8eaed;
+
+  /* Code blocks */
+  --md-code-fg-color: #1a1a2e;
+  --md-code-bg-color: #f6f8fa;
+  --md-code-hl-color: rgba(13, 115, 119, 0.1);
+  --md-code-hl-number-color: #0550ae;
+  --md-code-hl-special-color: #a40e26;
+  --md-code-hl-function-color: #6639ba;
+  --md-code-hl-constant-color: #0550ae;
+  --md-code-hl-keyword-color: #cf222e;
+  --md-code-hl-string-color: #0a6640;
+  --md-code-hl-name-color: #1a1a2e;
+  --md-code-hl-operator-color: #1a1a2e;
+  --md-code-hl-punctuation-color: #1a1a2e;
+  --md-code-hl-comment-color: #6e7781;
+  --md-code-hl-generic-color: #1a1a2e;
+  --md-code-hl-variable-color: #953800;
+
+  /* Typography */
+  --md-typeset-color: #1a1a2e;
+  --md-typeset-a-color: #0d7377;
+  --md-typeset-mark-color: rgba(224, 122, 47, 0.2);
+  --md-typeset-del-color: rgba(207, 34, 46, 0.15);
+  --md-typeset-ins-color: rgba(10, 102, 64, 0.15);
+  --md-typeset-kbd-color: #f6f8fa;
+  --md-typeset-kbd-accent-color: #e8eaed;
+  --md-typeset-kbd-border-color: #d0d7de;
+  --md-typeset-table-color: rgba(26, 26, 46, 0.1);
+
+  /* Admonitions */
+  --md-admonition-fg-color: #1a1a2e;
+  --md-admonition-bg-color: #f8f9fa;
+
+  /* Footer */
+  --md-footer-fg-color: #ffffff;
+  --md-footer-fg-color--light: rgba(255, 255, 255, 0.7);
+  --md-footer-fg-color--lighter: rgba(255, 255, 255, 0.5);
+  --md-footer-bg-color: #1a1a2e;
+  --md-footer-bg-color--dark: #12121f;
+
+  /* Shadows */
+  --md-shadow-z1: 0 1px 2px rgba(26, 26, 46, 0.05), 0 1px 3px rgba(26, 26, 46, 0.1);
+  --md-shadow-z2: 0 2px 4px rgba(26, 26, 46, 0.08), 0 4px 12px rgba(26, 26, 46, 0.08);
+  --md-shadow-z3: 0 4px 8px rgba(26, 26, 46, 0.1), 0 8px 24px rgba(26, 26, 46, 0.1);
+}
+
+/* --------------------------------------------------------------------------
+   Dark Theme
+   -------------------------------------------------------------------------- */
+[data-md-color-scheme="forage-dark"] {
+  /* Primary - Bright Teal */
+  --md-primary-fg-color: #32d9a0;
+  --md-primary-fg-color--light: #5ce4b8;
+  --md-primary-fg-color--dark: #28b585;
+  --md-primary-bg-color: #1e1e2e;
+  --md-primary-bg-color--light: #262636;
+
+  /* Accent - Soft Amber */
+  --md-accent-fg-color: #f5a742;
+  --md-accent-fg-color--transparent: rgba(245, 167, 66, 0.15);
+  --md-accent-bg-color: #262636;
+  --md-accent-bg-color--light: #2e2e3e;
+
+  /* Default colors */
+  --md-default-fg-color: #e4e4e7;
+  --md-default-fg-color--light: #a1a1aa;
+  --md-default-fg-color--lighter: #71717a;
+  --md-default-fg-color--lightest: rgba(228, 228, 231, 0.1);
+  --md-default-bg-color: #16161e;
+  --md-default-bg-color--light: #1e1e2e;
+  --md-default-bg-color--lighter: #262636;
+  --md-default-bg-color--lightest: #2e2e3e;
+
+  /* Code blocks */
+  --md-code-fg-color: #e4e4e7;
+  --md-code-bg-color: #1e1e2e;
+  --md-code-hl-color: rgba(50, 217, 160, 0.1);
+  --md-code-hl-number-color: #79c0ff;
+  --md-code-hl-special-color: #ff7b72;
+  --md-code-hl-function-color: #d2a8ff;
+  --md-code-hl-constant-color: #79c0ff;
+  --md-code-hl-keyword-color: #ff7b72;
+  --md-code-hl-string-color: #a5d6ff;
+  --md-code-hl-name-color: #e4e4e7;
+  --md-code-hl-operator-color: #e4e4e7;
+  --md-code-hl-punctuation-color: #e4e4e7;
+  --md-code-hl-comment-color: #8b949e;
+  --md-code-hl-generic-color: #e4e4e7;
+  --md-code-hl-variable-color: #ffa657;
+
+  /* Typography */
+  --md-typeset-color: #e4e4e7;
+  --md-typeset-a-color: #32d9a0;
+  --md-typeset-mark-color: rgba(245, 167, 66, 0.25);
+  --md-typeset-del-color: rgba(255, 123, 114, 0.2);
+  --md-typeset-ins-color: rgba(50, 217, 160, 0.2);
+  --md-typeset-kbd-color: #262636;
+  --md-typeset-kbd-accent-color: #2e2e3e;
+  --md-typeset-kbd-border-color: #3e3e4e;
+  --md-typeset-table-color: rgba(228, 228, 231, 0.1);
+
+  /* Admonitions */
+  --md-admonition-fg-color: #e4e4e7;
+  --md-admonition-bg-color: #1e1e2e;
+
+  /* Footer */
+  --md-footer-fg-color: #e4e4e7;
+  --md-footer-fg-color--light: rgba(228, 228, 231, 0.7);
+  --md-footer-fg-color--lighter: rgba(228, 228, 231, 0.5);
+  --md-footer-bg-color: #1e1e2e;
+  --md-footer-bg-color--dark: #16161e;
+
+  /* Shadows */
+  --md-shadow-z1: 0 1px 2px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --md-shadow-z2: 0 2px 4px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --md-shadow-z3: 0 4px 8px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* --------------------------------------------------------------------------
+   Header
+   -------------------------------------------------------------------------- */
+.md-header {
+  background: var(--md-primary-fg-color);
+  box-shadow: none;
+}
+
+[data-md-color-scheme="forage-dark"] .md-header {
+  background: #1e1e2e;
+  border-bottom: 1px solid rgba(228, 228, 231, 0.1);
+}
+
+[data-md-color-scheme="forage-dark"] .md-header,
+[data-md-color-scheme="forage-dark"] .md-header .md-header__title,
+[data-md-color-scheme="forage-dark"] .md-header .md-header__topic,
+[data-md-color-scheme="forage-dark"] .md-header .md-header__button {
+  color: #e4e4e7;
+}
+
+[data-md-color-scheme="forage-dark"] .md-header .md-header__button svg {
+  fill: #e4e4e7;
+}
+
+.md-header__title {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.md-header__button.md-logo img,
+.md-header__button.md-logo svg {
+  height: 1.5rem;
+  width: auto;
+}
+
+/* --------------------------------------------------------------------------
+   Navigation Tabs
+   -------------------------------------------------------------------------- */
+.md-tabs {
+  background: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="forage-dark"] .md-tabs {
+  background: #262636;
+  border-bottom: 1px solid rgba(228, 228, 231, 0.08);
+}
+
+.md-tabs__link {
+  font-size: 0.8rem;
+  font-weight: 500;
+  opacity: 0.85;
+  transition: opacity 0.15s ease;
+}
+
+[data-md-color-scheme="forage-dark"] .md-tabs__link {
+  color: #e4e4e7;
+}
+
+.md-tabs__link:hover,
+.md-tabs__link--active {
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------------------
+   Search
+   -------------------------------------------------------------------------- */
+.md-search__input {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  font-size: 0.85rem;
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.md-search__input::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+[data-md-color-scheme="forage-dark"] .md-search__input {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.md-search__input:hover,
+.md-search__input:focus {
+  background: rgba(255, 255, 255, 0.18);
+  border: none;
+  outline: none;
+  box-shadow: none;
+}
+
+.md-search__form {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.md-search__icon {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* --------------------------------------------------------------------------
+   Sidebar Navigation
+   -------------------------------------------------------------------------- */
+.md-nav__title {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+
+.md-nav__link {
+  font-size: 0.82rem;
+  transition: color 0.15s ease, padding-left 0.15s ease;
+}
+
+.md-nav__link:hover {
+  color: var(--md-accent-fg-color);
+}
+
+.md-nav__item--active > .md-nav__link {
+  color: var(--md-typeset-a-color);
+  font-weight: 600;
+}
+
+/* --------------------------------------------------------------------------
+   Content Typography
+   -------------------------------------------------------------------------- */
+.md-typeset {
+  font-size: 0.85rem;
+  line-height: 1.7;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+  color: var(--md-default-fg-color);
+  border-bottom: none;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+  margin-top: 2rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset h4,
+.md-typeset h5,
+.md-typeset h6 {
+  font-weight: 600;
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset a {
+  color: var(--md-typeset-a-color);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.md-typeset a:hover {
+  border-bottom-color: var(--md-typeset-a-color);
+}
+
+/* --------------------------------------------------------------------------
+   Code Blocks
+   -------------------------------------------------------------------------- */
+.md-typeset code {
+  font-size: 0.82em;
+  padding: 0.15em 0.4em;
+  border-radius: 0.25rem;
+  background: var(--md-code-bg-color);
+  color: var(--md-code-fg-color);
+  font-weight: 400;
+}
+
+.md-typeset pre {
+  border-radius: 0.5rem;
+  box-shadow: var(--md-shadow-z1);
+}
+
+.md-typeset pre > code {
+  font-size: 0.8rem;
+  line-height: 1.6;
+  padding: 1rem 1.25rem;
+}
+
+/* Code copy button */
+.md-clipboard {
+  color: var(--md-default-fg-color--lighter);
+}
+
+.md-clipboard:hover {
+  color: var(--md-accent-fg-color);
+}
+
+/* --------------------------------------------------------------------------
+   Tables
+   -------------------------------------------------------------------------- */
+.md-typeset table:not([class]) {
+  font-size: 0.82rem;
+  border: 1px solid var(--md-typeset-table-color);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  box-shadow: var(--md-shadow-z1);
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-default-bg-color--light);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 0.75rem 1rem;
+}
+
+.md-typeset table:not([class]) td {
+  padding: 0.65rem 1rem;
+  border-top: 1px solid var(--md-typeset-table-color);
+}
+
+.md-typeset table:not([class]) tr:hover td {
+  background: var(--md-default-bg-color--light);
+}
+
+/* --------------------------------------------------------------------------
+   Admonitions
+   -------------------------------------------------------------------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  font-size: 0.82rem;
+  border-radius: 0.5rem;
+  border-width: 0;
+  border-left-width: 4px;
+  box-shadow: var(--md-shadow-z1);
+  background: var(--md-admonition-bg-color);
+}
+
+.md-typeset .admonition-title,
+.md-typeset summary {
+  font-weight: 600;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+}
+
+.md-typeset .admonition-title::before,
+.md-typeset summary::before {
+  left: 0.75rem;
+}
+
+/* Note - Blue */
+.md-typeset .admonition.note,
+.md-typeset details.note {
+  border-left-color: #2563eb;
+}
+
+.md-typeset .note > .admonition-title,
+.md-typeset .note > summary {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.md-typeset .note > .admonition-title::before,
+.md-typeset .note > summary::before {
+  background-color: #2563eb;
+}
+
+/* Tip - Green */
+.md-typeset .admonition.tip,
+.md-typeset details.tip {
+  border-left-color: #16a34a;
+}
+
+.md-typeset .tip > .admonition-title,
+.md-typeset .tip > summary {
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.md-typeset .tip > .admonition-title::before,
+.md-typeset .tip > summary::before {
+  background-color: #16a34a;
+}
+
+/* Warning - Amber */
+.md-typeset .admonition.warning,
+.md-typeset details.warning {
+  border-left-color: #d97706;
+}
+
+.md-typeset .warning > .admonition-title,
+.md-typeset .warning > summary {
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.md-typeset .warning > .admonition-title::before,
+.md-typeset .warning > summary::before {
+  background-color: #d97706;
+}
+
+/* Danger - Red */
+.md-typeset .admonition.danger,
+.md-typeset details.danger,
+.md-typeset .admonition.caution,
+.md-typeset details.caution {
+  border-left-color: #dc2626;
+}
+
+.md-typeset .danger > .admonition-title,
+.md-typeset .danger > summary,
+.md-typeset .caution > .admonition-title,
+.md-typeset .caution > summary {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.md-typeset .danger > .admonition-title::before,
+.md-typeset .danger > summary::before,
+.md-typeset .caution > .admonition-title::before,
+.md-typeset .caution > summary::before {
+  background-color: #dc2626;
+}
+
+/* Info - Teal */
+.md-typeset .admonition.info,
+.md-typeset details.info {
+  border-left-color: var(--md-primary-fg-color);
+}
+
+.md-typeset .info > .admonition-title,
+.md-typeset .info > summary {
+  background: rgba(13, 115, 119, 0.08);
+}
+
+[data-md-color-scheme="forage-dark"] .md-typeset .info > .admonition-title,
+[data-md-color-scheme="forage-dark"] .md-typeset .info > summary {
+  background: rgba(50, 217, 160, 0.08);
+}
+
+.md-typeset .info > .admonition-title::before,
+.md-typeset .info > summary::before {
+  background-color: var(--md-primary-fg-color);
+}
+
+/* --------------------------------------------------------------------------
+   Tabs
+   -------------------------------------------------------------------------- */
+.md-typeset .tabbed-labels {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset .tabbed-labels > label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  color: var(--md-default-fg-color--light);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.md-typeset .tabbed-labels > label:hover {
+  color: var(--md-default-fg-color);
+}
+
+.md-typeset .tabbed-set > input:checked + label {
+  color: var(--md-typeset-a-color);
+  border-bottom-color: var(--md-typeset-a-color);
+}
+
+/* --------------------------------------------------------------------------
+   Footer
+   -------------------------------------------------------------------------- */
+.md-footer {
+  background: var(--md-footer-bg-color);
+}
+
+.md-footer-meta {
+  background: var(--md-footer-bg-color--dark);
+}
+
+.md-footer__link {
+  transition: opacity 0.15s ease;
+}
+
+.md-footer__link:hover {
+  opacity: 0.8;
+}
+
+/* --------------------------------------------------------------------------
+   Table of Contents
+   -------------------------------------------------------------------------- */
+.md-sidebar--secondary .md-nav__title {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--md-default-fg-color--light);
+  padding-bottom: 0.4rem;
+}
+
+.md-sidebar--secondary .md-nav__link {
+  font-size: 0.72rem;
+  padding: 0.2rem 0;
+  line-height: 1.4;
+}
+
+.md-sidebar--secondary .md-nav__list {
+  margin: 0;
+}
+
+.md-sidebar--secondary .md-nav__item {
+  padding: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Back to Top
+   -------------------------------------------------------------------------- */
+.md-top {
+  background: #0d7377;
+  color: #ffffff;
+  box-shadow: var(--md-shadow-z2);
+}
+
+.md-top:hover {
+  background: #0a5c5f;
+}
+
+.md-top svg {
+  fill: #ffffff;
+}
+
+[data-md-color-scheme="forage-dark"] .md-top {
+  background: #3d3d4d;
+  color: #e4e4e7;
+}
+
+[data-md-color-scheme="forage-dark"] .md-top:hover {
+  background: #4d4d5d;
+}
+
+[data-md-color-scheme="forage-dark"] .md-top svg {
+  fill: #e4e4e7;
+}
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.md-typeset .md-button {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.65rem 1.5rem;
+  border-radius: 0.4rem;
+  transition: all 0.15s ease;
+}
+
+.md-typeset .md-button--primary {
+  background: var(--md-primary-fg-color);
+  border-color: var(--md-primary-fg-color);
+  color: #ffffff;
+}
+
+.md-typeset .md-button--primary:hover {
+  background: var(--md-primary-fg-color--dark);
+  border-color: var(--md-primary-fg-color--dark);
+  box-shadow: var(--md-shadow-z2);
+}
+
+/* --------------------------------------------------------------------------
+   Mermaid Diagrams
+   -------------------------------------------------------------------------- */
+.mermaid {
+  margin: 1.5rem 0;
+  padding: 1.5rem;
+  background: var(--md-default-bg-color--light);
+  border-radius: 0.5rem;
+  text-align: center;
+}
+
+/* --------------------------------------------------------------------------
+   Scrollbar (Webkit)
+   -------------------------------------------------------------------------- */
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--md-default-fg-color--lighter);
+  border-radius: 0.25rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--md-default-fg-color--light);
+}
+
+/* --------------------------------------------------------------------------
+   Selection
+   -------------------------------------------------------------------------- */
+::selection {
+  background: rgba(13, 115, 119, 0.2);
+}
+
+[data-md-color-scheme="forage-dark"] ::selection {
+  background: rgba(50, 217, 160, 0.25);
+}
+
+/* --------------------------------------------------------------------------
+   Smooth Scrolling
+   -------------------------------------------------------------------------- */
+html {
+  scroll-behavior: smooth;
+}
+
+/* --------------------------------------------------------------------------
+   Content Width
+   -------------------------------------------------------------------------- */
+.md-content__inner {
+  padding-top: 1.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Badges/Shields
+   -------------------------------------------------------------------------- */
+.md-typeset img[src*="shields.io"],
+.md-typeset img[src*="badge"] {
+  vertical-align: middle;
+  margin: 0.1rem 0.2rem;
+}
+
+/* --------------------------------------------------------------------------
+   Feature Cards (Custom)
+   -------------------------------------------------------------------------- */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.feature-card {
+  padding: 1.25rem 1.5rem;
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 0.5rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.feature-card:hover {
+  border-color: var(--md-primary-fg-color);
+  box-shadow: var(--md-shadow-z1);
+}
+
+.feature-card h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--md-default-fg-color);
+}
+
+.feature-card p {
+  margin-bottom: 0;
+  color: var(--md-default-fg-color--light);
+  font-size: 0.85rem;
+}
+
+/* --------------------------------------------------------------------------
+   Light/Dark Mode Image Switching
+   -------------------------------------------------------------------------- */
+[data-md-color-scheme="forage"] img[src$="#only-dark"],
+[data-md-color-scheme="forage"] img[src$="#only-dark"] {
+  display: none;
+}
+
+[data-md-color-scheme="forage-dark"] img[src$="#only-light"],
+[data-md-color-scheme="forage-dark"] img[src$="#only-light"] {
+  display: none;
+}
+
+/* --------------------------------------------------------------------------
+   Print Styles
+   -------------------------------------------------------------------------- */
+@media print {
+  .md-header,
+  .md-tabs,
+  .md-sidebar,
+  .md-footer {
+    display: none;
+  }
+
+  .md-content {
+    margin: 0;
+  }
+}
