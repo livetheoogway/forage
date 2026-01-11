@@ -1,0 +1,122 @@
+site_name: Forage
+site_url: https://livetheoogway.github.io/forage
+repo_url: https://github.com/livetheoogway/forage
+site_description: In-memory Search made Easy - A library that helps you build an in-memory search index using Lucene
+
+theme:
+  logo: assets/logo-white.png
+  favicon: assets/logo-white.png
+  name: material
+  custom_dir: docs/overrides
+  features:
+    - navigation.tracking
+    - navigation.path
+    - navigation.tabs
+    - content.code.copy
+    - content.code.annotate
+    - navigation.expand
+    - toc.follow
+    - navigation.top
+    - navigation.footer
+    - search.suggest
+    - search.highlight
+    - search.share
+  font:
+    text: Open Sans  # Options: Inter, Nunito, Poppins, Source Sans Pro, Lato, Open Sans
+    code: JetBrains Mono  # Options: JetBrains Mono, Fira Code, Source Code Pro
+
+  palette:
+    - scheme: forage
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: forage-dark
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+extra:
+  status:
+    new: Recently added
+    deprecated: Deprecated
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/livetheoogway/forage
+    - icon: fontawesome/brands/linkedin
+      link: https://www.linkedin.com/in/tushar-naik
+    - icon: custom/live-the-oogway
+      link: https://livetheoogway.com/
+
+plugins:
+  - search
+
+copyright: "Copyright &copy; 2022-2026 Live the Oogway, Tushar Naik"
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - attr_list
+  - md_in_html
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+extra_css:
+  - stylesheets/extra.css
+
+# Navigation Tree
+nav:
+  - Home: index.md
+  - Overview: overview.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+    - Dropwizard Integration: getting-started/dropwizard.md
+  - Core Concepts:
+    - Core Concepts: core-concepts/index.md
+    - Indexable Documents: core-concepts/indexable-documents.md
+    - Field Types: core-concepts/field-types.md
+    - Data Store: core-concepts/data-store.md
+    - Bootstrapping: core-concepts/bootstrapping.md
+  - Query Types:
+    - Query Types: queries/index.md
+    - Match Query: queries/match-query.md
+    - Boolean Query: queries/boolean-query.md
+    - Range Query: queries/range-query.md
+    - Fuzzy Query: queries/fuzzy-query.md
+    - Phrase Query: queries/phrase-query.md
+    - Prefix Query: queries/prefix-query.md
+    - Match All Query: queries/match-all-query.md
+  - Scoring & Ranking:
+    - Scoring & Ranking: scoring/index.md
+    - Query Boosts: scoring/query-boosts.md
+    - Function Score: scoring/function-score.md
+    - Sorting: scoring/sorting.md
+    - Minimum Score: scoring/minimum-score.md
+  - Advanced Usage:
+    - Advanced Usage: advanced/index.md
+    - Pagination: advanced/pagination.md
+    - Performance: advanced/performance.md
+    - Architecture: advanced/architecture.md
+  - API Reference:
+    - QueryBuilder: api/query-builder.md
+    - Score Functions: api/score-functions.md
+  - Troubleshooting:
+    - Common Issues: troubleshooting/common-issues.md
+    - Best Practices: troubleshooting/best-practices.md

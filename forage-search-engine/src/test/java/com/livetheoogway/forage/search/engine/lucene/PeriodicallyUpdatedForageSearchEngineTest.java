@@ -64,6 +64,7 @@ class PeriodicallyUpdatedForageSearchEngineTest {
                         .withDataStore(dataStore)
                         .withObjectMapper(TestUtils.mapper()));
 
+
         dataStore.addBooks(1);
 
         final PeriodicUpdateEngine<IndexableDocument> periodicUpdateEngine =

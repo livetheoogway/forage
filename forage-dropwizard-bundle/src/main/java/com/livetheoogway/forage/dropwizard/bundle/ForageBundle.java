@@ -28,7 +28,6 @@ import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.setup.Environment;
 import lombok.extern.slf4j.Slf4j;
-import lombok.val;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.search.similarities.Similarity;
 
@@ -91,19 +90,19 @@ public abstract class ForageBundle<T extends Configuration, D> implements Config
             @Override
             public void start() {
                 log.info("[forage][startup] Starting the engine...");
-                val engineBuilder = ForageSearchEngineBuilder.<D>builder()
+                final var engineBuilder = ForageSearchEngineBuilder.<D>builder()
                         .withObjectMapper(environment.getObjectMapper())
                         .withDataStore(dataStore(configuration));
-                val analyser = analyser();
+                final var analyser = analyser();
                 if (analyser != null) {
                     engineBuilder.withAnalyser(analyser);
                 }
-                val similarity = similarity();
+                final var similarity = similarity();
                 if (similarity != null) {
                     engineBuilder.withSimilarity(similarity);
                 }
 
-                val forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
+                final var forageEngineIndexer = new ForageEngineIndexer<>(engineBuilder);
 
                 delegatedForageSearchEngine.onStart(forageEngineIndexer);
 
