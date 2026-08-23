@@ -18,6 +18,8 @@ import com.livetheoogway.forage.models.result.field.FloatField;
 import com.livetheoogway.forage.models.result.field.IntField;
 import com.livetheoogway.forage.models.result.field.StringField;
 import com.livetheoogway.forage.models.result.field.TextField;
+import com.livetheoogway.forage.models.result.field.VectorField;
+import com.livetheoogway.forage.models.result.field.VectorSimilarity;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -43,5 +45,16 @@ class LuceneFieldValidatorTest {
         assertFalse(new FloatField("", null).accept(luceneFieldValidator));
         assertFalse(new FloatField("name", null).accept(luceneFieldValidator));
         assertTrue(new FloatField("name", new float[]{1.1f}).accept(luceneFieldValidator));
+    }
+
+    @Test
+    void testVectorFieldValidation() {
+        final LuceneFieldValidator luceneFieldValidator = new LuceneFieldValidator();
+
+        assertFalse(new VectorField("", new float[]{1.0f}, VectorSimilarity.COSINE).accept(luceneFieldValidator));
+        assertFalse(new VectorField("name", null, VectorSimilarity.COSINE).accept(luceneFieldValidator));
+        assertFalse(new VectorField("name", new float[0], VectorSimilarity.COSINE).accept(luceneFieldValidator));
+        assertFalse(new VectorField("name", new float[]{1.0f}, (VectorSimilarity) null).accept(luceneFieldValidator));
+        assertTrue(new VectorField("name", new float[]{1.0f, 2.0f}, VectorSimilarity.COSINE).accept(luceneFieldValidator));
     }
 }
