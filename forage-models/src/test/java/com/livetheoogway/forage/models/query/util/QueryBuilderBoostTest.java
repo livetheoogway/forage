@@ -246,11 +246,84 @@ class QueryBuilderBoostTest {
     void testForageQueryBuilderWithDefaultsOnly() {
         ForageQuery forageQuery = QueryBuilder.matchQuery("title", "java")
                 .buildForageQuery(5);
-        
+
         assertInstanceOf(ForageSearchQuery.class, forageQuery);
         ForageSearchQuery searchQuery = (ForageSearchQuery) forageQuery;
         assertEquals(5, searchQuery.getSize());
         assertNull(searchQuery.getSortBy());
         assertNull(searchQuery.getMinimumScore());
+    }
+
+    @Test
+    void testKnnQueryBuilderWithBoostAndFilter() {
+        float[] vector = {1.0f, 0.0f, 0.0f};
+        Query filter = QueryBuilder.matchQuery("category", "fruit").build();
+
+        Query query = QueryBuilder.knnQuery("embedding", vector, 5)
+                .boost(2.0f)
+                .filter(filter)
+                .build();
+
+        assertInstanceOf(KnnQuery.class, query);
+        KnnQuery knnQuery = (KnnQuery) query;
+        assertEquals("embedding", knnQuery.getField());
+        assertArrayEquals(vector, knnQuery.getQueryVector());
+        assertEquals(5, knnQuery.getK());
+        assertEquals(2.0f, knnQuery.getBoost());
+        assertEquals(filter, knnQuery.getFilter());
+    }
+
+    @Test
+    void testKnnQueryBuilderWithoutBoostOrFilter() {
+        float[] vector = {0.5f, 0.5f};
+
+        Query query = QueryBuilder.knnQuery("embedding", vector, 3).build();
+
+        assertInstanceOf(KnnQuery.class, query);
+        KnnQuery knnQuery = (KnnQuery) query;
+        assertEquals("embedding", knnQuery.getField());
+        assertEquals(3, knnQuery.getK());
+        assertNull(knnQuery.getBoost());
+        assertNull(knnQuery.getFilter());
+    }
+
+    @Test
+    void testKnnQueryBuilderValidatesNullOrEmptyField() {
+        float[] vector = {1.0f};
+
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery(null, vector, 5).build());
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery("", vector, 5).build());
+    }
+
+    @Test
+    void testKnnQueryBuilderValidatesQueryVector() {
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery("embedding", null, 5).build());
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery("embedding", new float[0], 5).build());
+    }
+
+    @Test
+    void testKnnQueryBuilderValidatesK() {
+        float[] vector = {1.0f};
+
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery("embedding", vector, 0).build());
+        assertThrows(IllegalStateException.class, () ->
+                QueryBuilder.knnQuery("embedding", vector, -1).build());
+    }
+
+    @Test
+    void testKnnQueryBuilderBuildForageQuery() {
+        float[] vector = {1.0f, 0.0f};
+
+        ForageQuery forageQuery = QueryBuilder.knnQuery("embedding", vector, 5).buildForageQuery(20);
+
+        assertInstanceOf(ForageSearchQuery.class, forageQuery);
+        ForageSearchQuery searchQuery = (ForageSearchQuery) forageQuery;
+        assertEquals(20, searchQuery.getSize());
+        assertInstanceOf(KnnQuery.class, searchQuery.getQuery());
     }
 }
