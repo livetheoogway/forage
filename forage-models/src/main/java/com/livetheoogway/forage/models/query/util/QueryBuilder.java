@@ -55,4 +55,16 @@ public class QueryBuilder {
         return new Builders.InnerFunctionScoreQueryBuilder();
     }
 
+    /**
+     * Creates a KNN (K-Nearest Neighbors) query builder for vector similarity search.
+     *
+     * @param field       the name of the vector field to search
+     * @param queryVector the query vector to find nearest neighbors for
+     * @param k           the number of nearest neighbors to return
+     * @return a builder for further configuration
+     */
+    public Builders.InnerKnnQueryBuilder knnQuery(String field, float[] queryVector, int k) {
+        return new Builders.InnerKnnQueryBuilder(field, queryVector, k);
+    }
+
 }

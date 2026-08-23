@@ -19,11 +19,15 @@ import com.livetheoogway.forage.models.result.field.FloatField;
 import com.livetheoogway.forage.models.result.field.IntField;
 import com.livetheoogway.forage.models.result.field.StringField;
 import com.livetheoogway.forage.models.result.field.TextField;
+import com.livetheoogway.forage.models.result.field.VectorField;
+import com.livetheoogway.forage.models.result.field.VectorSimilarity;
 import org.apache.lucene.document.DoubleDocValuesField;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.FloatPoint;
 import org.apache.lucene.document.IntPoint;
+import org.apache.lucene.document.KnnFloatVectorField;
 import org.apache.lucene.index.IndexableField;
+import org.apache.lucene.index.VectorSimilarityFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,5 +79,23 @@ public class LuceneFieldHandler implements FieldVisitor<List<IndexableField>> {
             fields.add(new DoubleDocValuesField(intField.getName(), intField.getPoints()[0]));
         }
         return fields;
+    }
+
+    @Override
+    public List<IndexableField> visit(final VectorField vectorField) {
+        VectorSimilarityFunction similarityFunction = mapSimilarityFunction(vectorField.getSimilarity());
+        return Collections.singletonList(
+                new KnnFloatVectorField(vectorField.getName(), vectorField.getVector(), similarityFunction));
+    }
+
+    /**
+     * Maps the Forage VectorSimilarity enum to Lucene's VectorSimilarityFunction.
+     */
+    private VectorSimilarityFunction mapSimilarityFunction(final VectorSimilarity similarity) {
+        return switch (similarity) {
+            case COSINE -> VectorSimilarityFunction.COSINE;
+            case DOT_PRODUCT -> VectorSimilarityFunction.DOT_PRODUCT;
+            case EUCLIDEAN -> VectorSimilarityFunction.EUCLIDEAN;
+        };
     }
 }

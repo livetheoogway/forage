@@ -23,6 +23,7 @@ import com.livetheoogway.forage.models.query.search.score.ConstantScoreFunction;
 import com.livetheoogway.forage.models.query.search.score.FieldValueFactorFunction;
 import com.livetheoogway.forage.models.query.search.FunctionScoreQuery;
 import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
+import com.livetheoogway.forage.models.query.search.KnnQuery;
 import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.search.PhraseMatchQuery;
@@ -322,6 +323,54 @@ public class Builders {
                 throw new IllegalStateException("Score function is required for function score query");
             }
             return new FunctionScoreQuery(baseQuery, scoreFunction, boost);
+        }
+    }
+
+    /**
+     * Builder for KNN (K-Nearest Neighbors) vector similarity queries.
+     */
+    public static final class InnerKnnQueryBuilder extends InnerQueryBuilder {
+        private final String field;
+        private final float[] queryVector;
+        private final int k;
+        private Float boost;
+        private Query filter;
+
+        public InnerKnnQueryBuilder(String field, float[] queryVector, int k) {
+            this.field = field;
+            this.queryVector = queryVector;
+            this.k = k;
+        }
+
+        /**
+         * Sets the boost factor for the query.
+         */
+        public InnerKnnQueryBuilder boost(float boost) {
+            this.boost = boost;
+            return this;
+        }
+
+        /**
+         * Sets a filter query for hybrid search.
+         * The filter is applied before vector similarity computation.
+         */
+        public InnerKnnQueryBuilder filter(Query filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        @Override
+        public Query build() {
+            if (field == null || field.isEmpty()) {
+                throw new IllegalStateException("Field name is required for KNN query");
+            }
+            if (queryVector == null || queryVector.length == 0) {
+                throw new IllegalStateException("Query vector is required for KNN query");
+            }
+            if (k <= 0) {
+                throw new IllegalStateException("k must be positive for KNN query");
+            }
+            return new KnnQuery(field, queryVector, k, boost, filter);
         }
     }
 }

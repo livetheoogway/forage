@@ -18,6 +18,7 @@ import com.livetheoogway.forage.models.query.search.BooleanQuery;
 import com.livetheoogway.forage.models.query.search.ClauseVisitor;
 import com.livetheoogway.forage.models.query.search.FunctionScoreQuery;
 import com.livetheoogway.forage.models.query.search.FuzzyMatchQuery;
+import com.livetheoogway.forage.models.query.search.KnnQuery;
 import com.livetheoogway.forage.models.query.search.MatchAllQuery;
 import com.livetheoogway.forage.models.query.search.MatchQuery;
 import com.livetheoogway.forage.models.query.search.ParsableQuery;
@@ -52,6 +53,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BoostQuery;
 import org.apache.lucene.search.DoubleValuesSource;
 import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.KnnFloatVectorQuery;
 import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.MultiPhraseQuery;
 import org.apache.lucene.search.PrefixQuery;
@@ -334,6 +336,25 @@ public class LuceneQueryGenerator implements QueryVisitor<Query> {
                 yield expr.getDoubleValuesSource(bindings);
             }
         };
+    }
+
+    @Override
+    public Query visit(final KnnQuery knnQuery) throws Exception {
+        // Build filter query if present (for hybrid search)
+        Query filterQuery = null;
+        if (knnQuery.getFilter() != null) {
+            filterQuery = knnQuery.getFilter().accept(this);
+        }
+
+        // Create the KNN vector query
+        final KnnFloatVectorQuery vectorQuery = new KnnFloatVectorQuery(
+                knnQuery.getField(),
+                knnQuery.getQueryVector(),
+                knnQuery.getK(),
+                filterQuery
+        );
+
+        return applyBoost(vectorQuery, knnQuery.getBoost());
     }
 
     private Query applyBoost(Query query, Float boost) {

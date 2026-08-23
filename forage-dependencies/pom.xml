@@ -24,7 +24,7 @@
         <junit.jupiter.version>5.8.2</junit.jupiter.version>
         <mockito.version>3.2.4</mockito.version>
         <slf4j.api>1.7.36</slf4j.api>
-        <lombok.version>1.18.22</lombok.version>
+        <lombok.version>1.18.30</lombok.version>
         <jackson>2.13.3</jackson>
         <awaitility.version>4.2.0</awaitility.version>
         <javax.validation>2.0.1.Final</javax.validation>

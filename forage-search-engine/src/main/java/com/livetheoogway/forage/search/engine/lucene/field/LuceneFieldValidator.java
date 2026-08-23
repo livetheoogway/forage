@@ -20,6 +20,7 @@ import com.livetheoogway.forage.models.result.field.FloatField;
 import com.livetheoogway.forage.models.result.field.IntField;
 import com.livetheoogway.forage.models.result.field.StringField;
 import com.livetheoogway.forage.models.result.field.TextField;
+import com.livetheoogway.forage.models.result.field.VectorField;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -59,6 +60,16 @@ public class LuceneFieldValidator implements FieldVisitor<Boolean> {
                         && intField.getPoints() != null
                         && intField.getPoints().length > 0,
                 () -> log.warn("Null values/name for IntField: {}", intField.getName()));
+    }
+
+    @Override
+    public Boolean visit(final VectorField vectorField) {
+        return executeIfFalseAndReturn(
+                !Strings.isNullOrEmpty(vectorField.getName())
+                        && vectorField.getVector() != null
+                        && vectorField.getVector().length > 0
+                        && vectorField.getSimilarity() != null,
+                () -> log.warn("Null/invalid values for VectorField: {}", vectorField.getName()));
     }
 
     private boolean executeIfFalseAndReturn(final boolean check, final Runnable runnable) {
