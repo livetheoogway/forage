@@ -38,6 +38,12 @@ public enum FieldType {
         public <T> T accept(final FieldTypeVisitor<T> visitor) {
             return visitor.intPoint();
         }
+    },
+    VECTOR {
+        @Override
+        public <T> T accept(final FieldTypeVisitor<T> visitor) {
+            return visitor.vector();
+        }
     };
 
     public abstract <T> T accept(FieldTypeVisitor<T> visitor);

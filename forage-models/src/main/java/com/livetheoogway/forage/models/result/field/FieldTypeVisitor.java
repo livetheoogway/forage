@@ -24,4 +24,6 @@ public interface FieldTypeVisitor<T> {
 
     T intPoint();
 
+    T vector();
+
 }

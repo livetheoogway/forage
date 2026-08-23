@@ -23,5 +23,6 @@ public enum QueryType {
     FUZZY_MATCH,
     PREFIX_MATCH,
     RANGE,
-    FUNCTION_SCORE
+    FUNCTION_SCORE,
+    KNN
 }

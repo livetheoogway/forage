@@ -22,4 +22,6 @@ public interface FieldVisitor<T> {
     T visit(FloatField floatField);
 
     T visit(IntField intField);
+
+    T visit(VectorField vectorField);
 }

@@ -26,7 +26,8 @@ import lombok.Getter;
         @JsonSubTypes.Type(name = "TEXT", value = TextField.class),
         @JsonSubTypes.Type(name = "STRING", value = StringField.class),
         @JsonSubTypes.Type(name = "INT", value = IntField.class),
-        @JsonSubTypes.Type(name = "FLOAT", value = FloatField.class)
+        @JsonSubTypes.Type(name = "FLOAT", value = FloatField.class),
+        @JsonSubTypes.Type(name = "VECTOR", value = VectorField.class)
 })
 @Getter
 public abstract class Field {

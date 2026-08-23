@@ -34,4 +34,6 @@ public interface QueryVisitor<T> {
     T visit(PrefixMatchQuery prefixMatchQuery);
 
     T visit(FunctionScoreQuery functionScoreQuery) throws Exception;
+
+    T visit(KnnQuery knnQuery) throws Exception;
 }
